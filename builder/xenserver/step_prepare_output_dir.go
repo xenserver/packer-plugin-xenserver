@@ -34,7 +34,7 @@ func (stepPrepareOutputDir) Cleanup(state multistep.StateBag) {
 	_, halted := state.GetOk(multistep.StateHalted)
 
 	if cancelled || halted {
-		config := state.Get("config").(*config)
+		config := state.Get("config").(config)
 		ui := state.Get("ui").(packer.Ui)
 
 		ui.Say("Deleting output directory...")

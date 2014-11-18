@@ -55,6 +55,11 @@ type VBD struct {
     Client *XenAPIClient
 }
 
+type VIF struct {
+    Ref string
+    Client *XenAPIClient
+}
+
 func (c *XenAPIClient) RPCCall (result interface{}, method string, params []interface{}) (err error) {
     fmt.Println(params)
     p := new(xmlrpc.Params)
@@ -147,6 +152,26 @@ func (client *XenAPIClient) GetNetworkByUuid (network_uuid string) (network *Net
     network.Client = client
     return
 }
+
+
+func (client *XenAPIClient) GetNetworkByNameLabel (name_label string) (networks []*Network, err error) {
+    networks = make([]*Network, 0)
+    result := APIResult{}
+    err = client.APICall(&result, "network.get_by_name_label", name_label)
+    if err != nil {
+        return networks, err
+    }
+
+    for _, elem := range result.Value.([]interface{}) {
+        network := new(Network)
+        network.Ref = elem.(string)
+        network.Client = client
+        networks = append(networks, network)
+    }
+
+    return networks, nil
+}
+
 
 func (client *XenAPIClient) GetSRByUuid (sr_uuid string) (sr *SR, err error) {
     sr = new(SR)
@@ -274,6 +299,24 @@ func (self *VM) GetVBDs() (vbds []VBD, err error) {
     }
 
     return vbds, nil
+}
+
+
+func (self *VM) GetVIFs() (vifs []VIF, err error) {
+    vifs = make([]VIF, 0)
+    result := APIResult{}
+    err = self.Client.APICall(&result, "VM.get_VIFs", self.Ref)
+    if err != nil {
+        return vifs, err
+    }
+    for _, elem := range result.Value.([]interface{}) {
+        vif := VIF{}
+        vif.Ref = elem.(string)
+        vif.Client = self.Client
+        vifs = append(vifs, vif)
+    }
+
+    return vifs, nil
 }
 
 func (self *VM) GetDisks() (vdis []*VDI, err error) {
@@ -406,7 +449,7 @@ func (self *VM) SetPlatform(params map[string]string) (err error) {
 }
 
 
-func (self *VM) ConnectNetwork (network *Network, device string) (err error) {
+func (self *VM) ConnectNetwork (network *Network, device string) (vif *VIF, err error) {
     // Create the VIF
 
     vif_rec := make(xmlrpc.Struct)
@@ -423,10 +466,14 @@ func (self *VM) ConnectNetwork (network *Network, device string) (err error) {
     err = self.Client.APICall(&result, "VIF.create", vif_rec)
 
     if err != nil {
-        return err
+        return nil, err
     }
 
-    return nil
+    vif = new(VIF)
+    vif.Ref = result.Value.(string)
+    vif.Client = self.Client
+
+    return vif, nil
 }
 
 //      Setters
@@ -470,6 +517,21 @@ func (self *SR) CreateVdi (name_label, size string) (vdi *VDI, err error) {
     return
 }
 
+// Network associated functions
+
+func (self *Network) GetAssignedIPs () (ip_map map[string]string, err error) {
+    ip_map = make(map[string]string, 0)
+    result := APIResult{}
+    err = self.Client.APICall(&result, "network.get_assigned_ips", self.Ref)
+    if err != nil {
+        return ip_map, err
+    }
+    for k, v := range result.Value.(xmlrpc.Struct) {
+        ip_map[k] = v.(string)
+    }
+    return ip_map, nil
+}
+
 // VBD associated functions
 func (self *VBD) GetRecord () (record map[string]interface{}, err error) {
     record = make(map[string]interface{})
@@ -500,6 +562,17 @@ func (self *VBD) GetVDI () (vdi *VDI, err error) {
 func (self *VBD) Eject () (err error) {
     result := APIResult{}
     err = self.Client.APICall(&result, "VBD.eject", self.Ref)
+    if err != nil {
+        return err
+    }
+    return nil
+}
+
+// VIF associated functions
+
+func (self *VIF) Destroy () (err error) {
+    result := APIResult{}
+    err = self.Client.APICall(&result, "VIF.destroy", self.Ref)
     if err != nil {
         return err
     }

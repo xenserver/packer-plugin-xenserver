@@ -40,7 +40,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
     if err != nil {
         ui.Say(err.Error())
     }
-    err = instance.ConnectNetwork(network, "0")
+    _, err = instance.ConnectNetwork(network, "0")
 
     if err != nil {
         ui.Say(err.Error())
@@ -57,6 +57,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
     // Stash the VM reference
     self.InstanceId, _ = instance.GetUuid()
     state.Put("instance_uuid", self.InstanceId)
+    state.Put("instance", instance)
     ui.Say(fmt.Sprintf("Created instance '%s'", self.InstanceId))
 
     return multistep.ActionContinue

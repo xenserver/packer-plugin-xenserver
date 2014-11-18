@@ -6,7 +6,6 @@ import (
     "log"
     "net"
     "fmt"
-    "time"
 )
 
 type stepForwardPortOverSSH struct {
@@ -67,11 +66,6 @@ func (self *stepForwardPortOverSSH) Run(state multistep.StateBag) multistep.Step
 
     // Provide the local port to future steps.
     state.Put(self.ResultKey, sshHostPort)
-
-    // Need to wait before connecting
-    // @todo: figure out why and check for the correct conditions.
-    ui.Message("Sleeping 30...")
-    time.Sleep(30 * time.Second)
 
     return multistep.ActionContinue
 }

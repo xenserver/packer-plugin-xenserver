@@ -5,7 +5,6 @@ import (
     "github.com/mitchellh/packer/packer"
     "time"
     "reflect"
-    "github.com/nilshell/xmlrpc"
 )
 
 
@@ -34,7 +33,7 @@ func (self *stepWait) Run(state multistep.StateBag) multistep.StepAction {
         }
     }
 
-    //Eject ISO from drive and start VM
+    // Eject ISO from drive
     vbds, _ := instance.GetVBDs()
     for _, vbd := range vbds {
         rec, _ := vbd.GetRecord()
@@ -53,41 +52,12 @@ func (self *stepWait) Run(state multistep.StateBag) multistep.StepAction {
         }
     }
 
-    ui.Say("Starting VM...")
-    instance.Start(false, false)
-
-
-    vm_ip := ""
-    for i:=0; i < 10; i++ {
-        ref, _ := instance.GetGuestMetricsRef()
-
-        if ref != "OpaqueRef:NULL" {
-            metrics, _ := instance.GetGuestMetrics()
-            // todo: xmlrpc shouldn't be needed here
-            networks := metrics["networks"].(xmlrpc.Struct)
-            for k, v := range networks {
-                if k == "0/ip" && v.(string) != "" {
-                    vm_ip = v.(string)
-                    break
-                }
-            }
-
-        }
-
-        // Check if an IP has been returned yet
-        if vm_ip != "" {
-            break
-        }
-
-        ui.Say("Wait for IP address...")
-        time.Sleep(10*time.Second)
+    // Destroy all connected VIFs
+    vifs, _ := instance.GetVIFs()
+    for _, vif := range vifs {
+        ui.Message("Destroying VIF " + vif.Ref)
+        vif.Destroy()
     }
-
-
-    // Pass on the VM's IP
-    state.Put("ssh_address", vm_ip)
-    ui.Say("Found the VM's IP " + vm_ip)
-
 
     return multistep.ActionContinue
 }

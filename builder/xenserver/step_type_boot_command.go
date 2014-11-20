@@ -33,6 +33,7 @@ func (self *stepTypeBootCommand) Run (state multistep.StateBag) multistep.StepAc
 
     // Connect to the local VNC port as we have set up a SSH port forward
     ui.Say("Connecting to the VM over VNC")
+    ui.Message(fmt.Sprintf("Using local port: %d", vnc_port))
     net_conn, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", vnc_port))
 
     if err != nil {

@@ -8,7 +8,6 @@ import (
     "log"
     "errors"
     "time"
-    "strings"
     "os"
     commonssh "github.com/mitchellh/packer/common/ssh"
 )
@@ -33,8 +32,8 @@ type config struct {
     SrUuid          string      `mapstructure:"sr_uuid"`
     NetworkUuid     string      `mapstructure:"network_uuid"`
 
-    VncPortMin      uint        `mapstructure:"vnc_port_min"`
-    VncPortMax      uint        `mapstructure:"vnc_port_max"`
+    HostPortMin      uint        `mapstructure:"host_port_min"`
+    HostPortMax      uint        `mapstructure:"host_port_max"`
 
     BootCommand     []string    `mapstructure:"boot_command"`
     RawBootWait     string      `mapstructure:"boot_wait"`
@@ -92,12 +91,12 @@ func (self *Builder) Prepare (raws ...interface{}) (params []string, retErr erro
 
     // Set default vaules
 
-    if self.config.VncPortMin == 0 {
-        self.config.VncPortMin = 5900
+    if self.config.HostPortMin == 0 {
+        self.config.HostPortMin = 5900
     }
 
-    if self.config.VncPortMax == 0 {
-        self.config.VncPortMax = 6000
+    if self.config.HostPortMax == 0 {
+        self.config.HostPortMax = 6000
     }
 
     if self.config.RawBootWait == "" {
@@ -259,11 +258,11 @@ func (self *Builder) Prepare (raws ...interface{}) (params []string, retErr erro
                 errs, errors.New("the HTTP min port must be less than the max"))
     }
 
-    if self.config.VncPortMin > self.config.VncPortMax {
+    if self.config.HostPortMin > self.config.HostPortMax {
         errs = packer.MultiErrorAppend(
-                errs, errors.New("the VNC min port must be less than the max"))
+                errs, errors.New("the host min port must be less than the max"))
     }
-
+/*
     if self.config.ISOChecksumType == "" {
         errs = packer.MultiErrorAppend(
                 errs, errors.New("The iso_checksum_type must be specified."))
@@ -299,7 +298,7 @@ func (self *Builder) Prepare (raws ...interface{}) (params []string, retErr erro
                     errs, fmt.Errorf("Failed to parse the iso_url (%d): %s", i, err))
         }
     }
-
+*/
     if len(errs.Errors) > 0 {
         retErr = errors.New(errs.Error())
     }
@@ -331,6 +330,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 
     //Build the steps
     steps := []multistep.Step{
+        /*
         &common.StepDownload{
             Checksum:       self.config.ISOChecksum,
             ChecksumType:   self.config.ISOChecksumType,
@@ -338,17 +338,33 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
             ResultKey:      "iso_path",
             Url:            self.config.ISOUrls,
         },
+        */
         new(stepPrepareOutputDir),
         new(stepHTTPServer),
-        new(stepUploadIso),
+        //new(stepUploadIso),
         new(stepCreateInstance),
         new(stepStartVmPaused),
-        new(stepForwardVncPortOverSsh),
+        new(stepGetVNCPort),
+        &stepForwardPortOverSSH{
+            RemotePort: instanceVNCPort,
+            RemoteDest: instanceVNCIP,
+            HostPortMin: self.config.HostPortMin,
+            HostPortMax: self.config.HostPortMax,
+            ResultKey: "local_vnc_port",
+        },
         new(stepBootWait),
         new(stepTypeBootCommand),
         new(stepWait),
+        new(stepStartOnHIMN),
+        &stepForwardPortOverSSH{
+            RemotePort: himnSSHPort,
+            RemoteDest: himnSSHIP,
+            HostPortMin: self.config.HostPortMin,
+            HostPortMax: self.config.HostPortMax,
+            ResultKey: "local_ssh_port",
+        },
         &common.StepConnectSSH{
-            SSHAddress: sshAddress,
+            SSHAddress: sshLocalAddress,
             SSHConfig:  sshConfig,
             SSHWaitTimeout: self.config.sshWaitTimeout,
         },

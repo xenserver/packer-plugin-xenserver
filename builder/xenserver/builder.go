@@ -8,7 +8,6 @@ import (
     "log"
     "errors"
     "time"
-    "strings"
     "os"
     commonssh "github.com/mitchellh/packer/common/ssh"
 )
@@ -263,7 +262,7 @@ func (self *Builder) Prepare (raws ...interface{}) (params []string, retErr erro
         errs = packer.MultiErrorAppend(
                 errs, errors.New("the host min port must be less than the max"))
     }
-
+/*
     if self.config.ISOChecksumType == "" {
         errs = packer.MultiErrorAppend(
                 errs, errors.New("The iso_checksum_type must be specified."))
@@ -299,7 +298,7 @@ func (self *Builder) Prepare (raws ...interface{}) (params []string, retErr erro
                     errs, fmt.Errorf("Failed to parse the iso_url (%d): %s", i, err))
         }
     }
-
+*/
     if len(errs.Errors) > 0 {
         retErr = errors.New(errs.Error())
     }
@@ -331,6 +330,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 
     //Build the steps
     steps := []multistep.Step{
+        /*
         &common.StepDownload{
             Checksum:       self.config.ISOChecksum,
             ChecksumType:   self.config.ISOChecksumType,
@@ -338,9 +338,10 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
             ResultKey:      "iso_path",
             Url:            self.config.ISOUrls,
         },
+        */
         new(stepPrepareOutputDir),
         new(stepHTTPServer),
-//        new(stepUploadIso),
+        //new(stepUploadIso),
         new(stepCreateInstance),
         new(stepStartVmPaused),
         new(stepGetVNCPort),

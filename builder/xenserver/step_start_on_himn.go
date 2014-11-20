@@ -5,6 +5,7 @@ import (
     "github.com/mitchellh/packer/packer"
     "time"
     "log"
+    "fmt"
 )
 
 type stepStartOnHIMN struct{}
@@ -22,6 +23,7 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 
     ui := state.Get("ui").(packer.Ui)
     client := state.Get("client").(XenAPIClient)
+    config := state.Get("config").(config)
 
     ui.Say("Step: Start VM on the Host Internal Mangement Network")
 
@@ -77,6 +79,31 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
         log.Fatal("Unable to find an IP on the Host-internal management interface")
         return multistep.ActionHalt
     }
+
+
+    // Wait for the VM to boot, and check we can ping this interface
+
+    ping_cmd := fmt.Sprintf("ping -c 1 %s", himn_iface_ip)
+
+    err = nil
+    for i:=0; i < 30; i++ {
+        ui.Message(fmt.Sprintf("Attempting to ping interface: %s", ping_cmd))
+        _, err := execute_ssh_cmd(ping_cmd, config.HostIp, "22", config.Username, config.Password)
+
+        if err == nil {
+            ui.Message("Ping success! Continuing...")
+            break
+        }
+
+        time.Sleep(10 * time.Second)
+    }
+
+    if err != nil {
+        log.Fatal("Unable to ping interface. Something is wrong. Has the VM not booted?")
+        log.Fatal(err.Error())
+        return multistep.ActionHalt
+    }
+
 
     return multistep.ActionContinue
 

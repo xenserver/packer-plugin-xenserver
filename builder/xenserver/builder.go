@@ -26,6 +26,7 @@ type config struct {
     IsoUrl          string      `mapstructure:"iso_url"`
 
     InstanceName    string      `mapstructure:"instance_name"`
+    InstanceMemory  string      `mapstructure:"instance_memory"`
     RootDiskSize    string      `mapstructure:"root_disk_size"`
     CloneTemplate   string      `mapstructure:"clone_template"`
     IsoName         string      `mapstructure:"iso_name"`
@@ -125,6 +126,7 @@ func (self *Builder) Prepare (raws ...interface{}) (params []string, retErr erro
         "host_ip":              &self.config.HostIp,
         "iso_url":              &self.config.IsoUrl,
         "instance_name":        &self.config.InstanceName,
+        "instance_memory":      &self.config.InstanceMemory,
         "root_disk_size":       &self.config.RootDiskSize,
         "clone_template":       &self.config.CloneTemplate,
         "iso_name":             &self.config.IsoName,
@@ -210,6 +212,10 @@ func (self *Builder) Prepare (raws ...interface{}) (params []string, retErr erro
     if self.config.InstanceName == "" {
         errs = packer.MultiErrorAppend(
                 errs, errors.New("An insatnce name must be specified."))
+    }
+
+    if self.config.InstanceMemory == "" {
+        self.config.InstanceMemory = "1024000000"
     }
 
     if self.config.RootDiskSize == "" {

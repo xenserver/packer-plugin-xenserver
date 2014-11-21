@@ -39,7 +39,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
     // Clone that VM template
     instance, _ := template.Clone(config.InstanceName)
     instance.SetIsATemplate(false)
-    instance.SetStaticMemoryRange("1024000000", "1024000000")
+    instance.SetStaticMemoryRange(config.InstanceMemory, config.InstanceMemory)
     instance.SetPlatform(config.PlatformArgs)
 
     // Create VDI for the instance

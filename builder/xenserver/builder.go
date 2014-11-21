@@ -26,11 +26,12 @@ type config struct {
     IsoUrl          string      `mapstructure:"iso_url"`
 
     InstanceName    string      `mapstructure:"instance_name"`
+    InstanceMemory  string      `mapstructure:"instance_memory"`
     RootDiskSize    string      `mapstructure:"root_disk_size"`
     CloneTemplate   string      `mapstructure:"clone_template"`
-    IsoUuid         string      `mapstructure:"iso_uuid"`
-    SrUuid          string      `mapstructure:"sr_uuid"`
-    NetworkUuid     string      `mapstructure:"network_uuid"`
+    IsoName         string      `mapstructure:"iso_name"`
+    SrName          string      `mapstructure:"sr_name"`
+    NetworkName     string      `mapstructure:"network_name"`
 
     HostPortMin      uint        `mapstructure:"host_port_min"`
     HostPortMax      uint        `mapstructure:"host_port_max"`
@@ -125,11 +126,12 @@ func (self *Builder) Prepare (raws ...interface{}) (params []string, retErr erro
         "host_ip":              &self.config.HostIp,
         "iso_url":              &self.config.IsoUrl,
         "instance_name":        &self.config.InstanceName,
+        "instance_memory":      &self.config.InstanceMemory,
         "root_disk_size":       &self.config.RootDiskSize,
         "clone_template":       &self.config.CloneTemplate,
-        "iso_uuid":             &self.config.IsoUuid,
-        "sr_uuid":              &self.config.SrUuid,
-        "network_uuid":         &self.config.NetworkUuid,
+        "iso_name":             &self.config.IsoName,
+        "sr_name":              &self.config.SrName,
+        "network_name":         &self.config.NetworkName,
         "boot_wait":            &self.config.RawBootWait,
         "iso_checksum":         &self.config.ISOChecksum,
         "iso_checksum_type":    &self.config.ISOChecksumType,
@@ -212,35 +214,25 @@ func (self *Builder) Prepare (raws ...interface{}) (params []string, retErr erro
                 errs, errors.New("An insatnce name must be specified."))
     }
 
+    if self.config.InstanceMemory == "" {
+        self.config.InstanceMemory = "1024000000"
+    }
+
     if self.config.RootDiskSize == "" {
         errs = packer.MultiErrorAppend(
                 errs, errors.New("A root disk size must be specified."))
     }
 
     if self.config.CloneTemplate == "" {
-        errs = packer.MultiErrorAppend(
-                errs, errors.New("A template to clone from must be specified."))
+        self.config.CloneTemplate = "Other install media"
     }
 
-    if self.config.IsoUuid == "" {
-        errs = packer.MultiErrorAppend(
-                errs, errors.New("a uuid for the installation iso must be specified."))
-    }
-
-    if self.config.SrUuid == "" {
-        errs = packer.MultiErrorAppend(
-                errs, errors.New("a uuid for the sr used for the instance must be specified."))
-    }
-
-    if self.config.NetworkUuid == "" {
-        errs = packer.MultiErrorAppend(
-                errs, errors.New("a uuid for the network used for the instance must be specified."))
-    }
-
+/*
     if self.config.LocalIp == "" {
         errs = packer.MultiErrorAppend(
                 errs, errors.New("A local IP visible to XenServer's mangement interface is required to serve files."))
     }
+*/
 
     if len(self.config.PlatformArgs) == 0 {
         pargs := make(map[string]string)

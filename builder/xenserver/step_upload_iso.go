@@ -37,7 +37,9 @@ func (self *stepUploadIso) Run(state multistep.StateBag) multistep.StepAction {
     iso_filesize := stat.Size()
 
     // Create a VDI with the write size
-    sr, err := client.GetSRByUuid(config.SrUuid)
+    srs, err := client.GetSRByNameLabel(config.SrName)
+
+    sr := srs[0]
 
     if err != nil {
         ui.Error(err.Error())

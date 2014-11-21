@@ -28,9 +28,9 @@ type config struct {
     InstanceName    string      `mapstructure:"instance_name"`
     RootDiskSize    string      `mapstructure:"root_disk_size"`
     CloneTemplate   string      `mapstructure:"clone_template"`
-    IsoUuid         string      `mapstructure:"iso_uuid"`
-    SrUuid          string      `mapstructure:"sr_uuid"`
-    NetworkUuid     string      `mapstructure:"network_uuid"`
+    IsoName         string      `mapstructure:"iso_name"`
+    SrName          string      `mapstructure:"sr_name"`
+    NetworkName     string      `mapstructure:"network_name"`
 
     HostPortMin      uint        `mapstructure:"host_port_min"`
     HostPortMax      uint        `mapstructure:"host_port_max"`
@@ -127,9 +127,9 @@ func (self *Builder) Prepare (raws ...interface{}) (params []string, retErr erro
         "instance_name":        &self.config.InstanceName,
         "root_disk_size":       &self.config.RootDiskSize,
         "clone_template":       &self.config.CloneTemplate,
-        "iso_uuid":             &self.config.IsoUuid,
-        "sr_uuid":              &self.config.SrUuid,
-        "network_uuid":         &self.config.NetworkUuid,
+        "iso_name":             &self.config.IsoName,
+        "sr_name":              &self.config.SrName,
+        "network_name":         &self.config.NetworkName,
         "boot_wait":            &self.config.RawBootWait,
         "iso_checksum":         &self.config.ISOChecksum,
         "iso_checksum_type":    &self.config.ISOChecksumType,
@@ -218,29 +218,15 @@ func (self *Builder) Prepare (raws ...interface{}) (params []string, retErr erro
     }
 
     if self.config.CloneTemplate == "" {
-        errs = packer.MultiErrorAppend(
-                errs, errors.New("A template to clone from must be specified."))
+        self.config.CloneTemplate = "Other install media"
     }
 
-    if self.config.IsoUuid == "" {
-        errs = packer.MultiErrorAppend(
-                errs, errors.New("a uuid for the installation iso must be specified."))
-    }
-
-    if self.config.SrUuid == "" {
-        errs = packer.MultiErrorAppend(
-                errs, errors.New("a uuid for the sr used for the instance must be specified."))
-    }
-
-    if self.config.NetworkUuid == "" {
-        errs = packer.MultiErrorAppend(
-                errs, errors.New("a uuid for the network used for the instance must be specified."))
-    }
-
+/*
     if self.config.LocalIp == "" {
         errs = packer.MultiErrorAppend(
                 errs, errors.New("A local IP visible to XenServer's mangement interface is required to serve files."))
     }
+*/
 
     if len(self.config.PlatformArgs) == 0 {
         pargs := make(map[string]string)

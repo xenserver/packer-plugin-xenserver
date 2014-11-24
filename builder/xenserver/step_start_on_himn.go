@@ -104,6 +104,7 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
         return multistep.ActionHalt
     }
 
+    time.Sleep(10 * time.Second)
 
     return multistep.ActionContinue
 

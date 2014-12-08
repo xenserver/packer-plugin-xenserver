@@ -3,7 +3,6 @@ package xenserver
 import (
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	"reflect"
 	"time"
 )
 
@@ -39,13 +38,12 @@ func (self *stepWait) Run(state multistep.StateBag) multistep.StepAction {
 		// Hack - should encapsulate this in the client really
 		// This is needed because we can't guarentee the type
 		// returned by the xmlrpc lib will be string
-		switch reflect.TypeOf(rec["type"]).Kind() {
-		case reflect.String:
-			if rec["type"].(string) == "CD" {
+		if recType, ok := rec["type"].(string); ok {
+			if recType == "CD" {
 				ui.Say("Ejecting CD...")
 				vbd.Eject()
 			}
-		default:
+		} else {
 			break
 		}
 	}

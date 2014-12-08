@@ -9,26 +9,32 @@ import (
 type stepWait struct{}
 
 func (self *stepWait) Run(state multistep.StateBag) multistep.StepAction {
+	config := state.Get("config").(config)
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(XenAPIClient)
 
 	ui.Say("Step: Wait for install to complete.")
 
-	//Expect install to be configured to shutdown on completion
-
 	instance_id := state.Get("instance_uuid").(string)
 	instance, _ := client.GetVMByUuid(instance_id)
 
-	for {
-		time.Sleep(30 * time.Second)
-		ui.Say("Waiting for VM install...")
+	//Expect install to be configured to shutdown on completion
+	err := InterruptibleWait{
+		Predicate: func () (bool, error) {
+			power_state, err := instance.GetPowerState()
+			return power_state == "Halted", err
+		},
+		PredicateInterval: 30 * time.Second,
+		Timeout: config.InstallTimeout,
+	}.Wait(state)
 
-		power_state, _ := instance.GetPowerState()
-		if power_state == "Halted" {
-			ui.Say("Install has completed. Moving on.")
-			break
-		}
+	if err != nil {
+		ui.Error(err.Error())
+		ui.Error("Giving up waiting for installation to complete.")
+		return multistep.ActionHalt
 	}
+
+	ui.Say("Install has completed. Moving on.")
 
 	// Eject ISO from drive
 	vbds, _ := instance.GetVBDs()

@@ -35,10 +35,9 @@ type config struct {
 	HostPortMax uint `mapstructure:"host_port_max"`
 
 	BootCommand []string `mapstructure:"boot_command"`
-	RawBootWait string   `mapstructure:"boot_wait"`
 
-	BootWait       time.Duration ``
-	SSHWaitTimeout time.Duration ``
+	RawBootWait string        `mapstructure:"boot_wait"`
+	BootWait    time.Duration ``
 
 	ISOChecksum     string   `mapstructure:"iso_checksum"`
 	ISOChecksumType string   `mapstructure:"iso_checksum_type"`
@@ -52,7 +51,11 @@ type config struct {
 	LocalIp      string            `mapstructure:"local_ip"`
 	PlatformArgs map[string]string `mapstructure:"platform_args"`
 
-	RawSSHWaitTimeout string `mapstructure:"ssh_wait_timeout"`
+	RawInstallTimeout string        `mapstructure:"install_timeout"`
+	InstallTimeout    time.Duration ``
+
+	RawSSHWaitTimeout string        `mapstructure:"ssh_wait_timeout"`
+	SSHWaitTimeout    time.Duration ``
 
 	SSHPassword string `mapstructure:"ssh_password"`
 	SSHUser     string `mapstructure:"ssh_username"`
@@ -100,6 +103,10 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		self.config.RawBootWait = "5s"
 	}
 
+	if self.config.RawInstallTimeout == "" {
+		self.config.RawInstallTimeout = "200m"
+	}
+
 	if self.config.HTTPPortMin == 0 {
 		self.config.HTTPPortMin = 8000
 	}
@@ -133,6 +140,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		"iso_checksum_type": &self.config.ISOChecksumType,
 		"http_directory":    &self.config.HTTPDir,
 		"local_ip":          &self.config.LocalIp,
+		"install_timeout":   &self.config.RawInstallTimeout,
 		"ssh_wait_timeout":  &self.config.RawSSHWaitTimeout,
 		"ssh_username":      &self.config.SSHUser,
 		"ssh_password":      &self.config.SSHPassword,
@@ -165,6 +173,12 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	if err != nil {
 		errs = packer.MultiErrorAppend(
 			errs, fmt.Errorf("Failed to parse ssh_wait_timeout: %s", err))
+	}
+
+	self.config.InstallTimeout, err = time.ParseDuration(self.config.RawInstallTimeout)
+	if err != nil {
+		errs = packer.MultiErrorAppend(
+			errs, fmt.Errorf("Failed to parse install_timeout: %s", err))
 	}
 
 	for i, command := range self.config.BootCommand {

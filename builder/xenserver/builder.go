@@ -38,7 +38,7 @@ type config struct {
 	RawBootWait string   `mapstructure:"boot_wait"`
 
 	BootWait       time.Duration ``
-	sshWaitTimeout time.Duration ``
+	SSHWaitTimeout time.Duration ``
 
 	ISOChecksum     string   `mapstructure:"iso_checksum"`
 	ISOChecksumType string   `mapstructure:"iso_checksum_type"`
@@ -161,7 +161,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 			errs, errors.New("Failed to parse boot_wait."))
 	}
 
-	self.config.sshWaitTimeout, err = time.ParseDuration(self.config.RawSSHWaitTimeout)
+	self.config.SSHWaitTimeout, err = time.ParseDuration(self.config.RawSSHWaitTimeout)
 	if err != nil {
 		errs = packer.MultiErrorAppend(
 			errs, fmt.Errorf("Failed to parse ssh_wait_timeout: %s", err))
@@ -352,7 +352,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		&common.StepConnectSSH{
 			SSHAddress:     sshLocalAddress,
 			SSHConfig:      sshConfig,
-			SSHWaitTimeout: self.config.sshWaitTimeout,
+			SSHWaitTimeout: self.config.SSHWaitTimeout,
 		},
 		new(common.StepProvision),
 		new(stepShutdownAndExport),

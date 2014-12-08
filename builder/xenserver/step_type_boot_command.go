@@ -3,92 +3,91 @@ package xenserver
 /* Heavily borrowed from builder/quemu/step_type_boot_command.go */
 
 import (
-    "fmt"
-    "github.com/mitchellh/go-vnc"
-    "github.com/mitchellh/multistep"
-    "github.com/mitchellh/packer/packer"
-    "log"
-    "net"
-    "strings"
-    "time"
-    "unicode"
-    "unicode/utf8"
+	"fmt"
+	"github.com/mitchellh/go-vnc"
+	"github.com/mitchellh/multistep"
+	"github.com/mitchellh/packer/packer"
+	"log"
+	"net"
+	"strings"
+	"time"
+	"unicode"
+	"unicode/utf8"
 )
 
 const KeyLeftShift uint = 0xFFE1
 
 type bootCommandTemplateData struct {
-    HTTPIP      string
-    HTTPPort    uint
+	HTTPIP   string
+	HTTPPort uint
 }
-
 
 type stepTypeBootCommand struct{}
 
-func (self *stepTypeBootCommand) Run (state multistep.StateBag) multistep.StepAction {
-    config := state.Get("config").(config)
-    ui := state.Get("ui").(packer.Ui)
-    vnc_port := state.Get("local_vnc_port").(uint)
-    http_port := state.Get("http_port").(uint)
+func (self *stepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAction {
+	config := state.Get("config").(config)
+	ui := state.Get("ui").(packer.Ui)
+	vnc_port := state.Get("local_vnc_port").(uint)
+	http_port := state.Get("http_port").(uint)
 
-    // Connect to the local VNC port as we have set up a SSH port forward
-    ui.Say("Connecting to the VM over VNC")
-    ui.Message(fmt.Sprintf("Using local port: %d", vnc_port))
-    net_conn, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", vnc_port))
+	// Connect to the local VNC port as we have set up a SSH port forward
+	ui.Say("Connecting to the VM over VNC")
+	ui.Message(fmt.Sprintf("Using local port: %d", vnc_port))
+	net_conn, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", vnc_port))
 
-    if err != nil {
-        err := fmt.Errorf("Error connecting to VNC: %s", err)
-        state.Put("error", err)
-        ui.Error(err.Error())
-        return multistep.ActionHalt
-    }
+	if err != nil {
+		err := fmt.Errorf("Error connecting to VNC: %s", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
 
-    defer net_conn.Close()
+	defer net_conn.Close()
 
-    c, err := vnc.Client(net_conn, &vnc.ClientConfig{Exclusive: true})
+	c, err := vnc.Client(net_conn, &vnc.ClientConfig{Exclusive: true})
 
-    if err != nil {
-        err := fmt.Errorf("Error establishing VNC session: %s", err)
-        state.Put("error", err)
-        ui.Error(err.Error())
-        return multistep.ActionHalt
-    }
+	if err != nil {
+		err := fmt.Errorf("Error establishing VNC session: %s", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
 
-    defer c.Close()
+	defer c.Close()
 
-    log.Printf("Connected to the VNC console: %s", c.DesktopName)
+	log.Printf("Connected to the VNC console: %s", c.DesktopName)
 
-    // @todo - include http port/ip so kickstarter files can be grabbed
-    tplData := &bootCommandTemplateData {
-                config.LocalIp,
-                http_port,
-    }
+	// @todo - include http port/ip so kickstarter files can be grabbed
+	tplData := &bootCommandTemplateData{
+		config.LocalIp,
+		http_port,
+	}
 
-    ui.Say("About to type boot commands over VNC...")
-    for _, command := range config.BootCommand {
+	ui.Say("About to type boot commands over VNC...")
+	for _, command := range config.BootCommand {
 
-        command, err := config.tpl.Process(command, tplData)
-        if err != nil {
-            err := fmt.Errorf("Error preparing boot command: %s", err)
-            state.Put("error", err)
-            ui.Error(err.Error())
-            return multistep.ActionHalt
-        }
+		command, err := config.tpl.Process(command, tplData)
+		if err != nil {
+			err := fmt.Errorf("Error preparing boot command: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
 
-        // Check for interrupts
-        if _, ok := state.GetOk(multistep.StateCancelled); ok {
-            return multistep.ActionHalt
-        }
+		// Check for interrupts
+		if _, ok := state.GetOk(multistep.StateCancelled); ok {
+			return multistep.ActionHalt
+		}
 
-        vncSendString(c, command)
-    }
+		vncSendString(c, command)
+	}
 
-    ui.Say("Finished typing.")
+	ui.Say("Finished typing.")
 
-    return multistep.ActionContinue
+	return multistep.ActionContinue
 }
 
-func (self *stepTypeBootCommand) Cleanup (multistep.StateBag) {}
+func (self *stepTypeBootCommand) Cleanup(multistep.StateBag) {}
 
 // Taken from qemu's builder plugin - not an exported function.
 func vncSendString(c *vnc.ClientConn, original string) {

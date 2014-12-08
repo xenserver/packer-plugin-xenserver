@@ -84,34 +84,38 @@ func execute_ssh_cmd(cmd, host, port, username, password string) (stdout string,
 	return strings.Trim(b.String(), "\n"), nil
 }
 
-func forward(local_conn net.Conn, config *gossh.ClientConfig, server, remote_dest string, remote_port uint) {
+func forward(local_conn net.Conn, config *gossh.ClientConfig, server, remote_dest string, remote_port uint) error {
 	ssh_client_conn, err := gossh.Dial("tcp", server+":22", config)
 	if err != nil {
-		log.Fatalf("local ssh.Dial error: %s", err)
+		log.Printf("local ssh.Dial error: %s", err)
+		return err
 	}
 
 	remote_loc := fmt.Sprintf("%s:%d", remote_dest, remote_port)
 	ssh_conn, err := ssh_client_conn.Dial("tcp", remote_loc)
 	if err != nil {
-		log.Fatalf("ssh.Dial error: %s", err)
+		log.Printf("ssh.Dial error: %s", err)
+		return err
 	}
 
 	go func() {
 		_, err = io.Copy(ssh_conn, local_conn)
 		if err != nil {
-			log.Fatalf("io.copy failed: %v", err)
+			log.Printf("io.copy failed: %v", err)
 		}
 	}()
 
 	go func() {
 		_, err = io.Copy(local_conn, ssh_conn)
 		if err != nil {
-			log.Fatalf("io.copy failed: %v", err)
+			log.Printf("io.copy failed: %v", err)
 		}
 	}()
+
+	return nil
 }
 
-func ssh_port_forward(local_port uint, remote_port uint, remote_dest, host, username, password string) (err error) {
+func ssh_port_forward(local_port uint, remote_port uint, remote_dest, host, username, password string) error {
 
 	config := &gossh.ClientConfig{
 		User: username,
@@ -126,7 +130,7 @@ func ssh_port_forward(local_port uint, remote_port uint, remote_dest, host, user
 			"127.0.0.1",
 			local_port))
 	if err != nil {
-		log.Fatalf("Local listen failed: %s", err)
+		log.Printf("Local listen failed: %s", err)
 		return err
 	}
 
@@ -134,7 +138,7 @@ func ssh_port_forward(local_port uint, remote_port uint, remote_dest, host, user
 		local_connection, err := local_listener.Accept()
 
 		if err != nil {
-			log.Fatalf("Local accept failed: %s", err)
+			log.Printf("Local accept failed: %s", err)
 			return err
 		}
 

@@ -89,7 +89,7 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 		downloadFile(disk_export_url, disk_export_filename)
 	}
 
-	ui.Say("Download complteded: " + config.OutputDir)
+	ui.Say("Download completed: " + config.OutputDir)
 
 	return multistep.ActionContinue
 }

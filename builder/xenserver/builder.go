@@ -361,11 +361,19 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	self.runner = &multistep.BasicRunner{Steps: steps}
 	self.runner.Run(state)
 
-	artifact, _ := NewArtifact(self.config.OutputDir)
-
 	if rawErr, ok := state.GetOk("error"); ok {
 		return nil, rawErr.(error)
 	}
+
+	// If we were interrupted or cancelled, then just exit.
+	if _, ok := state.GetOk(multistep.StateCancelled); ok {
+		return nil, errors.New("Build was cancelled.")
+	}
+	if _, ok := state.GetOk(multistep.StateHalted); ok {
+		return nil, errors.New("Build was halted.")
+	}
+
+	artifact, _ := NewArtifact(self.config.OutputDir)
 
 	return artifact, nil
 }

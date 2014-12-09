@@ -7,7 +7,8 @@ import (
 )
 
 type stepCreateInstance struct {
-	InstanceId string
+	instance *VM
+	vdi      *VDI
 }
 
 func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepAction {
@@ -39,6 +40,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		ui.Error(fmt.Sprintf("Error cloning VM: %s", err.Error()))
 		return multistep.ActionHalt
 	}
+	self.instance = instance
 
 	err = instance.SetIsATemplate(false)
 	if err != nil {
@@ -97,6 +99,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		ui.Error(fmt.Sprintf("Unable to create packer disk VDI: %s", err.Error()))
 		return multistep.ActionHalt
 	}
+	self.vdi = vdi
 
 	err = instance.ConnectVdi(vdi, false)
 	if err != nil {
@@ -197,32 +200,36 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		return multistep.ActionHalt
 	}
 
-	// Stash the VM reference
-	self.InstanceId, err = instance.GetUuid()
+	instanceId, err := instance.GetUuid()
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM UUID: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 
-	state.Put("instance_uuid", self.InstanceId)
+	state.Put("instance_uuid", instanceId)
 	state.Put("instance", instance)
-	ui.Say(fmt.Sprintf("Created instance '%s'", self.InstanceId))
+	ui.Say(fmt.Sprintf("Created instance '%s'", instanceId))
 
 	return multistep.ActionContinue
 }
 
 func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
+	ui := state.Get("ui").(packer.Ui)
 
-	//    client := state.Get("client").(*XenAPIClient)
-	//    config := state.Get("config").(config)
-	//    ui := state.Get("ui").(packer.Ui)
-
-	// If instance hasn't been created, we have nothing to do.
-	if self.InstanceId == "" {
-		return
+	if self.instance != nil {
+		ui.Say("Destroying VM")
+		_ = self.instance.HardShutdown()
+		err := self.instance.Destroy()
+		if err != nil {
+			ui.Error(err.Error())
+		}
 	}
 
-	// @todo: destroy the created instance.
-
-	return
+	if self.vdi != nil {
+		ui.Say("Destroying VDI")
+		err := self.vdi.Destroy()
+		if err != nil {
+			ui.Error(err.Error())
+		}
+	}
 }

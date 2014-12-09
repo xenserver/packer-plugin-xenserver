@@ -35,13 +35,14 @@ func (wait InterruptibleWait) Wait(state multistep.StateBag) error {
 
 	go func() {
 		for {
+			if complete, err := wait.Predicate(); err != nil || complete {
+				predicateResult <- PredicateResult{complete, err}
+				return
+			}
+
 			select {
 			case <-time.After(wait.PredicateInterval):
-				if complete, err := wait.Predicate(); err != nil || complete {
-					predicateResult <- PredicateResult{complete, err}
-					return
-				}
-
+				// do nothing; loop again
 			case <-stopWaiting:
 				return
 			}

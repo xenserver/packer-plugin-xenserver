@@ -80,7 +80,6 @@ func execute_ssh_cmd(cmd, host, port, username, password string) (stdout string,
 		return "", err
 	}
 
-	session.Close()
 	return strings.Trim(b.String(), "\n"), nil
 }
 

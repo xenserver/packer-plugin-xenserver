@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	"log"
 )
 
 type stepCreateInstance struct {
@@ -25,10 +24,10 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 	switch {
 	case len(vms) == 0:
-		log.Fatal(fmt.Sprintf("Couldn't find a template with the name-label '%s'. Aborting.", config.CloneTemplate))
+		ui.Error(fmt.Sprintf("Couldn't find a template with the name-label '%s'. Aborting.", config.CloneTemplate))
 		return multistep.ActionHalt
 	case len(vms) > 1:
-		log.Fatal(fmt.Sprintf("Found more than one template with the name '%s'. The name must be unique. Aborting.", config.CloneTemplate))
+		ui.Error(fmt.Sprintf("Found more than one template with the name '%s'. The name must be unique. Aborting.", config.CloneTemplate))
 		return multistep.ActionHalt
 	}
 
@@ -49,7 +48,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		sr = default_sr
 
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Error getting default SR: %s", err.Error()))
+			ui.Error(fmt.Sprintf("Error getting default SR: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 
@@ -58,16 +57,16 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		srs, err := client.GetSRByNameLabel(config.SrName)
 
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Error getting default SR: %s", err.Error()))
+			ui.Error(fmt.Sprintf("Error getting default SR: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 
 		switch {
 		case len(srs) == 0:
-			log.Fatal(fmt.Sprintf("Couldn't find a SR with the specified name-label '%s'. Aborting.", config.SrName))
+			ui.Error(fmt.Sprintf("Couldn't find a SR with the specified name-label '%s'. Aborting.", config.SrName))
 			return multistep.ActionHalt
 		case len(srs) > 1:
-			log.Fatal(fmt.Sprintf("Found more than one SR with the name '%s'. The name must be unique. Aborting.", config.SrName))
+			ui.Error(fmt.Sprintf("Found more than one SR with the name '%s'. The name must be unique. Aborting.", config.SrName))
 			return multistep.ActionHalt
 		}
 
@@ -91,7 +90,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		pifs, err := client.GetPIFs()
 
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Error getting PIFs %s", err.Error()))
+			ui.Error(fmt.Sprintf("Error getting PIFs %s", err.Error()))
 			return multistep.ActionHalt
 		}
 
@@ -99,7 +98,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 			pif_rec, err := pif.GetRecord()
 
 			if err != nil {
-				log.Fatal(fmt.Sprintf("Error getting PIF record: %s", err.Error()))
+				ui.Error(fmt.Sprintf("Error getting PIF record: %s", err.Error()))
 				return multistep.ActionHalt
 			}
 
@@ -110,7 +109,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		}
 
 		if network.Ref == "" {
-			log.Fatal("Error: couldn't find management network. Aborting.")
+			ui.Error("Error: couldn't find management network. Aborting.")
 			return multistep.ActionHalt
 		}
 
@@ -120,16 +119,16 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		networks, err := client.GetNetworkByNameLabel(config.NetworkName)
 
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Error occured getting Network by name-label: %s", err.Error()))
+			ui.Error(fmt.Sprintf("Error occured getting Network by name-label: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 
 		switch {
 		case len(networks) == 0:
-			log.Fatal(fmt.Sprintf("Couldn't find a network with the specified name-label '%s'. Aborting.", config.NetworkName))
+			ui.Error(fmt.Sprintf("Couldn't find a network with the specified name-label '%s'. Aborting.", config.NetworkName))
 			return multistep.ActionHalt
 		case len(networks) > 1:
-			log.Fatal(fmt.Sprintf("Found more than one SR with the name '%s'. The name must be unique. Aborting.", config.NetworkName))
+			ui.Error(fmt.Sprintf("Found more than one SR with the name '%s'. The name must be unique. Aborting.", config.NetworkName))
 			return multistep.ActionHalt
 		}
 
@@ -152,10 +151,10 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 	switch {
 	case len(isos) == 0:
-		log.Fatal(fmt.Sprintf("Couldn't find an ISO named '%s'. Aborting", config.IsoName))
+		ui.Error(fmt.Sprintf("Couldn't find an ISO named '%s'. Aborting", config.IsoName))
 		return multistep.ActionHalt
 	case len(isos) > 1:
-		log.Fatal(fmt.Sprintf("Found more than one VDI with name '%s'. Name must be unique. Aborting.", config.IsoName))
+		ui.Error(fmt.Sprintf("Found more than one VDI with name '%s'. Name must be unique. Aborting.", config.IsoName))
 		return multistep.ActionHalt
 	}
 

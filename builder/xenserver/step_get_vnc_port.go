@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	"log"
 	"strconv"
 )
 
@@ -25,8 +24,8 @@ func (self *stepGetVNCPort) Run(state multistep.StateBag) multistep.StepAction {
 	remote_port, err := strconv.ParseUint(remote_vncport, 10, 16)
 
 	if err != nil {
-		log.Fatal(err.Error())
-		log.Fatal(fmt.Sprintf("Unable to convert '%s' to an int", remote_vncport))
+		ui.Error(fmt.Sprintf("Unable to convert '%s' to an int", remote_vncport))
+		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
 

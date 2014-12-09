@@ -4,14 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nilshell/xmlrpc"
-	"log"
 )
-
-func check(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
 
 type XenAPIClient struct {
 	Session  interface{}
@@ -118,7 +111,6 @@ func (client *XenAPIClient) APICall(result *APIResult, method string, params ...
 	if result.Status != "Success" {
 		fmt.Println("Encountered an API error: ", result.Status)
 		fmt.Println(res["ErrorDescription"])
-		log.Fatal(res["ErrorDescription"])
 		return errors.New("API Error occurred")
 	} else {
 		result.Value = res["Value"]

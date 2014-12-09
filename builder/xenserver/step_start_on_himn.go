@@ -31,8 +31,8 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	// Find the HIMN Ref
 	networks, err := client.GetNetworkByNameLabel("Host internal management network")
 	if err != nil || len(networks) == 0 {
-		log.Fatal("Unable to find a host internal management network")
-		log.Fatal(err.Error())
+		ui.Error("Unable to find a host internal management network")
+		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
 
@@ -41,8 +41,8 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	// Create a VIF for the HIMN
 	himn_vif, err := instance.ConnectNetwork(himn, "0")
 	if err != nil {
-		log.Fatal("Error creating VIF")
-		log.Fatal(err.Error())
+		ui.Error("Error creating VIF")
+		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
 
@@ -73,7 +73,7 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 		state.Put("himn_ssh_address", himn_iface_ip)
 		ui.Say("Stored VM's IP " + himn_iface_ip)
 	} else {
-		log.Fatal("Unable to find an IP on the Host-internal management interface")
+		ui.Error("Unable to find an IP on the Host-internal management interface")
 		return multistep.ActionHalt
 	}
 
@@ -95,8 +95,8 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	}
 
 	if err != nil {
-		log.Fatal("Unable to ping interface. Something is wrong. Has the VM not booted?")
-		log.Fatal(err.Error())
+		ui.Error("Unable to ping interface. Something is wrong. Has the VM not booted?")
+		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
 

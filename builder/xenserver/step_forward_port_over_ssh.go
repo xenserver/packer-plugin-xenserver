@@ -47,7 +47,7 @@ func (self *stepForwardPortOverSSH) Run(state multistep.StateBag) multistep.Step
 	}
 
 	if !foundPort {
-		log.Fatal("Error: unable to find free host port. Try providing a larger range")
+		ui.Error("Error: unable to find free host port. Try providing a larger range")
 		return multistep.ActionHalt
 	}
 

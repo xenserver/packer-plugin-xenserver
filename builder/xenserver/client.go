@@ -111,7 +111,7 @@ func (client *XenAPIClient) APICall(result *APIResult, method string, params ...
 	if result.Status != "Success" {
 		fmt.Println("Encountered an API error: ", result.Status)
 		fmt.Println(res["ErrorDescription"])
-		return errors.New("API Error occurred")
+		return fmt.Errorf("API Error: %s", res["ErrorDescription"])
 	} else {
 		result.Value = res["Value"]
 	}

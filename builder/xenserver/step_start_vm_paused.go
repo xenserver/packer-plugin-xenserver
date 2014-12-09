@@ -1,6 +1,7 @@
 package xenserver
 
 import (
+	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
 )
@@ -14,11 +15,24 @@ func (self *stepStartVmPaused) Run(state multistep.StateBag) multistep.StepActio
 
 	ui.Say("Step: Start VM Paused")
 
-	instance, _ := client.GetVMByUuid(state.Get("instance_uuid").(string))
+	uuid := state.Get("instance_uuid").(string)
+	instance, err := client.GetVMByUuid(uuid)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
+		return multistep.ActionHalt
+	}
 
-	instance.Start(true, false)
+	err = instance.Start(true, false)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to start VM with UUID '%s': %s", uuid, err.Error()))
+		return multistep.ActionHalt
+	}
 
-	domid, _ := instance.GetDomainId()
+	domid, err := instance.GetDomainId()
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to get domid of VM with UUID '%s': %s", uuid, err.Error()))
+		return multistep.ActionHalt
+	}
 	state.Put("domid", domid)
 
 	return multistep.ActionContinue

@@ -34,10 +34,29 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	template := vms[0]
 
 	// Clone that VM template
-	instance, _ := template.Clone(config.InstanceName)
-	instance.SetIsATemplate(false)
-	instance.SetStaticMemoryRange(config.InstanceMemory, config.InstanceMemory)
+	instance, err := template.Clone(config.InstanceName)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error cloning VM: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
+	err = instance.SetIsATemplate(false)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting is_a_template=false: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
+	err = instance.SetStaticMemoryRange(config.InstanceMemory, config.InstanceMemory)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting VM memory=%s: %s", config.InstanceMemory, err.Error()))
+		return multistep.ActionHalt
+	}
+
 	instance.SetPlatform(config.PlatformArgs)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting VM platform: %s", err.Error()))
+		return multistep.ActionHalt
+	}
 
 	// Create VDI for the instance
 	var sr *SR
@@ -73,9 +92,17 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		sr = srs[0]
 	}
 
-	vdi, _ := sr.CreateVdi("Packer-disk", config.RootDiskSize)
+	vdi, err := sr.CreateVdi("Packer-disk", config.RootDiskSize)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to create packer disk VDI: %s", err.Error()))
+		return multistep.ActionHalt
+	}
 
-	instance.ConnectVdi(vdi, false)
+	err = instance.ConnectVdi(vdi, false)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
+		return multistep.ActionHalt
+	}
 
 	// Connect Network
 
@@ -90,7 +117,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		pifs, err := client.GetPIFs()
 
 		if err != nil {
-			ui.Error(fmt.Sprintf("Error getting PIFs %s", err.Error()))
+			ui.Error(fmt.Sprintf("Error getting PIFs: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 
@@ -163,10 +190,20 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	//iso, _ := client.GetVdiByUuid(config.IsoUuid)
 	//ui.Say("Using VDI: " + iso_vdi_uuid)
 	//iso, _ := client.GetVdiByUuid(iso_vdi_uuid)
-	instance.ConnectVdi(iso, true)
+
+	err = instance.ConnectVdi(iso, true)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to connect ISO VDI: %s", err.Error()))
+		return multistep.ActionHalt
+	}
 
 	// Stash the VM reference
-	self.InstanceId, _ = instance.GetUuid()
+	self.InstanceId, err = instance.GetUuid()
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to get VM UUID: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
 	state.Put("instance_uuid", self.InstanceId)
 	state.Put("instance", instance)
 	ui.Say(fmt.Sprintf("Created instance '%s'", self.InstanceId))

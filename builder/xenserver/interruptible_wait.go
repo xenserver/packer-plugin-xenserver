@@ -6,24 +6,26 @@ import (
 )
 
 type InterruptibleWait struct {
-	Predicate func () (result bool, err error)
+	Predicate         func() (result bool, err error)
 	PredicateInterval time.Duration
-	Timeout time.Duration
+	Timeout           time.Duration
 }
 
-type TimeoutError struct { }
+type TimeoutError struct{}
+
 func (err TimeoutError) Error() string {
 	return "Timed out"
 }
 
-type InterruptedError struct { }
+type InterruptedError struct{}
+
 func (err InterruptedError) Error() string {
 	return "Interrupted"
 }
 
 type PredicateResult struct {
 	complete bool
-	err error
+	err      error
 }
 
 func (wait InterruptibleWait) Wait(state multistep.StateBag) error {

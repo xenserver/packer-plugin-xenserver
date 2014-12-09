@@ -20,12 +20,12 @@ func (self *stepWait) Run(state multistep.StateBag) multistep.StepAction {
 
 	//Expect install to be configured to shutdown on completion
 	err := InterruptibleWait{
-		Predicate: func () (bool, error) {
+		Predicate: func() (bool, error) {
 			power_state, err := instance.GetPowerState()
 			return power_state == "Halted", err
 		},
 		PredicateInterval: 30 * time.Second,
-		Timeout: config.InstallTimeout,
+		Timeout:           config.InstallTimeout,
 	}.Wait(state)
 
 	if err != nil {

@@ -220,7 +220,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 
 	if self.config.InstanceName == "" {
 		errs = packer.MultiErrorAppend(
-			errs, errors.New("An insatnce name must be specified."))
+			errs, errors.New("An instance name must be specified."))
 	}
 
 	if self.config.InstanceMemory == "" {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	"time"
 )
 
 type stepBootWait struct{}
@@ -20,7 +19,11 @@ func (self *stepBootWait) Run(state multistep.StateBag) multistep.StepAction {
 
 	if int64(config.BootWait) > 0 {
 		ui.Say(fmt.Sprintf("Waiting %s for boot...", config.BootWait))
-		time.Sleep(config.BootWait)
+		err := InterruptibleWait{Timeout: config.BootWait}.Wait(state)
+		if err != nil {
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
 	}
 	return multistep.ActionContinue
 }

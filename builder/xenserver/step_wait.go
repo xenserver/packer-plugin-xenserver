@@ -1,6 +1,7 @@
 package xenserver
 
 import (
+	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
 	"time"
@@ -16,11 +17,17 @@ func (self *stepWait) Run(state multistep.StateBag) multistep.StepAction {
 	ui.Say("Step: Wait for install to complete.")
 
 	instance_id := state.Get("instance_uuid").(string)
-	instance, _ := client.GetVMByUuid(instance_id)
+	instance, err := client.GetVMByUuid(instance_id)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Could not get VM from UUID %s", instance_id))
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
 
 	//Expect install to be configured to shutdown on completion
-	err := InterruptibleWait{
+	err = InterruptibleWait{
 		Predicate: func() (bool, error) {
+			ui.Say("Waiting for install to complete.")
 			power_state, err := instance.GetPowerState()
 			return power_state == "Halted", err
 		},
@@ -37,9 +44,19 @@ func (self *stepWait) Run(state multistep.StateBag) multistep.StepAction {
 	ui.Say("Install has completed. Moving on.")
 
 	// Eject ISO from drive
-	vbds, _ := instance.GetVBDs()
+	vbds, err := instance.GetVBDs()
+	if err != nil {
+		ui.Error(fmt.Sprintf("Could not get VBDs"))
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
 	for _, vbd := range vbds {
-		rec, _ := vbd.GetRecord()
+		rec, err := vbd.GetRecord()
+		if err != nil {
+			ui.Error(fmt.Sprintf("Could not get record for VBD"))
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
 
 		// Hack - should encapsulate this in the client really
 		// This is needed because we can't guarentee the type
@@ -55,7 +72,12 @@ func (self *stepWait) Run(state multistep.StateBag) multistep.StepAction {
 	}
 
 	// Destroy all connected VIFs
-	vifs, _ := instance.GetVIFs()
+	vifs, err := instance.GetVIFs()
+	if err != nil {
+		ui.Error(fmt.Sprintf("Could not get VIFs"))
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
 	for _, vif := range vifs {
 		ui.Message("Destroying VIF " + vif.Ref)
 		vif.Destroy()

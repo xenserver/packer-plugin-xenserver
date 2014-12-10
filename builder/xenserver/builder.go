@@ -63,6 +63,8 @@ type config struct {
 
 	OutputDir string `mapstructure:"output_directory"`
 
+	KeepInstance string `mapstructure:"keep_instance"`
+
 	tpl *packer.ConfigTemplate
 }
 
@@ -131,6 +133,10 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		self.config.OutputDir = fmt.Sprintf("output-%s", self.config.PackerBuildName)
 	}
 
+	if self.config.KeepInstance == "" {
+		self.config.KeepInstance = "never"
+	}
+
 	if len(self.config.PlatformArgs) == 0 {
 		pargs := make(map[string]string)
 		pargs["viridian"] = "false"
@@ -167,6 +173,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		"ssh_password":      &self.config.SSHPassword,
 		"ssh_key_path":      &self.config.SSHKeyPath,
 		"output_directory":  &self.config.OutputDir,
+		"keep_instance":     &self.config.KeepInstance,
 	}
 
 	for n, ptr := range templates {
@@ -249,6 +256,13 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	if self.config.RootDiskSize == "" {
 		errs = packer.MultiErrorAppend(
 			errs, errors.New("A root disk size must be specified."))
+	}
+
+	switch self.config.KeepInstance {
+	case "always", "never", "on_success":
+	default:
+		errs = packer.MultiErrorAppend(
+			errs, errors.New("keep_instance must be one of 'always', 'never', 'on_success'"))
 	}
 
 	/*
@@ -394,6 +408,23 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	artifact, _ := NewArtifact(self.config.OutputDir)
 
 	return artifact, nil
+}
+
+// all steps should check config.ShouldKeepInstance first before cleaning up
+func (cfg config) ShouldKeepInstance(state multistep.StateBag) bool {
+	switch cfg.KeepInstance {
+	case "always":
+		return true
+	case "never":
+		return false
+	case "on_success":
+		// only keep instance if build was successful
+		_, cancelled := state.GetOk(multistep.StateCancelled)
+		_, halted := state.GetOk(multistep.StateHalted)
+		return !(cancelled || halted)
+	default:
+		panic(fmt.Sprintf("Unknown keep_instance value '%s'", cfg.KeepInstance))
+	}
 }
 
 func (self *Builder) Cancel() {

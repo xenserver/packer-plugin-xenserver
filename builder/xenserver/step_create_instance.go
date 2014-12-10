@@ -214,6 +214,11 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 }
 
 func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
+	config := state.Get("config").(config)
+	if config.ShouldKeepInstance(state) {
+		return
+	}
+
 	ui := state.Get("ui").(packer.Ui)
 
 	if self.instance != nil {

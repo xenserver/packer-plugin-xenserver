@@ -80,7 +80,6 @@ func execute_ssh_cmd(cmd, host, port, username, password string) (stdout string,
 		return "", err
 	}
 
-	session.Close()
 	return strings.Trim(b.String(), "\n"), nil
 }
 
@@ -95,14 +94,19 @@ func forward(local_conn net.Conn, config *gossh.ClientConfig, server, remote_des
 	ssh_conn, err := ssh_client_conn.Dial("tcp", remote_loc)
 	if err != nil {
 		log.Printf("ssh.Dial error: %s", err)
+		ssh_client_conn.Close()
 		return err
 	}
+
+	txDone := make(chan struct{})
+	rxDone := make(chan struct{})
 
 	go func() {
 		_, err = io.Copy(ssh_conn, local_conn)
 		if err != nil {
 			log.Printf("io.copy failed: %v", err)
 		}
+		close(txDone)
 	}()
 
 	go func() {
@@ -110,6 +114,14 @@ func forward(local_conn net.Conn, config *gossh.ClientConfig, server, remote_des
 		if err != nil {
 			log.Printf("io.copy failed: %v", err)
 		}
+		close(rxDone)
+	}()
+
+	go func() {
+		<-txDone
+		<-rxDone
+		ssh_client_conn.Close()
+		ssh_conn.Close()
 	}()
 
 	return nil

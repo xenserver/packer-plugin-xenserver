@@ -4,14 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nilshell/xmlrpc"
-	"log"
 )
-
-func check(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
 
 type XenAPIClient struct {
 	Session  interface{}
@@ -118,8 +111,7 @@ func (client *XenAPIClient) APICall(result *APIResult, method string, params ...
 	if result.Status != "Success" {
 		fmt.Println("Encountered an API error: ", result.Status)
 		fmt.Println(res["ErrorDescription"])
-		log.Fatal(res["ErrorDescription"])
-		return errors.New("API Error occurred")
+		return fmt.Errorf("API Error: %s", res["ErrorDescription"])
 	} else {
 		result.Value = res["Value"]
 	}
@@ -328,6 +320,15 @@ func (self *VM) Clone(label string) (new_instance *VM, err error) {
 	return
 }
 
+func (self *VM) Destroy() (err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VM.destroy", self.Ref)
+	if err != nil {
+		return err
+	}
+	return
+}
+
 func (self *VM) Start(paused, force bool) (err error) {
 	result := APIResult{}
 	err = self.Client.APICall(&result, "VM.start", self.Ref, paused, force)
@@ -340,6 +341,15 @@ func (self *VM) Start(paused, force bool) (err error) {
 func (self *VM) CleanShutdown() (err error) {
 	result := APIResult{}
 	err = self.Client.APICall(&result, "VM.clean_shutdown", self.Ref)
+	if err != nil {
+		return err
+	}
+	return
+}
+
+func (self *VM) HardShutdown() (err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VM.hard_shutdown", self.Ref)
 	if err != nil {
 		return err
 	}
@@ -731,6 +741,15 @@ func (self *VDI) GetUuid() (vdi_uuid string, err error) {
 	}
 	vdi_uuid = result.Value.(string)
 	return vdi_uuid, nil
+}
+
+func (self *VDI) Destroy() (err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VDI.destroy", self.Ref)
+	if err != nil {
+		return err
+	}
+	return
 }
 
 // Client Initiator

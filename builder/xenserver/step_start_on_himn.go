@@ -1,6 +1,7 @@
 package xenserver
 
 import (
+	gossh "code.google.com/p/go.crypto/ssh"
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
@@ -31,8 +32,8 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	// Find the HIMN Ref
 	networks, err := client.GetNetworkByNameLabel("Host internal management network")
 	if err != nil || len(networks) == 0 {
-		log.Fatal("Unable to find a host internal management network")
-		log.Fatal(err.Error())
+		ui.Error("Unable to find a host internal management network")
+		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
 
@@ -41,8 +42,8 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	// Create a VIF for the HIMN
 	himn_vif, err := instance.ConnectNetwork(himn, "0")
 	if err != nil {
-		log.Fatal("Error creating VIF")
-		log.Fatal(err.Error())
+		ui.Error("Error creating VIF")
+		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
 
@@ -52,56 +53,70 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	var himn_iface_ip string = ""
 
 	// Obtain the allocated IP
-	for i := 0; i < 10; i++ {
-		ips, _ := himn.GetAssignedIPs()
-		log.Printf("IPs: %s", ips)
-		log.Printf("Ref: %s", instance.Ref)
+	err = InterruptibleWait{
+		Predicate: func() (found bool, err error) {
+			ips, err := himn.GetAssignedIPs()
+			if err != nil {
+				return false, fmt.Errorf("Can't get assigned IPs: %s", err.Error())
+			}
+			log.Printf("IPs: %s", ips)
+			log.Printf("Ref: %s", instance.Ref)
 
-		//Check for instance.Ref in map
-		if vm_ip, ok := ips[himn_vif.Ref]; ok {
-			ui.Say("Found the VM's IP " + vm_ip)
-			himn_iface_ip = vm_ip
-			break
-		}
+			//Check for instance.Ref in map
+			if vm_ip, ok := ips[himn_vif.Ref]; ok {
+				ui.Say("Found the VM's IP: " + vm_ip)
+				himn_iface_ip = vm_ip
+				return true, nil
+			}
 
-		ui.Say("Wait for IP address...")
-		time.Sleep(10 * time.Second)
+			ui.Say("Wait for IP address...")
+			return false, nil
+		},
+		PredicateInterval: 10 * time.Second,
+		Timeout:           100 * time.Second,
+	}.Wait(state)
 
+	if err != nil || himn_iface_ip == "" {
+		ui.Error(fmt.Sprintf("Unable to find an IP on the Host-internal management interface: %s", err.Error()))
+		return multistep.ActionHalt
 	}
 
 	if himn_iface_ip != "" {
 		state.Put("himn_ssh_address", himn_iface_ip)
 		ui.Say("Stored VM's IP " + himn_iface_ip)
-	} else {
-		log.Fatal("Unable to find an IP on the Host-internal management interface")
-		return multistep.ActionHalt
 	}
 
 	// Wait for the VM to boot, and check we can ping this interface
 
 	ping_cmd := fmt.Sprintf("ping -c 1 %s", himn_iface_ip)
 
-	err = nil
-	for i := 0; i < 30; i++ {
-		ui.Message(fmt.Sprintf("Attempting to ping interface: %s", ping_cmd))
-		_, err := execute_ssh_cmd(ping_cmd, config.HostIp, "22", config.Username, config.Password)
+	err = InterruptibleWait{
+		Predicate: func() (success bool, err error) {
+			ui.Message(fmt.Sprintf("Attempting to ping interface: %s", ping_cmd))
+			_, err = execute_ssh_cmd(ping_cmd, config.HostIp, "22", config.Username, config.Password)
 
-		if err == nil {
-			ui.Message("Ping success! Continuing...")
-			break
-		}
-
-		time.Sleep(10 * time.Second)
-	}
+			switch err.(type) {
+			case nil:
+				// ping succeeded
+				return true, nil
+			case *gossh.ExitError:
+				// ping failed, try again
+				return false, nil
+			default:
+				// unknown error
+				return false, err
+			}
+		},
+		PredicateInterval: 10 * time.Second,
+		Timeout:           300 * time.Second,
+	}.Wait(state)
 
 	if err != nil {
-		log.Fatal("Unable to ping interface. Something is wrong. Has the VM not booted?")
-		log.Fatal(err.Error())
+		ui.Error(fmt.Sprintf("Unable to ping interface. (Has the VM not booted?): %s", err.Error()))
 		return multistep.ActionHalt
 	}
 
-	time.Sleep(10 * time.Second)
-
+	ui.Message("Ping success! Continuing...")
 	return multistep.ActionContinue
 
 }

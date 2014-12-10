@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	"log"
 )
 
 type stepCreateInstance struct {
-	InstanceId string
+	instance *VM
+	vdi      *VDI
 }
 
 func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepAction {
@@ -25,20 +25,40 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 	switch {
 	case len(vms) == 0:
-		log.Fatal(fmt.Sprintf("Couldn't find a template with the name-label '%s'. Aborting.", config.CloneTemplate))
+		ui.Error(fmt.Sprintf("Couldn't find a template with the name-label '%s'. Aborting.", config.CloneTemplate))
 		return multistep.ActionHalt
 	case len(vms) > 1:
-		log.Fatal(fmt.Sprintf("Found more than one template with the name '%s'. The name must be unique. Aborting.", config.CloneTemplate))
+		ui.Error(fmt.Sprintf("Found more than one template with the name '%s'. The name must be unique. Aborting.", config.CloneTemplate))
 		return multistep.ActionHalt
 	}
 
 	template := vms[0]
 
 	// Clone that VM template
-	instance, _ := template.Clone(config.InstanceName)
-	instance.SetIsATemplate(false)
-	instance.SetStaticMemoryRange(config.InstanceMemory, config.InstanceMemory)
+	instance, err := template.Clone(config.InstanceName)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error cloning VM: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+	self.instance = instance
+
+	err = instance.SetIsATemplate(false)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting is_a_template=false: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
+	err = instance.SetStaticMemoryRange(config.InstanceMemory, config.InstanceMemory)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting VM memory=%s: %s", config.InstanceMemory, err.Error()))
+		return multistep.ActionHalt
+	}
+
 	instance.SetPlatform(config.PlatformArgs)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting VM platform: %s", err.Error()))
+		return multistep.ActionHalt
+	}
 
 	// Create VDI for the instance
 	var sr *SR
@@ -49,7 +69,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		sr = default_sr
 
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Error getting default SR: %s", err.Error()))
+			ui.Error(fmt.Sprintf("Error getting default SR: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 
@@ -58,25 +78,34 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		srs, err := client.GetSRByNameLabel(config.SrName)
 
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Error getting default SR: %s", err.Error()))
+			ui.Error(fmt.Sprintf("Error getting default SR: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 
 		switch {
 		case len(srs) == 0:
-			log.Fatal(fmt.Sprintf("Couldn't find a SR with the specified name-label '%s'. Aborting.", config.SrName))
+			ui.Error(fmt.Sprintf("Couldn't find a SR with the specified name-label '%s'. Aborting.", config.SrName))
 			return multistep.ActionHalt
 		case len(srs) > 1:
-			log.Fatal(fmt.Sprintf("Found more than one SR with the name '%s'. The name must be unique. Aborting.", config.SrName))
+			ui.Error(fmt.Sprintf("Found more than one SR with the name '%s'. The name must be unique. Aborting.", config.SrName))
 			return multistep.ActionHalt
 		}
 
 		sr = srs[0]
 	}
 
-	vdi, _ := sr.CreateVdi("Packer-disk", config.RootDiskSize)
+	vdi, err := sr.CreateVdi("Packer-disk", config.RootDiskSize)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to create packer disk VDI: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+	self.vdi = vdi
 
-	instance.ConnectVdi(vdi, false)
+	err = instance.ConnectVdi(vdi, false)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
+		return multistep.ActionHalt
+	}
 
 	// Connect Network
 
@@ -91,7 +120,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		pifs, err := client.GetPIFs()
 
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Error getting PIFs %s", err.Error()))
+			ui.Error(fmt.Sprintf("Error getting PIFs: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 
@@ -99,7 +128,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 			pif_rec, err := pif.GetRecord()
 
 			if err != nil {
-				log.Fatal(fmt.Sprintf("Error getting PIF record: %s", err.Error()))
+				ui.Error(fmt.Sprintf("Error getting PIF record: %s", err.Error()))
 				return multistep.ActionHalt
 			}
 
@@ -110,7 +139,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		}
 
 		if network.Ref == "" {
-			log.Fatal("Error: couldn't find management network. Aborting.")
+			ui.Error("Error: couldn't find management network. Aborting.")
 			return multistep.ActionHalt
 		}
 
@@ -120,16 +149,16 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		networks, err := client.GetNetworkByNameLabel(config.NetworkName)
 
 		if err != nil {
-			log.Fatal(fmt.Sprintf("Error occured getting Network by name-label: %s", err.Error()))
+			ui.Error(fmt.Sprintf("Error occured getting Network by name-label: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 
 		switch {
 		case len(networks) == 0:
-			log.Fatal(fmt.Sprintf("Couldn't find a network with the specified name-label '%s'. Aborting.", config.NetworkName))
+			ui.Error(fmt.Sprintf("Couldn't find a network with the specified name-label '%s'. Aborting.", config.NetworkName))
 			return multistep.ActionHalt
 		case len(networks) > 1:
-			log.Fatal(fmt.Sprintf("Found more than one SR with the name '%s'. The name must be unique. Aborting.", config.NetworkName))
+			ui.Error(fmt.Sprintf("Found more than one SR with the name '%s'. The name must be unique. Aborting.", config.NetworkName))
 			return multistep.ActionHalt
 		}
 
@@ -152,10 +181,10 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 	switch {
 	case len(isos) == 0:
-		log.Fatal(fmt.Sprintf("Couldn't find an ISO named '%s'. Aborting", config.IsoName))
+		ui.Error(fmt.Sprintf("Couldn't find an ISO named '%s'. Aborting", config.IsoName))
 		return multistep.ActionHalt
 	case len(isos) > 1:
-		log.Fatal(fmt.Sprintf("Found more than one VDI with name '%s'. Name must be unique. Aborting.", config.IsoName))
+		ui.Error(fmt.Sprintf("Found more than one VDI with name '%s'. Name must be unique. Aborting.", config.IsoName))
 		return multistep.ActionHalt
 	}
 
@@ -164,29 +193,43 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	//iso, _ := client.GetVdiByUuid(config.IsoUuid)
 	//ui.Say("Using VDI: " + iso_vdi_uuid)
 	//iso, _ := client.GetVdiByUuid(iso_vdi_uuid)
-	instance.ConnectVdi(iso, true)
 
-	// Stash the VM reference
-	self.InstanceId, _ = instance.GetUuid()
-	state.Put("instance_uuid", self.InstanceId)
+	err = instance.ConnectVdi(iso, true)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to connect ISO VDI: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
+	instanceId, err := instance.GetUuid()
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to get VM UUID: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
+	state.Put("instance_uuid", instanceId)
 	state.Put("instance", instance)
-	ui.Say(fmt.Sprintf("Created instance '%s'", self.InstanceId))
+	ui.Say(fmt.Sprintf("Created instance '%s'", instanceId))
 
 	return multistep.ActionContinue
 }
 
 func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
+	ui := state.Get("ui").(packer.Ui)
 
-	//    client := state.Get("client").(*XenAPIClient)
-	//    config := state.Get("config").(config)
-	//    ui := state.Get("ui").(packer.Ui)
-
-	// If instance hasn't been created, we have nothing to do.
-	if self.InstanceId == "" {
-		return
+	if self.instance != nil {
+		ui.Say("Destroying VM")
+		_ = self.instance.HardShutdown()
+		err := self.instance.Destroy()
+		if err != nil {
+			ui.Error(err.Error())
+		}
 	}
 
-	// @todo: destroy the created instance.
-
-	return
+	if self.vdi != nil {
+		ui.Say("Destroying VDI")
+		err := self.vdi.Destroy()
+		if err != nil {
+			ui.Error(err.Error())
+		}
+	}
 }

@@ -49,13 +49,21 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 	client := state.Get("client").(XenAPIClient)
 	instance_uuid := state.Get("instance_uuid").(string)
 
-	instance, _ := client.GetVMByUuid(instance_uuid)
+	instance, err := client.GetVMByUuid(instance_uuid)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Could not get VM with UUID '%s': %s", instance_uuid, err.Error()))
+		return multistep.ActionHalt
+	}
 
 	ui.Say("Step: Shutdown and export VPX")
 
 	// Shutdown the VM
 	ui.Say("Shutting down the VM...")
-	instance.CleanShutdown()
+	err = instance.CleanShutdown()
+	if err != nil {
+		ui.Error(fmt.Sprintf("Could not shut down VM: %s", err.Error()))
+		return multistep.ActionHalt
+	}
 
 	//Export the VM
 
@@ -69,9 +77,17 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 	ui.Say("Getting metadata " + export_url)
 	downloadFile(export_url, export_filename)
 
-	disks, _ := instance.GetDisks()
+	disks, err := instance.GetDisks()
+	if err != nil {
+		ui.Error(fmt.Sprintf("Could not get VM disks: %s", err.Error()))
+		return multistep.ActionHalt
+	}
 	for _, disk := range disks {
-		disk_uuid, _ := disk.GetUuid()
+		disk_uuid, err := disk.GetUuid()
+		if err != nil {
+			ui.Error(fmt.Sprintf("Could not get disk with UUID '%s': %s", disk_uuid, err.Error()))
+			return multistep.ActionHalt
+		}
 
 		// Basic auth in URL request is required as session token is not
 		// accepted for some reason.

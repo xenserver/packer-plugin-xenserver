@@ -84,19 +84,22 @@ func execute_ssh_cmd(cmd, host, port, username, password string) (stdout string,
 }
 
 func forward(local_conn net.Conn, config *gossh.ClientConfig, server, remote_dest string, remote_port uint) error {
+	defer local_conn.Close()
+
 	ssh_client_conn, err := gossh.Dial("tcp", server+":22", config)
 	if err != nil {
 		log.Printf("local ssh.Dial error: %s", err)
 		return err
 	}
+	defer ssh_client_conn.Close()
 
 	remote_loc := fmt.Sprintf("%s:%d", remote_dest, remote_port)
 	ssh_conn, err := ssh_client_conn.Dial("tcp", remote_loc)
 	if err != nil {
 		log.Printf("ssh.Dial error: %s", err)
-		ssh_client_conn.Close()
 		return err
 	}
+	defer ssh_conn.Close()
 
 	txDone := make(chan struct{})
 	rxDone := make(chan struct{})
@@ -117,12 +120,8 @@ func forward(local_conn net.Conn, config *gossh.ClientConfig, server, remote_des
 		close(rxDone)
 	}()
 
-	go func() {
-		<-txDone
-		<-rxDone
-		ssh_client_conn.Close()
-		ssh_conn.Close()
-	}()
+	<-txDone
+	<-rxDone
 
 	return nil
 }

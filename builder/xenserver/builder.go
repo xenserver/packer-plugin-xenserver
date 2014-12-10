@@ -119,9 +119,30 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		self.config.RawSSHWaitTimeout = "200m"
 	}
 
+	if self.config.InstanceMemory == "" {
+		self.config.InstanceMemory = "1024000000"
+	}
+
+	if self.config.CloneTemplate == "" {
+		self.config.CloneTemplate = "Other install media"
+	}
+
 	if self.config.OutputDir == "" {
 		self.config.OutputDir = fmt.Sprintf("output-%s", self.config.PackerBuildName)
 	}
+
+	if len(self.config.PlatformArgs) == 0 {
+		pargs := make(map[string]string)
+		pargs["viridian"] = "false"
+		pargs["nx"] = "true"
+		pargs["pae"] = "true"
+		pargs["apic"] = "true"
+		pargs["timeoffset"] = "0"
+		pargs["acpi"] = "1"
+		self.config.PlatformArgs = pargs
+	}
+
+	// Template substitution
 
 	templates := map[string]*string{
 		"username":          &self.config.Username,
@@ -156,6 +177,8 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		}
 	}
 
+	// Validation
+
 	/*
 	   if self.config.IsoUrl == "" {
 	       errs = packer.MultiErrorAppend(
@@ -166,7 +189,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	self.config.BootWait, err = time.ParseDuration(self.config.RawBootWait)
 	if err != nil {
 		errs = packer.MultiErrorAppend(
-			errs, errors.New("Failed to parse boot_wait."))
+			errs, fmt.Errorf("Failed to parse boot_wait: %s", err))
 	}
 
 	self.config.SSHWaitTimeout, err = time.ParseDuration(self.config.RawSSHWaitTimeout)
@@ -223,17 +246,9 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 			errs, errors.New("An instance name must be specified."))
 	}
 
-	if self.config.InstanceMemory == "" {
-		self.config.InstanceMemory = "1024000000"
-	}
-
 	if self.config.RootDiskSize == "" {
 		errs = packer.MultiErrorAppend(
 			errs, errors.New("A root disk size must be specified."))
-	}
-
-	if self.config.CloneTemplate == "" {
-		self.config.CloneTemplate = "Other install media"
 	}
 
 	/*
@@ -242,17 +257,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	               errs, errors.New("A local IP visible to XenServer's mangement interface is required to serve files."))
 	   }
 	*/
-
-	if len(self.config.PlatformArgs) == 0 {
-		pargs := make(map[string]string)
-		pargs["viridian"] = "false"
-		pargs["nx"] = "true"
-		pargs["pae"] = "true"
-		pargs["apic"] = "true"
-		pargs["timeoffset"] = "0"
-		pargs["acpi"] = "1"
-		self.config.PlatformArgs = pargs
-	}
 
 	if self.config.HTTPPortMin > self.config.HTTPPortMax {
 		errs = packer.MultiErrorAppend(

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	"log"
-	"math/rand"
 	"net"
 	"net/http"
 )
@@ -36,32 +34,18 @@ func (s *stepHTTPServer) Run(state multistep.StateBag) multistep.StepAction {
 		return multistep.ActionContinue
 	}
 
-	// Find an available TCP port for our HTTP server
-	var httpAddr string
-	portRange := int(config.HTTPPortMax - config.HTTPPortMin)
-	for {
-		var err error
-		var offset uint = 0
+	s.l, httpPort = FindPort(config.HTTPPortMin, config.HTTPPortMax)
 
-		if portRange > 0 {
-			// Intn will panic if portRange == 0, so we do a check.
-			offset = uint(rand.Intn(portRange))
-		}
-
-		httpPort = offset + config.HTTPPortMin
-		httpAddr = fmt.Sprintf(":%d", httpPort)
-		log.Printf("Trying port: %d", httpPort)
-		s.l, err = net.Listen("tcp", httpAddr)
-		if err == nil {
-			break
-		}
+	if s.l == nil || httpPort == 0 {
+		ui.Error("Error: unable to find free HTTP server port. Try providing a larger range [http_port_min, http_port_max]")
+		return multistep.ActionHalt
 	}
 
 	ui.Say(fmt.Sprintf("Starting HTTP server on port %d", httpPort))
 
 	// Start the HTTP server and run it in the background
 	fileServer := http.FileServer(http.Dir(config.HTTPDir))
-	server := &http.Server{Addr: httpAddr, Handler: fileServer}
+	server := &http.Server{Addr: fmt.Sprintf(":%d", httpPort), Handler: fileServer}
 	go server.Serve(s.l)
 
 	// Save the address into the state so it can be accessed in the future

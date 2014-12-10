@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	"log"
-	"net"
 )
 
 type stepForwardPortOverSSH struct {
@@ -25,31 +23,14 @@ func (self *stepForwardPortOverSSH) Run(state multistep.StateBag) multistep.Step
 
 	// Find a free local port:
 
-	log.Printf("Looking for an available port between %d and %d",
-		self.HostPortMin,
-		self.HostPortMax)
+	l, sshHostPort := FindPort(self.HostPortMin, self.HostPortMax)
 
-	var sshHostPort uint
-	var foundPort bool
-
-	foundPort = false
-
-	for i := self.HostPortMin; i < self.HostPortMax; i++ {
-		sshHostPort = i
-		log.Printf("Trying port: %d", sshHostPort)
-		l, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", sshHostPort))
-		if err == nil {
-			l.Close()
-			foundPort = true
-			break
-		}
-
-	}
-
-	if !foundPort {
-		ui.Error("Error: unable to find free host port. Try providing a larger range")
+	if l == nil || sshHostPort == 0 {
+		ui.Error("Error: unable to find free host port. Try providing a larger range [host_port_min, host_port_max]")
 		return multistep.ActionHalt
 	}
+
+	l.Close()
 
 	ui.Say(fmt.Sprintf("Creating a local port forward over SSH on local port %d", sshHostPort))
 

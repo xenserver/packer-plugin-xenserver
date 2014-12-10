@@ -68,31 +68,8 @@ in your $PACKERPATH directory and you are ready to get going with packer.
 
 Once you've setup the above, you are good to go with an example. 
 
-To get you started, there is an example config file which you can use `examples/centos-6.4.conf`:
+To get you started, there is an example config file which you can use: [`examples/centos-6.4.conf`](https://github.com/rdobson/packer-builder-xenserver/blob/master/examples/centos-6.4.conf)
 
-```shell
-{
-    "builders": [{
-        "type": "xenserver",
-        "username": "root",
-        "password": "hostpassword",
-        "host_ip": "10.81.2.105",
-        "instance_name": "packer-centos-6-4",
-        "instance_memory": "2048000000",
-        "root_disk_size": "40000000000",
-        "iso_name": "CentOS-6.4-x86_64-minimal.iso",
-        "http_directory": "http",
-        "local_ip": "10.80.3.223",
-        "ssh_username": "root",
-        "ssh_password": "vmpassword",
-        "boot_command": 
-            [
-                "<tab><wait>",
-                " ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/centos6-ks.cfg<enter>"
-            ]
-    }]
-}
-```
 Currently it is not (easily) possible to take care of the ISO download and upload,
 so you will need to attach an ISO SR to the XenServer host (NFS/CIFS) with the
 ISO you want to use for installation. You will then need to specify the name

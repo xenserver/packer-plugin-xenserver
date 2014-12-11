@@ -61,7 +61,8 @@ type config struct {
 	SSHUser     string `mapstructure:"ssh_username"`
 	SSHKeyPath  string `mapstructure:"ssh_key_path"`
 
-	OutputDir string `mapstructure:"output_directory"`
+	OutputDir    string `mapstructure:"output_directory"`
+	ExportFormat string `mapstructure:"export_format"`
 
 	KeepInstance string `mapstructure:"keep_instance"`
 
@@ -133,6 +134,10 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		self.config.OutputDir = fmt.Sprintf("output-%s", self.config.PackerBuildName)
 	}
 
+	if self.config.ExportFormat == "" {
+		self.config.ExportFormat = "xva"
+	}
+
 	if self.config.KeepInstance == "" {
 		self.config.KeepInstance = "never"
 	}
@@ -173,6 +178,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		"ssh_password":      &self.config.SSHPassword,
 		"ssh_key_path":      &self.config.SSHKeyPath,
 		"output_directory":  &self.config.OutputDir,
+		"export_format":     &self.config.ExportFormat,
 		"keep_instance":     &self.config.KeepInstance,
 	}
 
@@ -256,6 +262,13 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	if self.config.RootDiskSize == "" {
 		errs = packer.MultiErrorAppend(
 			errs, errors.New("A root disk size must be specified."))
+	}
+
+	switch self.config.ExportFormat {
+	case "xva", "vdi_raw":
+	default:
+		errs = packer.MultiErrorAppend(
+			errs, errors.New("export_format must be one of 'xva', 'vdi_raw'"))
 	}
 
 	switch self.config.KeepInstance {

@@ -65,44 +65,52 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 		return multistep.ActionHalt
 	}
 
-	//Export the VM
+	switch config.ExportFormat {
+	case "xva":
+		// export the VM
 
-	export_url := fmt.Sprintf("https://%s/export?vm=%s&session_id=%s",
-		client.Host,
-		instance_uuid,
-		client.Session.(string),
-	)
-
-	export_filename := fmt.Sprintf("%s/%s.xva", config.OutputDir, config.InstanceName)
-	ui.Say("Getting metadata " + export_url)
-	downloadFile(export_url, export_filename)
-
-	disks, err := instance.GetDisks()
-	if err != nil {
-		ui.Error(fmt.Sprintf("Could not get VM disks: %s", err.Error()))
-		return multistep.ActionHalt
-	}
-	for _, disk := range disks {
-		disk_uuid, err := disk.GetUuid()
-		if err != nil {
-			ui.Error(fmt.Sprintf("Could not get disk with UUID '%s': %s", disk_uuid, err.Error()))
-			return multistep.ActionHalt
-		}
-
-		// Basic auth in URL request is required as session token is not
-		// accepted for some reason.
-		// @todo: raise with XAPI team.
-		disk_export_url := fmt.Sprintf("https://%s:%s@%s/export_raw_vdi?vdi=%s",
-			client.Username,
-			client.Password,
+		export_url := fmt.Sprintf("https://%s/export?vm=%s&session_id=%s",
 			client.Host,
-			disk_uuid,
+			instance_uuid,
+			client.Session.(string),
 		)
 
-		ui.Say("Getting " + disk_export_url)
-		disk_export_filename := fmt.Sprintf("%s/%s.raw", config.OutputDir, disk_uuid)
-		ui.Say("Downloading " + disk_uuid)
-		downloadFile(disk_export_url, disk_export_filename)
+		export_filename := fmt.Sprintf("%s/%s.xva", config.OutputDir, config.InstanceName)
+		ui.Say("Getting XVA " + export_url)
+		downloadFile(export_url, export_filename)
+
+	case "vdi_raw":
+		// export the disks
+
+		disks, err := instance.GetDisks()
+		if err != nil {
+			ui.Error(fmt.Sprintf("Could not get VM disks: %s", err.Error()))
+			return multistep.ActionHalt
+		}
+		for _, disk := range disks {
+			disk_uuid, err := disk.GetUuid()
+			if err != nil {
+				ui.Error(fmt.Sprintf("Could not get disk with UUID '%s': %s", disk_uuid, err.Error()))
+				return multistep.ActionHalt
+			}
+
+			// Basic auth in URL request is required as session token is not
+			// accepted for some reason.
+			// @todo: raise with XAPI team.
+			disk_export_url := fmt.Sprintf("https://%s:%s@%s/export_raw_vdi?vdi=%s",
+				client.Username,
+				client.Password,
+				client.Host,
+				disk_uuid,
+			)
+
+			disk_export_filename := fmt.Sprintf("%s/%s.raw", config.OutputDir, disk_uuid)
+			ui.Say("Getting VDI " + disk_export_url)
+			downloadFile(disk_export_url, disk_export_filename)
+		}
+
+	default:
+		panic(fmt.Sprintf("Unknown export_format '%s'", config.ExportFormat))
 	}
 
 	ui.Say("Download completed: " + config.OutputDir)

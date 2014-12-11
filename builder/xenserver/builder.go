@@ -61,7 +61,10 @@ type config struct {
 	SSHUser     string `mapstructure:"ssh_username"`
 	SSHKeyPath  string `mapstructure:"ssh_key_path"`
 
-	OutputDir string `mapstructure:"output_directory"`
+	OutputDir    string `mapstructure:"output_directory"`
+	ExportFormat string `mapstructure:"export_format"`
+
+	KeepInstance string `mapstructure:"keep_instance"`
 
 	tpl *packer.ConfigTemplate
 }
@@ -84,12 +87,12 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	}
 
 	self.config.tpl, err = packer.NewConfigTemplate()
-
 	if err != nil {
 		return nil, err
 	}
+	self.config.tpl.UserVars = self.config.PackerUserVars
 
-	// Set default vaules
+	// Set default values
 
 	if self.config.HostPortMin == 0 {
 		self.config.HostPortMin = 5900
@@ -119,9 +122,38 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		self.config.RawSSHWaitTimeout = "200m"
 	}
 
+	if self.config.InstanceMemory == "" {
+		self.config.InstanceMemory = "1024000000"
+	}
+
+	if self.config.CloneTemplate == "" {
+		self.config.CloneTemplate = "Other install media"
+	}
+
 	if self.config.OutputDir == "" {
 		self.config.OutputDir = fmt.Sprintf("output-%s", self.config.PackerBuildName)
 	}
+
+	if self.config.ExportFormat == "" {
+		self.config.ExportFormat = "xva"
+	}
+
+	if self.config.KeepInstance == "" {
+		self.config.KeepInstance = "never"
+	}
+
+	if len(self.config.PlatformArgs) == 0 {
+		pargs := make(map[string]string)
+		pargs["viridian"] = "false"
+		pargs["nx"] = "true"
+		pargs["pae"] = "true"
+		pargs["apic"] = "true"
+		pargs["timeoffset"] = "0"
+		pargs["acpi"] = "1"
+		self.config.PlatformArgs = pargs
+	}
+
+	// Template substitution
 
 	templates := map[string]*string{
 		"username":          &self.config.Username,
@@ -146,6 +178,8 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		"ssh_password":      &self.config.SSHPassword,
 		"ssh_key_path":      &self.config.SSHKeyPath,
 		"output_directory":  &self.config.OutputDir,
+		"export_format":     &self.config.ExportFormat,
+		"keep_instance":     &self.config.KeepInstance,
 	}
 
 	for n, ptr := range templates {
@@ -155,6 +189,8 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 			errs = packer.MultiErrorAppend(errs, fmt.Errorf("Error processing %s: %s", n, err))
 		}
 	}
+
+	// Validation
 
 	/*
 	   if self.config.IsoUrl == "" {
@@ -166,7 +202,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	self.config.BootWait, err = time.ParseDuration(self.config.RawBootWait)
 	if err != nil {
 		errs = packer.MultiErrorAppend(
-			errs, errors.New("Failed to parse boot_wait."))
+			errs, fmt.Errorf("Failed to parse boot_wait: %s", err))
 	}
 
 	self.config.SSHWaitTimeout, err = time.ParseDuration(self.config.RawSSHWaitTimeout)
@@ -223,17 +259,23 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 			errs, errors.New("An instance name must be specified."))
 	}
 
-	if self.config.InstanceMemory == "" {
-		self.config.InstanceMemory = "1024000000"
-	}
-
 	if self.config.RootDiskSize == "" {
 		errs = packer.MultiErrorAppend(
 			errs, errors.New("A root disk size must be specified."))
 	}
 
-	if self.config.CloneTemplate == "" {
-		self.config.CloneTemplate = "Other install media"
+	switch self.config.ExportFormat {
+	case "xva", "vdi_raw":
+	default:
+		errs = packer.MultiErrorAppend(
+			errs, errors.New("export_format must be one of 'xva', 'vdi_raw'"))
+	}
+
+	switch self.config.KeepInstance {
+	case "always", "never", "on_success":
+	default:
+		errs = packer.MultiErrorAppend(
+			errs, errors.New("keep_instance must be one of 'always', 'never', 'on_success'"))
 	}
 
 	/*
@@ -242,17 +284,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	               errs, errors.New("A local IP visible to XenServer's mangement interface is required to serve files."))
 	   }
 	*/
-
-	if len(self.config.PlatformArgs) == 0 {
-		pargs := make(map[string]string)
-		pargs["viridian"] = "false"
-		pargs["nx"] = "true"
-		pargs["pae"] = "true"
-		pargs["apic"] = "true"
-		pargs["timeoffset"] = "0"
-		pargs["acpi"] = "1"
-		self.config.PlatformArgs = pargs
-	}
 
 	if self.config.HTTPPortMin > self.config.HTTPPortMax {
 		errs = packer.MultiErrorAppend(
@@ -390,6 +421,23 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	artifact, _ := NewArtifact(self.config.OutputDir)
 
 	return artifact, nil
+}
+
+// all steps should check config.ShouldKeepInstance first before cleaning up
+func (cfg config) ShouldKeepInstance(state multistep.StateBag) bool {
+	switch cfg.KeepInstance {
+	case "always":
+		return true
+	case "never":
+		return false
+	case "on_success":
+		// only keep instance if build was successful
+		_, cancelled := state.GetOk(multistep.StateCancelled)
+		_, halted := state.GetOk(multistep.StateHalted)
+		return !(cancelled || halted)
+	default:
+		panic(fmt.Sprintf("Unknown keep_instance value '%s'", cfg.KeepInstance))
+	}
 }
 
 func (self *Builder) Cancel() {

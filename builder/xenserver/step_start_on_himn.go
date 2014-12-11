@@ -63,7 +63,7 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 			log.Printf("Ref: %s", instance.Ref)
 
 			//Check for instance.Ref in map
-			if vm_ip, ok := ips[himn_vif.Ref]; ok {
+			if vm_ip, ok := ips[himn_vif.Ref]; ok && vm_ip != "" {
 				ui.Say("Found the VM's IP: " + vm_ip)
 				himn_iface_ip = vm_ip
 				return true, nil
@@ -76,15 +76,13 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 		Timeout:           100 * time.Second,
 	}.Wait(state)
 
-	if err != nil || himn_iface_ip == "" {
+	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to find an IP on the Host-internal management interface: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 
-	if himn_iface_ip != "" {
-		state.Put("himn_ssh_address", himn_iface_ip)
-		ui.Say("Stored VM's IP " + himn_iface_ip)
-	}
+	state.Put("himn_ssh_address", himn_iface_ip)
+	ui.Say("Stored VM's IP " + himn_iface_ip)
 
 	// Wait for the VM to boot, and check we can ping this interface
 

@@ -69,7 +69,7 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 
 	export_url := fmt.Sprintf("https://%s/export?vm=%s&session_id=%s",
 		client.Host,
-		instance.Ref,
+		instance_uuid,
 		client.Session.(string),
 	)
 

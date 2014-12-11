@@ -18,6 +18,7 @@ import (
 const KeyLeftShift uint = 0xFFE1
 
 type bootCommandTemplateData struct {
+	Name     string
 	HTTPIP   string
 	HTTPPort uint
 }
@@ -59,6 +60,7 @@ func (self *stepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 
 	// @todo - include http port/ip so kickstarter files can be grabbed
 	tplData := &bootCommandTemplateData{
+		config.InstanceName,
 		config.LocalIp,
 		http_port,
 	}

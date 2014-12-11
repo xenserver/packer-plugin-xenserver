@@ -92,7 +92,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	}
 	self.config.tpl.UserVars = self.config.PackerUserVars
 
-	// Set default vaules
+	// Set default values
 
 	if self.config.HostPortMin == 0 {
 		self.config.HostPortMin = 5900

@@ -199,6 +199,11 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	   }
 	*/
 
+	if self.config.IsoName == "" {
+		errs = packer.MultiErrorAppend(
+			errs, errors.New("an iso_name must be specified"))
+	}
+
 	self.config.BootWait, err = time.ParseDuration(self.config.RawBootWait)
 	if err != nil {
 		errs = packer.MultiErrorAppend(

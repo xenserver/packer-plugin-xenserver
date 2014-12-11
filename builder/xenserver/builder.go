@@ -86,10 +86,10 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	}
 
 	self.config.tpl, err = packer.NewConfigTemplate()
-
 	if err != nil {
 		return nil, err
 	}
+	self.config.tpl.UserVars = self.config.PackerUserVars
 
 	// Set default vaules
 

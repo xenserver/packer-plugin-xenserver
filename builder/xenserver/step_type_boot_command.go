@@ -181,7 +181,7 @@ func vncSendString(c *vnc.ClientConn, original string) {
 			c.KeyEvent(uint32(KeyLeftShift), false)
 		}
 
-		// qemu is picky, so no matter what, wait a small period
-		time.Sleep(100 * time.Millisecond)
+		// no matter what, wait a small period
+		time.Sleep(50 * time.Millisecond)
 	}
 }

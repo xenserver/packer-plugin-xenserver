@@ -34,7 +34,8 @@ type config struct {
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`
 
-	BootCommand []string `mapstructure:"boot_command"`
+	BootCommand     []string `mapstructure:"boot_command"`
+	ShutdownCommand string   `mapstructure:"shutdown_command"`
 
 	RawBootWait string        `mapstructure:"boot_wait"`
 	BootWait    time.Duration ``
@@ -167,6 +168,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		"iso_name":          &self.config.IsoName,
 		"sr_name":           &self.config.SrName,
 		"network_name":      &self.config.NetworkName,
+		"shutdown_command":  &self.config.ShutdownCommand,
 		"boot_wait":         &self.config.RawBootWait,
 		"iso_checksum":      &self.config.ISOChecksum,
 		"iso_checksum_type": &self.config.ISOChecksumType,

@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 )
 
 type stepShutdownAndExport struct{}
@@ -58,12 +59,55 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 	ui.Say("Step: Shutdown and export VPX")
 
 	// Shutdown the VM
-	ui.Say("Shutting down the VM...")
-	err = instance.CleanShutdown()
-	if err != nil {
-		ui.Error(fmt.Sprintf("Could not shut down VM: %s", err.Error()))
-		return multistep.ActionHalt
+	success := func() bool {
+		if config.ShutdownCommand != "" {
+			ui.Say("Executing shutdown command...")
+
+			_, err := execute_ssh_cmd(config.ShutdownCommand, config.HostIp, "22", config.Username, config.Password)
+			if err != nil {
+				ui.Error(fmt.Sprintf("Shutdown command failed: %s", err.Error()))
+				return false
+			}
+
+			ui.Say("Waiting for VM to enter Halted state...")
+
+			err = InterruptibleWait{
+				Predicate: func() (bool, error) {
+					power_state, err := instance.GetPowerState()
+					return power_state == "Halted", err
+				},
+				PredicateInterval: 5 * time.Second,
+				Timeout:           300 * time.Second,
+			}.Wait(state)
+
+			if err != nil {
+				ui.Error(fmt.Sprintf("Error waiting for VM to halt: %s", err.Error()))
+				return false
+			}
+
+		} else {
+			ui.Say("Attempting to cleanly shutdown the VM...")
+
+			err = instance.CleanShutdown()
+			if err != nil {
+				ui.Error(fmt.Sprintf("Could not shut down VM: %s", err.Error()))
+				return false
+			}
+
+		}
+		return true
+	}()
+
+	if !success {
+		ui.Say("Forcing hard shutdown of the VM...")
+		err = instance.HardShutdown()
+		if err != nil {
+			ui.Error(fmt.Sprintf("Could not hard shut down VM -- giving up: %s", err.Error()))
+			return multistep.ActionHalt
+		}
 	}
+
+	ui.Say("Successfully shut down VM")
 
 	switch config.ExportFormat {
 	case "xva":

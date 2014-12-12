@@ -51,7 +51,7 @@ func (wait InterruptibleWait) Wait(state multistep.StateBag) error {
 
 				select {
 				case <-time.After(wait.PredicateInterval):
-					// do nothing; loop again
+					continue
 				case <-stopWaiting:
 					return
 				}
@@ -63,14 +63,17 @@ func (wait InterruptibleWait) Wait(state multistep.StateBag) error {
 	for {
 		// wait for either install to complete/error,
 		// an interrupt to come through, or a timeout to occur
+
+		if _, ok := state.GetOk(multistep.StateCancelled); ok {
+			return InterruptedError{}
+		}
+
 		select {
 		case result := <-predicateResult:
 			return result.err
 
 		case <-time.After(1 * time.Second):
-			if _, ok := state.GetOk(multistep.StateCancelled); ok {
-				return InterruptedError{}
-			}
+			continue
 
 		case <-timeout:
 			if wait.Predicate != nil {

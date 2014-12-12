@@ -113,7 +113,7 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 	case "xva":
 		// export the VM
 
-		export_url := fmt.Sprintf("https://%s/export?vm=%s&session_id=%s",
+		export_url := fmt.Sprintf("https://%s/export?uuid=%s&session_id=%s",
 			client.Host,
 			instance_uuid,
 			client.Session.(string),

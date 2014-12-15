@@ -393,6 +393,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		new(stepBootWait),
 		new(stepTypeBootCommand),
 		new(stepWait),
+		new(stepRemoveDevices),
 		new(stepStartOnHIMN),
 		&stepForwardPortOverSSH{
 			RemotePort:  himnSSHPort,

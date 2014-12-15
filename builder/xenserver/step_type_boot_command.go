@@ -18,6 +18,7 @@ import (
 const KeyLeftShift uint = 0xFFE1
 
 type bootCommandTemplateData struct {
+	Name     string
 	HTTPIP   string
 	HTTPPort uint
 }
@@ -59,6 +60,7 @@ func (self *stepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 
 	// @todo - include http port/ip so kickstarter files can be grabbed
 	tplData := &bootCommandTemplateData{
+		config.InstanceName,
 		config.LocalIp,
 		http_port,
 	}
@@ -179,7 +181,7 @@ func vncSendString(c *vnc.ClientConn, original string) {
 			c.KeyEvent(uint32(KeyLeftShift), false)
 		}
 
-		// qemu is picky, so no matter what, wait a small period
-		time.Sleep(100 * time.Millisecond)
+		// no matter what, wait a small period
+		time.Sleep(50 * time.Millisecond)
 	}
 }

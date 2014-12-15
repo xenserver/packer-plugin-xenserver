@@ -34,7 +34,8 @@ type config struct {
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`
 
-	BootCommand []string `mapstructure:"boot_command"`
+	BootCommand     []string `mapstructure:"boot_command"`
+	ShutdownCommand string   `mapstructure:"shutdown_command"`
 
 	RawBootWait string        `mapstructure:"boot_wait"`
 	BootWait    time.Duration ``
@@ -167,6 +168,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		"iso_name":          &self.config.IsoName,
 		"sr_name":           &self.config.SrName,
 		"network_name":      &self.config.NetworkName,
+		"shutdown_command":  &self.config.ShutdownCommand,
 		"boot_wait":         &self.config.RawBootWait,
 		"iso_checksum":      &self.config.ISOChecksum,
 		"iso_checksum_type": &self.config.ISOChecksumType,
@@ -198,6 +200,11 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	               errs, errors.New("a iso url must be specified"))
 	   }
 	*/
+
+	if self.config.IsoName == "" {
+		errs = packer.MultiErrorAppend(
+			errs, errors.New("an iso_name must be specified"))
+	}
 
 	self.config.BootWait, err = time.ParseDuration(self.config.RawBootWait)
 	if err != nil {
@@ -386,6 +393,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		new(stepBootWait),
 		new(stepTypeBootCommand),
 		new(stepWait),
+		new(stepRemoveDevices),
 		new(stepStartOnHIMN),
 		&stepForwardPortOverSSH{
 			RemotePort:  himnSSHPort,
@@ -423,6 +431,14 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	return artifact, nil
 }
 
+func (self *Builder) Cancel() {
+	if self.runner != nil {
+		log.Println("Cancelling the step runner...")
+		self.runner.Cancel()
+	}
+	fmt.Println("Cancelling the builder")
+}
+
 // all steps should check config.ShouldKeepInstance first before cleaning up
 func (cfg config) ShouldKeepInstance(state multistep.StateBag) bool {
 	switch cfg.KeepInstance {
@@ -440,10 +456,26 @@ func (cfg config) ShouldKeepInstance(state multistep.StateBag) bool {
 	}
 }
 
-func (self *Builder) Cancel() {
-	if self.runner != nil {
-		log.Println("Cancelling the step runner...")
-		self.runner.Cancel()
+func (config config) GetSR(client XenAPIClient) (*SR, error) {
+	if config.SrName == "" {
+		// Find the default SR
+		return client.GetDefaultSR()
+
+	} else {
+		// Use the provided name label to find the SR to use
+		srs, err := client.GetSRByNameLabel(config.SrName)
+
+		if err != nil {
+			return nil, err
+		}
+
+		switch {
+		case len(srs) == 0:
+			return nil, fmt.Errorf("Couldn't find a SR with the specified name-label '%s'", config.SrName)
+		case len(srs) > 1:
+			return nil, fmt.Errorf("Found more than one SR with the name '%s'. The name must be unique", config.SrName)
+		}
+
+		return srs[0], nil
 	}
-	fmt.Println("Cancelling the builder")
 }

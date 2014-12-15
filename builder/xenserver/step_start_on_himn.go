@@ -27,7 +27,12 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 
 	ui.Say("Step: Start VM on the Host Internal Mangement Network")
 
-	instance := state.Get("instance").(*VM)
+	uuid := state.Get("instance_uuid").(string)
+	instance, err := client.GetVMByUuid(uuid)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
+		return multistep.ActionHalt
+	}
 
 	// Find the HIMN Ref
 	networks, err := client.GetNetworkByNameLabel("Host internal management network")

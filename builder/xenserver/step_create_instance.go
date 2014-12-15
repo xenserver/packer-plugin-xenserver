@@ -207,7 +207,6 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	}
 
 	state.Put("instance_uuid", instanceId)
-	state.Put("instance", instance)
 	ui.Say(fmt.Sprintf("Created instance '%s'", instanceId))
 
 	return multistep.ActionContinue

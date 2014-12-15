@@ -61,37 +61,11 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	}
 
 	// Create VDI for the instance
-	var sr *SR
 
-	if config.SrName == "" {
-		// Find the default SR
-		default_sr, err := client.GetDefaultSR()
-		sr = default_sr
-
-		if err != nil {
-			ui.Error(fmt.Sprintf("Error getting default SR: %s", err.Error()))
-			return multistep.ActionHalt
-		}
-
-	} else {
-		// Use the provided name label to find the SR to use
-		srs, err := client.GetSRByNameLabel(config.SrName)
-
-		if err != nil {
-			ui.Error(fmt.Sprintf("Error getting default SR: %s", err.Error()))
-			return multistep.ActionHalt
-		}
-
-		switch {
-		case len(srs) == 0:
-			ui.Error(fmt.Sprintf("Couldn't find a SR with the specified name-label '%s'. Aborting.", config.SrName))
-			return multistep.ActionHalt
-		case len(srs) > 1:
-			ui.Error(fmt.Sprintf("Found more than one SR with the name '%s'. The name must be unique. Aborting.", config.SrName))
-			return multistep.ActionHalt
-		}
-
-		sr = srs[0]
+	sr, err := config.GetSR(client)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
+		return multistep.ActionHalt
 	}
 
 	vdi, err := sr.CreateVdi("Packer-disk", config.RootDiskSize)

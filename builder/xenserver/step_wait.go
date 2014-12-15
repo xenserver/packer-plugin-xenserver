@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
+	"log"
 	"time"
 )
 
@@ -27,7 +28,7 @@ func (self *stepWait) Run(state multistep.StateBag) multistep.StepAction {
 	//Expect install to be configured to shutdown on completion
 	err = InterruptibleWait{
 		Predicate: func() (bool, error) {
-			ui.Say("Waiting for install to complete.")
+			log.Printf("Waiting for install to complete.")
 			power_state, err := instance.GetPowerState()
 			return power_state == "Halted", err
 		},

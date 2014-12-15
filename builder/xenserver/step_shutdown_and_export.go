@@ -120,8 +120,13 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 		)
 
 		export_filename := fmt.Sprintf("%s/%s.xva", config.OutputDir, config.InstanceName)
+
 		ui.Say("Getting XVA " + export_url)
-		downloadFile(export_url, export_filename)
+		err = downloadFile(export_url, export_filename)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Could not download XVA: %s", err.Error()))
+			return multistep.ActionHalt
+		}
 
 	case "vdi_raw":
 		// export the disks
@@ -149,8 +154,13 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 			)
 
 			disk_export_filename := fmt.Sprintf("%s/%s.raw", config.OutputDir, disk_uuid)
+
 			ui.Say("Getting VDI " + disk_export_url)
-			downloadFile(disk_export_url, disk_export_filename)
+			err = downloadFile(disk_export_url, disk_export_filename)
+			if err != nil {
+				ui.Error(fmt.Sprintf("Could not download VDI: %s", err.Error()))
+				return multistep.ActionHalt
+			}
 		}
 
 	default:

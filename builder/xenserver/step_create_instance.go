@@ -75,7 +75,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	}
 	self.vdi = vdi
 
-	err = instance.ConnectVdi(vdi, false)
+	err = instance.ConnectVdi(vdi, Disk)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
 		return multistep.ActionHalt
@@ -168,7 +168,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	//ui.Say("Using VDI: " + iso_vdi_uuid)
 	//iso, _ := client.GetVdiByUuid(iso_vdi_uuid)
 
-	err = instance.ConnectVdi(iso, true)
+	err = instance.ConnectVdi(iso, CD)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to connect ISO VDI: %s", err.Error()))
 		return multistep.ActionHalt

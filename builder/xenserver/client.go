@@ -36,6 +36,15 @@ type VDI struct {
 	Client *XenAPIClient
 }
 
+type VDIType int
+
+const (
+	_ = iota
+	Disk
+	CD
+	Floppy
+)
+
 type Network struct {
 	Ref    string
 	Client *XenAPIClient
@@ -506,7 +515,7 @@ func (self *VM) SetStaticMemoryRange(min, max string) (err error) {
 	return
 }
 
-func (self *VM) ConnectVdi(vdi *VDI, iso bool) (err error) {
+func (self *VM) ConnectVdi(vdi *VDI, vdiType VDIType) (err error) {
 
 	// 1. Create a VBD
 
@@ -514,20 +523,27 @@ func (self *VM) ConnectVdi(vdi *VDI, iso bool) (err error) {
 	vbd_rec["VM"] = self.Ref
 	vbd_rec["VDI"] = vdi.Ref
 	vbd_rec["userdevice"] = "autodetect"
-	vbd_rec["unpluggable"] = false
 	vbd_rec["empty"] = false
 	vbd_rec["other_config"] = make(xmlrpc.Struct)
 	vbd_rec["qos_algorithm_type"] = ""
 	vbd_rec["qos_algorithm_params"] = make(xmlrpc.Struct)
 
-	if iso {
+	switch vdiType {
+	case CD:
 		vbd_rec["mode"] = "RO"
 		vbd_rec["bootable"] = true
+		vbd_rec["unpluggable"] = false
 		vbd_rec["type"] = "CD"
-	} else {
+	case Disk:
 		vbd_rec["mode"] = "RW"
 		vbd_rec["bootable"] = false
+		vbd_rec["unpluggable"] = false
 		vbd_rec["type"] = "Disk"
+	case Floppy:
+		vbd_rec["mode"] = "RW"
+		vbd_rec["bootable"] = false
+		vbd_rec["unpluggable"] = true
+		vbd_rec["type"] = "Floppy"
 	}
 
 	result := APIResult{}

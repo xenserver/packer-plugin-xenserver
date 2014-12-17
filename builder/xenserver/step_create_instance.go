@@ -132,7 +132,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 			ui.Error(fmt.Sprintf("Couldn't find a network with the specified name-label '%s'. Aborting.", config.NetworkName))
 			return multistep.ActionHalt
 		case len(networks) > 1:
-			ui.Error(fmt.Sprintf("Found more than one SR with the name '%s'. The name must be unique. Aborting.", config.NetworkName))
+			ui.Error(fmt.Sprintf("Found more than one network with the name '%s'. The name must be unique. Aborting.", config.NetworkName))
 			return multistep.ActionHalt
 		}
 

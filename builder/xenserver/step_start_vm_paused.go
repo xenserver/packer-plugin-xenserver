@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
+	"log"
 )
 
 type stepStartVmPaused struct{}
@@ -39,4 +40,22 @@ func (self *stepStartVmPaused) Run(state multistep.StateBag) multistep.StepActio
 }
 
 func (self *stepStartVmPaused) Cleanup(state multistep.StateBag) {
+	config := state.Get("config").(config)
+	client := state.Get("client").(XenAPIClient)
+
+	if config.ShouldKeepInstance(state) {
+		return
+	}
+
+	uuid := state.Get("instance_uuid").(string)
+	instance, err := client.GetVMByUuid(uuid)
+	if err != nil {
+		log.Printf(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
+		return
+	}
+
+	err = instance.HardShutdown()
+	if err != nil {
+		log.Printf(fmt.Sprintf("Unable to force shutdown VM '%s': %s", uuid, err.Error()))
+	}
 }

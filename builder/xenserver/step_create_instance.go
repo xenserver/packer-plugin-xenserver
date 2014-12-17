@@ -196,7 +196,7 @@ func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
 
 	if self.instance != nil {
 		ui.Say("Destroying VM")
-		_ = self.instance.HardShutdown()
+		_ = self.instance.HardShutdown() // redundant, just in case
 		err := self.instance.Destroy()
 		if err != nil {
 			ui.Error(err.Error())

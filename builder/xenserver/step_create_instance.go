@@ -148,32 +148,6 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		ui.Say(err.Error())
 	}
 
-	// Connect the ISO
-	//iso_vdi_uuid := state.Get("iso_vdi_uuid").(string)
-
-	isos, err := client.GetVdiByNameLabel(config.IsoName)
-
-	switch {
-	case len(isos) == 0:
-		ui.Error(fmt.Sprintf("Couldn't find an ISO named '%s'. Aborting", config.IsoName))
-		return multistep.ActionHalt
-	case len(isos) > 1:
-		ui.Error(fmt.Sprintf("Found more than one VDI with name '%s'. Name must be unique. Aborting.", config.IsoName))
-		return multistep.ActionHalt
-	}
-
-	iso := isos[0]
-
-	//iso, _ := client.GetVdiByUuid(config.IsoUuid)
-	//ui.Say("Using VDI: " + iso_vdi_uuid)
-	//iso, _ := client.GetVdiByUuid(iso_vdi_uuid)
-
-	err = instance.ConnectVdi(iso, CD)
-	if err != nil {
-		ui.Error(fmt.Sprintf("Unable to connect ISO VDI: %s", err.Error()))
-		return multistep.ActionHalt
-	}
-
 	instanceId, err := instance.GetUuid()
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM UUID: %s", err.Error()))

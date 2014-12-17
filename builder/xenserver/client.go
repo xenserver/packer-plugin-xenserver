@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nilshell/xmlrpc"
+	"log"
 )
 
 type XenAPIClient struct {
@@ -603,6 +604,36 @@ func (self *VM) ConnectVdi(vdi *VDI, vdiType VDIType) (err error) {
 	return
 }
 
+func (self *VM) DisconnectVdi(vdi *VDI) error {
+	vbds, err := self.GetVBDs()
+	if err != nil {
+		return fmt.Errorf("Unable to get VM VBDs: %s", err.Error())
+	}
+
+	for _, vbd := range vbds {
+		rec, err := vbd.GetRecord()
+		if err != nil {
+			return fmt.Errorf("Could not get record for VBD '%s': %s", vbd.Ref, err.Error())
+		}
+
+		if recVdi, ok := rec["VDI"].(string); ok {
+			if recVdi == vdi.Ref {
+				_ = vbd.Unplug()
+				err = vbd.Destroy()
+				if err != nil {
+					return fmt.Errorf("Could not destroy VBD '%s': %s", vbd.Ref, err.Error())
+				}
+
+				return nil
+			}
+		} else {
+			log.Printf("Could not find VDI record in VBD '%s'", vbd.Ref)
+		}
+	}
+
+	return fmt.Errorf("Could not find VBD for VDI '%s'", vdi.Ref)
+}
+
 func (self *VM) SetPlatform(params map[string]string) (err error) {
 	result := APIResult{}
 	platform_rec := make(xmlrpc.Struct)
@@ -766,6 +797,24 @@ func (self *VBD) Eject() (err error) {
 	return nil
 }
 
+func (self *VBD) Unplug() (err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VBD.unplug", self.Ref)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (self *VBD) Destroy() (err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VBD.destroy", self.Ref)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // VIF associated functions
 
 func (self *VIF) Destroy() (err error) {
@@ -787,6 +836,23 @@ func (self *VDI) GetUuid() (vdi_uuid string, err error) {
 	}
 	vdi_uuid = result.Value.(string)
 	return vdi_uuid, nil
+}
+
+func (self *VDI) GetVBDs() (vbds []VBD, err error) {
+	vbds = make([]VBD, 0)
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VDI.get_VBDs", self.Ref)
+	if err != nil {
+		return vbds, err
+	}
+	for _, elem := range result.Value.([]interface{}) {
+		vbd := VBD{}
+		vbd.Ref = elem.(string)
+		vbd.Client = self.Client
+		vbds = append(vbds, vbd)
+	}
+
+	return vbds, nil
 }
 
 func (self *VDI) Destroy() (err error) {
@@ -834,13 +900,16 @@ func (self *Task) GetProgress() (progress float64, err error) {
 	return
 }
 
-func (self *Task) GetErrorInfo() (errorInfo string, err error) {
+func (self *Task) GetErrorInfo() (errorInfo []string, err error) {
 	result := APIResult{}
 	err = self.Client.APICall(&result, "task.get_error_info", self.Ref)
 	if err != nil {
 		return
 	}
-	errorInfo = result.Value.(string)
+	errorInfo = make([]string, 0)
+	for _, infoRaw := range result.Value.([]interface{}) {
+		errorInfo = append(errorInfo, infoRaw.(string))
+	}
 	return
 }
 

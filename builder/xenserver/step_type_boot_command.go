@@ -60,7 +60,7 @@ func (self *stepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 
 	// @todo - include http port/ip so kickstarter files can be grabbed
 	tplData := &bootCommandTemplateData{
-		config.InstanceName,
+		config.VMName,
 		config.LocalIp,
 		http_port,
 	}

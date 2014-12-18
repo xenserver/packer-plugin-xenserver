@@ -35,7 +35,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	template := vms[0]
 
 	// Clone that VM template
-	instance, err := template.Clone(config.InstanceName)
+	instance, err := template.Clone(config.VMName)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error cloning VM: %s", err.Error()))
 		return multistep.ActionHalt

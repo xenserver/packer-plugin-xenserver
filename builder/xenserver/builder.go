@@ -24,7 +24,7 @@ type config struct {
 	Password string `mapstructure:"password"`
 	HostIp   string `mapstructure:"host_ip"`
 
-	InstanceName   string   `mapstructure:"instance_name"`
+	VMName         string   `mapstructure:"vm_name"`
 	InstanceMemory string   `mapstructure:"instance_memory"`
 	DiskSize       uint     `mapstructure:"disk_size"`
 	CloneTemplate  string   `mapstructure:"clone_template"`
@@ -175,7 +175,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		"username":          &self.config.Username,
 		"password":          &self.config.Password,
 		"host_ip":           &self.config.HostIp,
-		"instance_name":     &self.config.InstanceName,
+		"vm_name":           &self.config.VMName,
 		"instance_memory":   &self.config.InstanceMemory,
 		"clone_template":    &self.config.CloneTemplate,
 		"sr_name":           &self.config.SrName,
@@ -270,9 +270,9 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 			errs, errors.New("An ip for the xenserver host must be specified."))
 	}
 
-	if self.config.InstanceName == "" {
+	if self.config.VMName == "" {
 		errs = packer.MultiErrorAppend(
-			errs, errors.New("An instance name must be specified."))
+			errs, errors.New("vm_name must be specified."))
 	}
 
 	switch self.config.ExportFormat {

@@ -537,9 +537,11 @@ func (self *VM) GetGuestMetrics() (metrics map[string]interface{}, err error) {
 	return metrics, nil
 }
 
-func (self *VM) SetStaticMemoryRange(min, max string) (err error) {
+func (self *VM) SetStaticMemoryRange(min, max uint) (err error) {
 	result := APIResult{}
-	err = self.Client.APICall(&result, "VM.set_memory_limits", self.Ref, min, max, min, max)
+	strMin := fmt.Sprintf("%d", min)
+	strMax := fmt.Sprintf("%d", max)
+	err = self.Client.APICall(&result, "VM.set_memory_limits", self.Ref, strMin, strMax, strMin, strMax)
 	if err != nil {
 		return err
 	}

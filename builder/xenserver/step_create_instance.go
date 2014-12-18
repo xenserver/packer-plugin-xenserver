@@ -48,9 +48,9 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		return multistep.ActionHalt
 	}
 
-	err = instance.SetStaticMemoryRange(config.InstanceMemory, config.InstanceMemory)
+	err = instance.SetStaticMemoryRange(config.VMMemory*1024*1024, config.VMMemory*1024*1024)
 	if err != nil {
-		ui.Error(fmt.Sprintf("Error setting VM memory=%s: %s", config.InstanceMemory, err.Error()))
+		ui.Error(fmt.Sprintf("Error setting VM memory=%d: %s", config.VMMemory*1024*1024, err.Error()))
 		return multistep.ActionHalt
 	}
 

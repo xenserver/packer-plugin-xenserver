@@ -24,13 +24,13 @@ type config struct {
 	Password string `mapstructure:"password"`
 	HostIp   string `mapstructure:"host_ip"`
 
-	VMName         string   `mapstructure:"vm_name"`
-	InstanceMemory string   `mapstructure:"instance_memory"`
-	DiskSize       uint     `mapstructure:"disk_size"`
-	CloneTemplate  string   `mapstructure:"clone_template"`
-	SrName         string   `mapstructure:"sr_name"`
-	FloppyFiles    []string `mapstructure:"floppy_files"`
-	NetworkName    string   `mapstructure:"network_name"`
+	VMName        string   `mapstructure:"vm_name"`
+	VMMemory      uint     `mapstructure:"vm_memory"`
+	DiskSize      uint     `mapstructure:"disk_size"`
+	CloneTemplate string   `mapstructure:"clone_template"`
+	SrName        string   `mapstructure:"sr_name"`
+	FloppyFiles   []string `mapstructure:"floppy_files"`
+	NetworkName   string   `mapstructure:"network_name"`
 
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`
@@ -134,8 +134,8 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		self.config.DiskSize = 40000
 	}
 
-	if self.config.InstanceMemory == "" {
-		self.config.InstanceMemory = "1024000000"
+	if self.config.VMMemory == 0 {
+		self.config.VMMemory = 1024
 	}
 
 	if self.config.CloneTemplate == "" {
@@ -176,7 +176,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		"password":          &self.config.Password,
 		"host_ip":           &self.config.HostIp,
 		"vm_name":           &self.config.VMName,
-		"instance_memory":   &self.config.InstanceMemory,
 		"clone_template":    &self.config.CloneTemplate,
 		"sr_name":           &self.config.SrName,
 		"network_name":      &self.config.NetworkName,

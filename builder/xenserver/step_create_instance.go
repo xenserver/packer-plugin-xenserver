@@ -68,7 +68,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		return multistep.ActionHalt
 	}
 
-	vdi, err := sr.CreateVdi("Packer-disk", config.RootDiskSize)
+	vdi, err := sr.CreateVdi("Packer-disk", int64(config.DiskSize*1024*1024))
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to create packer disk VDI: %s", err.Error()))
 		return multistep.ActionHalt

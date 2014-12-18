@@ -53,7 +53,7 @@ func (self *stepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 	fileLength := fstat.Size()
 
 	// Create the VDI
-	vdi, err := sr.CreateVdi(self.VdiName, fmt.Sprintf("%d", fileLength))
+	vdi, err := sr.CreateVdi(self.VdiName, fileLength)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to create VDI '%s': %s", self.VdiName, err.Error()))
 		return multistep.ActionHalt

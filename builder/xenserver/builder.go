@@ -26,7 +26,7 @@ type config struct {
 
 	InstanceName   string   `mapstructure:"instance_name"`
 	InstanceMemory string   `mapstructure:"instance_memory"`
-	RootDiskSize   string   `mapstructure:"root_disk_size"`
+	DiskSize       uint     `mapstructure:"disk_size"`
 	CloneTemplate  string   `mapstructure:"clone_template"`
 	SrName         string   `mapstructure:"sr_name"`
 	FloppyFiles    []string `mapstructure:"floppy_files"`
@@ -130,6 +130,10 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		self.config.RawSSHWaitTimeout = "200m"
 	}
 
+	if self.config.DiskSize == 0 {
+		self.config.DiskSize = 40000
+	}
+
 	if self.config.InstanceMemory == "" {
 		self.config.InstanceMemory = "1024000000"
 	}
@@ -173,7 +177,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		"host_ip":           &self.config.HostIp,
 		"instance_name":     &self.config.InstanceName,
 		"instance_memory":   &self.config.InstanceMemory,
-		"root_disk_size":    &self.config.RootDiskSize,
 		"clone_template":    &self.config.CloneTemplate,
 		"sr_name":           &self.config.SrName,
 		"network_name":      &self.config.NetworkName,
@@ -270,11 +273,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	if self.config.InstanceName == "" {
 		errs = packer.MultiErrorAppend(
 			errs, errors.New("An instance name must be specified."))
-	}
-
-	if self.config.RootDiskSize == "" {
-		errs = packer.MultiErrorAppend(
-			errs, errors.New("A root disk size must be specified."))
 	}
 
 	switch self.config.ExportFormat {

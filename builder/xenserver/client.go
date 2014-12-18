@@ -689,13 +689,13 @@ func (self *VM) SetIsATemplate(is_a_template bool) (err error) {
 
 // SR associated functions
 
-func (self *SR) CreateVdi(name_label, size string) (vdi *VDI, err error) {
+func (self *SR) CreateVdi(name_label string, size int64) (vdi *VDI, err error) {
 	vdi = new(VDI)
 
 	vdi_rec := make(xmlrpc.Struct)
 	vdi_rec["name_label"] = name_label
 	vdi_rec["SR"] = self.Ref
-	vdi_rec["virtual_size"] = size
+	vdi_rec["virtual_size"] = fmt.Sprintf("%d", size)
 	vdi_rec["type"] = "user"
 	vdi_rec["sharable"] = false
 	vdi_rec["read_only"] = false

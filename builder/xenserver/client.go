@@ -70,6 +70,22 @@ type Pool struct {
 	Client *XenAPIClient
 }
 
+type Task struct {
+	Ref    string
+	Client *XenAPIClient
+}
+
+type TaskStatusType int
+
+const (
+	_ = iota
+	Pending
+	Success
+	Failure
+	Cancelling
+	Cancelled
+)
+
 func (c *XenAPIClient) RPCCall(result interface{}, method string, params []interface{}) (err error) {
 	fmt.Println(params)
 	p := new(xmlrpc.Params)
@@ -312,6 +328,20 @@ func (client *XenAPIClient) GetPIFs() (pifs []*PIF, err error) {
 	}
 
 	return pifs, nil
+}
+
+func (client *XenAPIClient) CreateTask() (task *Task, err error) {
+	result := APIResult{}
+	err = client.APICall(&result, "task.create", "packer-task", "Packer task")
+
+	if err != nil {
+		return
+	}
+
+	task = new(Task)
+	task.Ref = result.Value.(string)
+	task.Client = client
+	return
 }
 
 // VM associated functions
@@ -765,6 +795,58 @@ func (self *VDI) Destroy() (err error) {
 	if err != nil {
 		return err
 	}
+	return
+}
+
+// Task associated functions
+
+func (self *Task) GetStatus() (status TaskStatusType, err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "task.get_status", self.Ref)
+	if err != nil {
+		return
+	}
+	rawStatus := result.Value.(string)
+	switch rawStatus {
+	case "pending":
+		status = Pending
+	case "success":
+		status = Success
+	case "failure":
+		status = Failure
+	case "cancelling":
+		status = Cancelling
+	case "cancelled":
+		status = Cancelled
+	default:
+		panic(fmt.Sprintf("Task.get_status: Unknown status '%s'", rawStatus))
+	}
+	return
+}
+
+func (self *Task) GetProgress() (progress float64, err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "task.get_progress", self.Ref)
+	if err != nil {
+		return
+	}
+	progress = result.Value.(float64)
+	return
+}
+
+func (self *Task) GetErrorInfo() (errorInfo string, err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "task.get_error_info", self.Ref)
+	if err != nil {
+		return
+	}
+	errorInfo = result.Value.(string)
+	return
+}
+
+func (self *Task) Destroy() (err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "task.destroy", self.Ref)
 	return
 }
 

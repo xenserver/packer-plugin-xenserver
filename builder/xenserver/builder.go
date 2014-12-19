@@ -9,6 +9,8 @@ import (
 	"github.com/mitchellh/packer/packer"
 	"log"
 	"os"
+	"path"
+	"strings"
 	"time"
 )
 
@@ -21,15 +23,14 @@ type config struct {
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
 	HostIp   string `mapstructure:"host_ip"`
-	IsoUrl   string `mapstructure:"iso_url"`
 
-	InstanceName   string `mapstructure:"instance_name"`
-	InstanceMemory string `mapstructure:"instance_memory"`
-	RootDiskSize   string `mapstructure:"root_disk_size"`
-	CloneTemplate  string `mapstructure:"clone_template"`
-	IsoName        string `mapstructure:"iso_name"`
-	SrName         string `mapstructure:"sr_name"`
-	NetworkName    string `mapstructure:"network_name"`
+	VMName        string   `mapstructure:"vm_name"`
+	VMMemory      uint     `mapstructure:"vm_memory"`
+	DiskSize      uint     `mapstructure:"disk_size"`
+	CloneTemplate string   `mapstructure:"clone_template"`
+	SrName        string   `mapstructure:"sr_name"`
+	FloppyFiles   []string `mapstructure:"floppy_files"`
+	NetworkName   string   `mapstructure:"network_name"`
 
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`
@@ -44,6 +45,8 @@ type config struct {
 	ISOChecksumType string   `mapstructure:"iso_checksum_type"`
 	ISOUrls         []string `mapstructure:"iso_urls"`
 	ISOUrl          string   `mapstructure:"iso_url"`
+
+	ToolsIsoName string `mapstructure:"tools_iso_name"`
 
 	HTTPDir     string `mapstructure:"http_directory"`
 	HTTPPortMin uint   `mapstructure:"http_port_min"`
@@ -111,6 +114,10 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		self.config.RawInstallTimeout = "200m"
 	}
 
+	if self.config.ToolsIsoName == "" {
+		self.config.ToolsIsoName = "xs-tools.iso"
+	}
+
 	if self.config.HTTPPortMin == 0 {
 		self.config.HTTPPortMin = 8000
 	}
@@ -123,12 +130,20 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		self.config.RawSSHWaitTimeout = "200m"
 	}
 
-	if self.config.InstanceMemory == "" {
-		self.config.InstanceMemory = "1024000000"
+	if self.config.DiskSize == 0 {
+		self.config.DiskSize = 40000
+	}
+
+	if self.config.VMMemory == 0 {
+		self.config.VMMemory = 1024
 	}
 
 	if self.config.CloneTemplate == "" {
 		self.config.CloneTemplate = "Other install media"
+	}
+
+	if self.config.FloppyFiles == nil {
+		self.config.FloppyFiles = make([]string, 0)
 	}
 
 	if self.config.OutputDir == "" {
@@ -160,18 +175,16 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		"username":          &self.config.Username,
 		"password":          &self.config.Password,
 		"host_ip":           &self.config.HostIp,
-		"iso_url":           &self.config.IsoUrl,
-		"instance_name":     &self.config.InstanceName,
-		"instance_memory":   &self.config.InstanceMemory,
-		"root_disk_size":    &self.config.RootDiskSize,
+		"vm_name":           &self.config.VMName,
 		"clone_template":    &self.config.CloneTemplate,
-		"iso_name":          &self.config.IsoName,
 		"sr_name":           &self.config.SrName,
 		"network_name":      &self.config.NetworkName,
 		"shutdown_command":  &self.config.ShutdownCommand,
 		"boot_wait":         &self.config.RawBootWait,
 		"iso_checksum":      &self.config.ISOChecksum,
 		"iso_checksum_type": &self.config.ISOChecksumType,
+		"iso_url":           &self.config.ISOUrl,
+		"tools_iso_name":    &self.config.ToolsIsoName,
 		"http_directory":    &self.config.HTTPDir,
 		"local_ip":          &self.config.LocalIp,
 		"install_timeout":   &self.config.RawInstallTimeout,
@@ -184,6 +197,13 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		"keep_instance":     &self.config.KeepInstance,
 	}
 
+	for i := range self.config.FloppyFiles {
+		templates[fmt.Sprintf("floppy_files[%d]", i)] = &self.config.FloppyFiles[i]
+	}
+	for i := range self.config.ISOUrls {
+		templates[fmt.Sprintf("iso_urls[%d]", i)] = &self.config.ISOUrls[i]
+	}
+
 	for n, ptr := range templates {
 		var err error
 		*ptr, err = self.config.tpl.Process(*ptr, nil)
@@ -193,18 +213,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	}
 
 	// Validation
-
-	/*
-	   if self.config.IsoUrl == "" {
-	       errs = packer.MultiErrorAppend(
-	               errs, errors.New("a iso url must be specified"))
-	   }
-	*/
-
-	if self.config.IsoName == "" {
-		errs = packer.MultiErrorAppend(
-			errs, errors.New("an iso_name must be specified"))
-	}
 
 	self.config.BootWait, err = time.ParseDuration(self.config.RawBootWait)
 	if err != nil {
@@ -261,14 +269,9 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 			errs, errors.New("An ip for the xenserver host must be specified."))
 	}
 
-	if self.config.InstanceName == "" {
+	if self.config.VMName == "" {
 		errs = packer.MultiErrorAppend(
-			errs, errors.New("An instance name must be specified."))
-	}
-
-	if self.config.RootDiskSize == "" {
-		errs = packer.MultiErrorAppend(
-			errs, errors.New("A root disk size must be specified."))
+			errs, errors.New("vm_name must be specified."))
 	}
 
 	switch self.config.ExportFormat {
@@ -301,43 +304,48 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		errs = packer.MultiErrorAppend(
 			errs, errors.New("the host min port must be less than the max"))
 	}
-	/*
-	   if self.config.ISOChecksumType == "" {
-	       errs = packer.MultiErrorAppend(
-	               errs, errors.New("The iso_checksum_type must be specified."))
-	   } else {
-	       self.config.ISOChecksumType = strings.ToLower(self.config.ISOChecksumType)
-	       if self.config.ISOChecksumType != "none" {
-	           if self.config.ISOChecksum == "" {
-	               errs = packer.MultiErrorAppend(
-	                       errs, errors.New("Due to the file size being large, an iso_checksum is required."))
-	           } else {
-	               self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
-	           }
 
-	           if hash := common.HashForType(self.config.ISOChecksumType); hash == nil {
-	               errs = packer.MultiErrorAppend(
-	                       errs, fmt.Errorf("Unsupported checksum type: %s", self.config.ISOChecksumType))
-	           }
+	if self.config.ISOChecksumType == "" {
+		errs = packer.MultiErrorAppend(
+			errs, errors.New("The iso_checksum_type must be specified."))
+	} else {
+		self.config.ISOChecksumType = strings.ToLower(self.config.ISOChecksumType)
+		if self.config.ISOChecksumType != "none" {
+			if self.config.ISOChecksum == "" {
+				errs = packer.MultiErrorAppend(
+					errs, errors.New("Due to the file size being large, an iso_checksum is required."))
+			} else {
+				self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
+			}
 
-	       }
-	   }
+			if hash := common.HashForType(self.config.ISOChecksumType); hash == nil {
+				errs = packer.MultiErrorAppend(
+					errs, fmt.Errorf("Unsupported checksum type: %s", self.config.ISOChecksumType))
+			}
 
-	   if self.config.ISOUrl == "" {
-	       errs = packer.MultiErrorAppend(
-	               errs, errors.New("A ISO URL must be specfied."))
-	   } else {
-	       self.config.ISOUrls = []string{self.config.ISOUrl}
-	   }
+		}
+	}
 
-	   for i, url := range self.config.ISOUrls {
-	       self.config.ISOUrls[i], err = common.DownloadableURL(url)
-	       if err != nil {
-	           errs = packer.MultiErrorAppend(
-	                   errs, fmt.Errorf("Failed to parse the iso_url (%d): %s", i, err))
-	       }
-	   }
-	*/
+	if len(self.config.ISOUrls) == 0 {
+		if self.config.ISOUrl == "" {
+			errs = packer.MultiErrorAppend(
+				errs, errors.New("One of iso_url or iso_urls must be specified."))
+		} else {
+			self.config.ISOUrls = []string{self.config.ISOUrl}
+		}
+	} else if self.config.ISOUrl != "" {
+		errs = packer.MultiErrorAppend(
+			errs, errors.New("Only one of iso_url or iso_urls may be specified."))
+	}
+
+	for i, url := range self.config.ISOUrls {
+		self.config.ISOUrls[i], err = common.DownloadableURL(url)
+		if err != nil {
+			errs = packer.MultiErrorAppend(
+				errs, fmt.Errorf("Failed to parse iso_urls[%d]: %s", i, err))
+		}
+	}
+
 	if len(errs.Errors) > 0 {
 		retErr = errors.New(errs.Error())
 	}
@@ -368,19 +376,52 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 
 	//Build the steps
 	steps := []multistep.Step{
-		/*
-		   &common.StepDownload{
-		       Checksum:       self.config.ISOChecksum,
-		       ChecksumType:   self.config.ISOChecksumType,
-		       Description:    "ISO",
-		       ResultKey:      "iso_path",
-		       Url:            self.config.ISOUrls,
-		   },
-		*/
+		&common.StepDownload{
+			Checksum:     self.config.ISOChecksum,
+			ChecksumType: self.config.ISOChecksumType,
+			Description:  "ISO",
+			ResultKey:    "iso_path",
+			Url:          self.config.ISOUrls,
+		},
 		new(stepPrepareOutputDir),
+		&common.StepCreateFloppy{
+			Files: self.config.FloppyFiles,
+		},
 		new(stepHTTPServer),
-		//new(stepUploadIso),
+		&stepUploadVdi{
+			VdiName: "Packer-floppy-disk",
+			ImagePathFunc: func() string {
+				if floppyPath, ok := state.GetOk("floppy_path"); ok {
+					return floppyPath.(string)
+				}
+				return ""
+			},
+			VdiUuidKey: "floppy_vdi_uuid",
+		},
+		&stepUploadVdi{
+			VdiName: path.Base(self.config.ISOUrls[0]),
+			ImagePathFunc: func() string {
+				return state.Get("iso_path").(string)
+			},
+			VdiUuidKey: "iso_vdi_uuid",
+		},
+		&stepFindVdi{
+			VdiName:    self.config.ToolsIsoName,
+			VdiUuidKey: "tools_vdi_uuid",
+		},
 		new(stepCreateInstance),
+		&stepAttachVdi{
+			VdiUuidKey: "floppy_vdi_uuid",
+			VdiType:    Floppy,
+		},
+		&stepAttachVdi{
+			VdiUuidKey: "iso_vdi_uuid",
+			VdiType:    CD,
+		},
+		&stepAttachVdi{
+			VdiUuidKey: "tools_vdi_uuid",
+			VdiType:    CD,
+		},
 		new(stepStartVmPaused),
 		new(stepGetVNCPort),
 		&stepForwardPortOverSSH{
@@ -393,6 +434,12 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		new(stepBootWait),
 		new(stepTypeBootCommand),
 		new(stepWait),
+		&stepDetachVdi{
+			VdiUuidKey: "floppy_vdi_uuid",
+		},
+		&stepDetachVdi{
+			VdiUuidKey: "iso_vdi_uuid",
+		},
 		new(stepRemoveDevices),
 		new(stepStartOnHIMN),
 		&stepForwardPortOverSSH{

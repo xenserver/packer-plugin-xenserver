@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nilshell/xmlrpc"
+	"log"
 )
 
 type XenAPIClient struct {
@@ -36,6 +37,15 @@ type VDI struct {
 	Client *XenAPIClient
 }
 
+type VDIType int
+
+const (
+	_ = iota
+	Disk
+	CD
+	Floppy
+)
+
 type Network struct {
 	Ref    string
 	Client *XenAPIClient
@@ -60,6 +70,22 @@ type Pool struct {
 	Ref    string
 	Client *XenAPIClient
 }
+
+type Task struct {
+	Ref    string
+	Client *XenAPIClient
+}
+
+type TaskStatusType int
+
+const (
+	_ = iota
+	Pending
+	Success
+	Failure
+	Cancelling
+	Cancelled
+)
 
 func (c *XenAPIClient) RPCCall(result interface{}, method string, params []interface{}) (err error) {
 	fmt.Println(params)
@@ -305,6 +331,20 @@ func (client *XenAPIClient) GetPIFs() (pifs []*PIF, err error) {
 	return pifs, nil
 }
 
+func (client *XenAPIClient) CreateTask() (task *Task, err error) {
+	result := APIResult{}
+	err = client.APICall(&result, "task.create", "packer-task", "Packer task")
+
+	if err != nil {
+		return
+	}
+
+	task = new(Task)
+	task.Ref = result.Value.(string)
+	task.Client = client
+	return
+}
+
 // VM associated functions
 
 func (self *VM) Clone(label string) (new_instance *VM, err error) {
@@ -497,16 +537,18 @@ func (self *VM) GetGuestMetrics() (metrics map[string]interface{}, err error) {
 	return metrics, nil
 }
 
-func (self *VM) SetStaticMemoryRange(min, max string) (err error) {
+func (self *VM) SetStaticMemoryRange(min, max uint) (err error) {
 	result := APIResult{}
-	err = self.Client.APICall(&result, "VM.set_memory_limits", self.Ref, min, max, min, max)
+	strMin := fmt.Sprintf("%d", min)
+	strMax := fmt.Sprintf("%d", max)
+	err = self.Client.APICall(&result, "VM.set_memory_limits", self.Ref, strMin, strMax, strMin, strMax)
 	if err != nil {
 		return err
 	}
 	return
 }
 
-func (self *VM) ConnectVdi(vdi *VDI, iso bool) (err error) {
+func (self *VM) ConnectVdi(vdi *VDI, vdiType VDIType) (err error) {
 
 	// 1. Create a VBD
 
@@ -514,20 +556,27 @@ func (self *VM) ConnectVdi(vdi *VDI, iso bool) (err error) {
 	vbd_rec["VM"] = self.Ref
 	vbd_rec["VDI"] = vdi.Ref
 	vbd_rec["userdevice"] = "autodetect"
-	vbd_rec["unpluggable"] = false
 	vbd_rec["empty"] = false
 	vbd_rec["other_config"] = make(xmlrpc.Struct)
 	vbd_rec["qos_algorithm_type"] = ""
 	vbd_rec["qos_algorithm_params"] = make(xmlrpc.Struct)
 
-	if iso {
+	switch vdiType {
+	case CD:
 		vbd_rec["mode"] = "RO"
 		vbd_rec["bootable"] = true
+		vbd_rec["unpluggable"] = false
 		vbd_rec["type"] = "CD"
-	} else {
+	case Disk:
 		vbd_rec["mode"] = "RW"
 		vbd_rec["bootable"] = false
+		vbd_rec["unpluggable"] = false
 		vbd_rec["type"] = "Disk"
+	case Floppy:
+		vbd_rec["mode"] = "RW"
+		vbd_rec["bootable"] = false
+		vbd_rec["unpluggable"] = true
+		vbd_rec["type"] = "Floppy"
 	}
 
 	result := APIResult{}
@@ -555,6 +604,36 @@ func (self *VM) ConnectVdi(vdi *VDI, iso bool) (err error) {
 	   }
 	*/
 	return
+}
+
+func (self *VM) DisconnectVdi(vdi *VDI) error {
+	vbds, err := self.GetVBDs()
+	if err != nil {
+		return fmt.Errorf("Unable to get VM VBDs: %s", err.Error())
+	}
+
+	for _, vbd := range vbds {
+		rec, err := vbd.GetRecord()
+		if err != nil {
+			return fmt.Errorf("Could not get record for VBD '%s': %s", vbd.Ref, err.Error())
+		}
+
+		if recVdi, ok := rec["VDI"].(string); ok {
+			if recVdi == vdi.Ref {
+				_ = vbd.Unplug()
+				err = vbd.Destroy()
+				if err != nil {
+					return fmt.Errorf("Could not destroy VBD '%s': %s", vbd.Ref, err.Error())
+				}
+
+				return nil
+			}
+		} else {
+			log.Printf("Could not find VDI record in VBD '%s'", vbd.Ref)
+		}
+	}
+
+	return fmt.Errorf("Could not find VBD for VDI '%s'", vdi.Ref)
 }
 
 func (self *VM) SetPlatform(params map[string]string) (err error) {
@@ -612,13 +691,13 @@ func (self *VM) SetIsATemplate(is_a_template bool) (err error) {
 
 // SR associated functions
 
-func (self *SR) CreateVdi(name_label, size string) (vdi *VDI, err error) {
+func (self *SR) CreateVdi(name_label string, size int64) (vdi *VDI, err error) {
 	vdi = new(VDI)
 
 	vdi_rec := make(xmlrpc.Struct)
 	vdi_rec["name_label"] = name_label
 	vdi_rec["SR"] = self.Ref
-	vdi_rec["virtual_size"] = size
+	vdi_rec["virtual_size"] = fmt.Sprintf("%d", size)
 	vdi_rec["type"] = "user"
 	vdi_rec["sharable"] = false
 	vdi_rec["read_only"] = false
@@ -720,6 +799,24 @@ func (self *VBD) Eject() (err error) {
 	return nil
 }
 
+func (self *VBD) Unplug() (err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VBD.unplug", self.Ref)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (self *VBD) Destroy() (err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VBD.destroy", self.Ref)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // VIF associated functions
 
 func (self *VIF) Destroy() (err error) {
@@ -743,12 +840,84 @@ func (self *VDI) GetUuid() (vdi_uuid string, err error) {
 	return vdi_uuid, nil
 }
 
+func (self *VDI) GetVBDs() (vbds []VBD, err error) {
+	vbds = make([]VBD, 0)
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VDI.get_VBDs", self.Ref)
+	if err != nil {
+		return vbds, err
+	}
+	for _, elem := range result.Value.([]interface{}) {
+		vbd := VBD{}
+		vbd.Ref = elem.(string)
+		vbd.Client = self.Client
+		vbds = append(vbds, vbd)
+	}
+
+	return vbds, nil
+}
+
 func (self *VDI) Destroy() (err error) {
 	result := APIResult{}
 	err = self.Client.APICall(&result, "VDI.destroy", self.Ref)
 	if err != nil {
 		return err
 	}
+	return
+}
+
+// Task associated functions
+
+func (self *Task) GetStatus() (status TaskStatusType, err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "task.get_status", self.Ref)
+	if err != nil {
+		return
+	}
+	rawStatus := result.Value.(string)
+	switch rawStatus {
+	case "pending":
+		status = Pending
+	case "success":
+		status = Success
+	case "failure":
+		status = Failure
+	case "cancelling":
+		status = Cancelling
+	case "cancelled":
+		status = Cancelled
+	default:
+		panic(fmt.Sprintf("Task.get_status: Unknown status '%s'", rawStatus))
+	}
+	return
+}
+
+func (self *Task) GetProgress() (progress float64, err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "task.get_progress", self.Ref)
+	if err != nil {
+		return
+	}
+	progress = result.Value.(float64)
+	return
+}
+
+func (self *Task) GetErrorInfo() (errorInfo []string, err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "task.get_error_info", self.Ref)
+	if err != nil {
+		return
+	}
+	errorInfo = make([]string, 0)
+	for _, infoRaw := range result.Value.([]interface{}) {
+		errorInfo = append(errorInfo, infoRaw.(string))
+	}
+	return
+}
+
+func (self *Task) Destroy() (err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "task.destroy", self.Ref)
 	return
 }
 

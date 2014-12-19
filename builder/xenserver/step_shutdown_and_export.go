@@ -119,7 +119,7 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 			client.Session.(string),
 		)
 
-		export_filename := fmt.Sprintf("%s/%s.xva", config.OutputDir, config.InstanceName)
+		export_filename := fmt.Sprintf("%s/%s.xva", config.OutputDir, config.VMName)
 
 		ui.Say("Getting XVA " + export_url)
 		err = downloadFile(export_url, export_filename)

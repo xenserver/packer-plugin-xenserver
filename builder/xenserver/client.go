@@ -40,7 +40,7 @@ type VDI struct {
 type VDIType int
 
 const (
-	_ = iota
+	_ VDIType = iota
 	Disk
 	CD
 	Floppy
@@ -79,7 +79,7 @@ type Task struct {
 type TaskStatusType int
 
 const (
-	_ = iota
+	_ TaskStatusType = iota
 	Pending
 	Success
 	Failure

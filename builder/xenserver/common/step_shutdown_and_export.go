@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 /* Taken from https://raw.githubusercontent.com/mitchellh/packer/master/builder/qemu/step_prepare_output_dir.go */
 
@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-type stepShutdownAndExport struct{}
+type StepShutdownAndExport struct{}
 
 func downloadFile(url, filename string) (err error) {
 
@@ -44,8 +44,8 @@ func downloadFile(url, filename string) (err error) {
 	return nil
 }
 
-func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction {
-	config := state.Get("config").(config)
+func (StepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction {
+	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(XenAPIClient)
 	instance_uuid := state.Get("instance_uuid").(string)
@@ -56,7 +56,7 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 		return multistep.ActionHalt
 	}
 
-	ui.Say("Step: Shutdown and export VPX")
+	ui.Say("Step: Shutdown and export")
 
 	// Shutdown the VM
 	success := func() bool {
@@ -109,7 +109,7 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 
 	ui.Say("Successfully shut down VM")
 
-	switch config.ExportFormat {
+	switch config.Format {
 	case "xva":
 		// export the VM
 
@@ -164,7 +164,7 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 		}
 
 	default:
-		panic(fmt.Sprintf("Unknown export_format '%s'", config.ExportFormat))
+		panic(fmt.Sprintf("Unknown export format '%s'", config.Format))
 	}
 
 	ui.Say("Download completed: " + config.OutputDir)
@@ -172,5 +172,4 @@ func (stepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 	return multistep.ActionContinue
 }
 
-func (stepShutdownAndExport) Cleanup(state multistep.StateBag) {
-}
+func (StepShutdownAndExport) Cleanup(state multistep.StateBag) {}

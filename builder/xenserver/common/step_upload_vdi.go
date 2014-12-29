@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 import (
 	"crypto/tls"
@@ -11,14 +11,14 @@ import (
 	"time"
 )
 
-type stepUploadVdi struct {
+type StepUploadVdi struct {
 	VdiName       string
 	ImagePathFunc func() string
 	VdiUuidKey    string
 }
 
-func (self *stepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
-	config := state.Get("config").(config)
+func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
+	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(XenAPIClient)
 
@@ -154,12 +154,12 @@ func (self *stepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 	return multistep.ActionContinue
 }
 
-func (self *stepUploadVdi) Cleanup(state multistep.StateBag) {
-	config := state.Get("config").(config)
+func (self *StepUploadVdi) Cleanup(state multistep.StateBag) {
+	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(XenAPIClient)
 
-	if config.ShouldKeepInstance(state) {
+	if config.ShouldKeepVM(state) {
 		return
 	}
 

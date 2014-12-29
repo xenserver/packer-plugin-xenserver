@@ -1,4 +1,4 @@
-package xenserver
+package xva
 
 import (
 	"github.com/mitchellh/packer/packer"

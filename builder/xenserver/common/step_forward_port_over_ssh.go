@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"github.com/mitchellh/packer/packer"
 )
 
-type stepForwardPortOverSSH struct {
+type StepForwardPortOverSSH struct {
 	RemotePort func(state multistep.StateBag) (uint, error)
 	RemoteDest func(state multistep.StateBag) (string, error)
 
@@ -16,9 +16,9 @@ type stepForwardPortOverSSH struct {
 	ResultKey string
 }
 
-func (self *stepForwardPortOverSSH) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepForwardPortOverSSH) Run(state multistep.StateBag) multistep.StepAction {
 
-	config := state.Get("config").(config)
+	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 
 	// Find a free local port:
@@ -46,4 +46,4 @@ func (self *stepForwardPortOverSSH) Run(state multistep.StateBag) multistep.Step
 	return multistep.ActionContinue
 }
 
-func (self *stepForwardPortOverSSH) Cleanup(state multistep.StateBag) {}
+func (self *StepForwardPortOverSSH) Cleanup(state multistep.StateBag) {}

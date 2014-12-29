@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 import (
 	"fmt"
@@ -7,11 +7,11 @@ import (
 	"strconv"
 )
 
-type stepGetVNCPort struct{}
+type StepGetVNCPort struct{}
 
-func (self *stepGetVNCPort) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepGetVNCPort) Run(state multistep.StateBag) multistep.StepAction {
 
-	config := state.Get("config").(config)
+	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: forward the instances VNC port over SSH")
@@ -38,15 +38,15 @@ func (self *stepGetVNCPort) Run(state multistep.StateBag) multistep.StepAction {
 	return multistep.ActionContinue
 }
 
-func (self *stepGetVNCPort) Cleanup(state multistep.StateBag) {
+func (self *StepGetVNCPort) Cleanup(state multistep.StateBag) {
 }
 
-func instanceVNCPort(state multistep.StateBag) (uint, error) {
+func InstanceVNCPort(state multistep.StateBag) (uint, error) {
 	vncPort := state.Get("instance_vnc_port").(uint)
 	return vncPort, nil
 }
 
-func instanceVNCIP(state multistep.StateBag) (string, error) {
+func InstanceVNCIP(state multistep.StateBag) (string, error) {
 	// The port is in Dom0, so we want to forward from localhost
 	return "127.0.0.1", nil
 }

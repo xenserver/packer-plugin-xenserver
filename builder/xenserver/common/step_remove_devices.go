@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 import (
 	"fmt"
@@ -6,9 +6,9 @@ import (
 	"github.com/mitchellh/packer/packer"
 )
 
-type stepRemoveDevices struct{}
+type StepRemoveDevices struct{}
 
-func (self *stepRemoveDevices) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepRemoveDevices) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(XenAPIClient)
 
@@ -37,4 +37,4 @@ func (self *stepRemoveDevices) Run(state multistep.StateBag) multistep.StepActio
 	return multistep.ActionContinue
 }
 
-func (self *stepRemoveDevices) Cleanup(state multistep.StateBag) {}
+func (self *StepRemoveDevices) Cleanup(state multistep.StateBag) {}

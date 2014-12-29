@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 import (
 	"fmt"
@@ -7,9 +7,9 @@ import (
 	"log"
 )
 
-type stepStartVmPaused struct{}
+type StepStartVmPaused struct{}
 
-func (self *stepStartVmPaused) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepStartVmPaused) Run(state multistep.StateBag) multistep.StepAction {
 
 	client := state.Get("client").(XenAPIClient)
 	ui := state.Get("ui").(packer.Ui)
@@ -39,11 +39,11 @@ func (self *stepStartVmPaused) Run(state multistep.StateBag) multistep.StepActio
 	return multistep.ActionContinue
 }
 
-func (self *stepStartVmPaused) Cleanup(state multistep.StateBag) {
-	config := state.Get("config").(config)
+func (self *StepStartVmPaused) Cleanup(state multistep.StateBag) {
+	config := state.Get("commonconfig").(CommonConfig)
 	client := state.Get("client").(XenAPIClient)
 
-	if config.ShouldKeepInstance(state) {
+	if config.ShouldKeepVM(state) {
 		return
 	}
 

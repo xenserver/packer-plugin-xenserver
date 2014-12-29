@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 import (
 	"fmt"

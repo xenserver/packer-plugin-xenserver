@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 /* Heavily borrowed from builder/quemu/step_type_boot_command.go */
 
@@ -23,10 +23,12 @@ type bootCommandTemplateData struct {
 	HTTPPort uint
 }
 
-type stepTypeBootCommand struct{}
+type StepTypeBootCommand struct {
+	Tpl *packer.ConfigTemplate
+}
 
-func (self *stepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAction {
-	config := state.Get("config").(config)
+func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAction {
+	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	vnc_port := state.Get("local_vnc_port").(uint)
 	http_port := state.Get("http_port").(uint)
@@ -68,7 +70,7 @@ func (self *stepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 	ui.Say("About to type boot commands over VNC...")
 	for _, command := range config.BootCommand {
 
-		command, err := config.tpl.Process(command, tplData)
+		command, err := self.Tpl.Process(command, tplData)
 		if err != nil {
 			err := fmt.Errorf("Error preparing boot command: %s", err)
 			state.Put("error", err)
@@ -89,7 +91,7 @@ func (self *stepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 	return multistep.ActionContinue
 }
 
-func (self *stepTypeBootCommand) Cleanup(multistep.StateBag) {}
+func (self *StepTypeBootCommand) Cleanup(multistep.StateBag) {}
 
 // Taken from qemu's builder plugin - not an exported function.
 func vncSendString(c *vnc.ClientConn, original string) {

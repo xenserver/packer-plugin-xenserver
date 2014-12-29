@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 import (
 	"fmt"
@@ -6,13 +6,13 @@ import (
 	"github.com/mitchellh/packer/packer"
 )
 
-type stepFindVdi struct {
+type StepFindVdi struct {
 	VdiName       string
 	ImagePathFunc func() string
 	VdiUuidKey    string
 }
 
-func (self *stepFindVdi) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepFindVdi) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(XenAPIClient)
 
@@ -39,4 +39,4 @@ func (self *stepFindVdi) Run(state multistep.StateBag) multistep.StepAction {
 	return multistep.ActionContinue
 }
 
-func (self *stepFindVdi) Cleanup(state multistep.StateBag) {}
+func (self *StepFindVdi) Cleanup(state multistep.StateBag) {}

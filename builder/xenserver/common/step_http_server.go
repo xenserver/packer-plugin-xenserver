@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 // Taken from mitchellh/packer/builder/qemu/step_http_server.go
 
@@ -20,12 +20,12 @@ import (
 //
 // Produces:
 //   http_port int - The port the HTTP server started on.
-type stepHTTPServer struct {
+type StepHTTPServer struct {
 	l net.Listener
 }
 
-func (s *stepHTTPServer) Run(state multistep.StateBag) multistep.StepAction {
-	config := state.Get("config").(config)
+func (s *StepHTTPServer) Run(state multistep.StateBag) multistep.StepAction {
+	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 
 	var httpPort uint = 0
@@ -54,7 +54,7 @@ func (s *stepHTTPServer) Run(state multistep.StateBag) multistep.StepAction {
 	return multistep.ActionContinue
 }
 
-func (s *stepHTTPServer) Cleanup(multistep.StateBag) {
+func (s *StepHTTPServer) Cleanup(multistep.StateBag) {
 	if s.l != nil {
 		// Close the listener so that the HTTP server stops
 		s.l.Close()

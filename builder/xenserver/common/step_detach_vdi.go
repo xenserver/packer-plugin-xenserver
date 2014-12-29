@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 import (
 	"fmt"
@@ -7,11 +7,11 @@ import (
 	"log"
 )
 
-type stepDetachVdi struct {
+type StepDetachVdi struct {
 	VdiUuidKey string
 }
 
-func (self *stepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(XenAPIClient)
 
@@ -47,4 +47,4 @@ func (self *stepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
 	return multistep.ActionContinue
 }
 
-func (self *stepDetachVdi) Cleanup(state multistep.StateBag) {}
+func (self *StepDetachVdi) Cleanup(state multistep.StateBag) {}

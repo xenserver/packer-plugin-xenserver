@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 import (
 	"bytes"
@@ -13,22 +13,21 @@ import (
 	"strings"
 )
 
-func sshAddress(state multistep.StateBag) (string, error) {
+func SSHAddress(state multistep.StateBag) (string, error) {
 	sshIP := state.Get("ssh_address").(string)
 	sshHostPort := 22
 	return fmt.Sprintf("%s:%d", sshIP, sshHostPort), nil
 }
 
-func sshLocalAddress(state multistep.StateBag) (string, error) {
+func SSHLocalAddress(state multistep.StateBag) (string, error) {
 	sshLocalPort := state.Get("local_ssh_port").(uint)
 	conn_str := fmt.Sprintf("%s:%d", "127.0.0.1", sshLocalPort)
 	log.Printf("sshLocalAddress: %s", conn_str)
 	return conn_str, nil
 }
 
-func sshConfig(state multistep.StateBag) (*gossh.ClientConfig, error) {
-	config := state.Get("config").(config)
-
+func SSHConfig(state multistep.StateBag) (*gossh.ClientConfig, error) {
+	config := state.Get("commonconfig").(CommonConfig)
 	auth := []gossh.AuthMethod{
 		gossh.Password(config.SSHPassword),
 		gossh.KeyboardInteractive(

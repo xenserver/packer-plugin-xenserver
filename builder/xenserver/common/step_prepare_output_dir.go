@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 /* Taken from https://raw.githubusercontent.com/mitchellh/packer/master/builder/qemu/step_prepare_output_dir.go */
 
@@ -10,18 +10,20 @@ import (
 	"time"
 )
 
-type stepPrepareOutputDir struct{}
+type StepPrepareOutputDir struct {
+	Force bool
+	Path  string
+}
 
-func (stepPrepareOutputDir) Run(state multistep.StateBag) multistep.StepAction {
-	config := state.Get("config").(config)
+func (self *StepPrepareOutputDir) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 
-	if _, err := os.Stat(config.OutputDir); err == nil && config.PackerForce {
+	if _, err := os.Stat(self.Path); err == nil && self.Force {
 		ui.Say("Deleting previous output directory...")
-		os.RemoveAll(config.OutputDir)
+		os.RemoveAll(self.Path)
 	}
 
-	if err := os.MkdirAll(config.OutputDir, 0755); err != nil {
+	if err := os.MkdirAll(self.Path, 0755); err != nil {
 		state.Put("error", err)
 		return multistep.ActionHalt
 	}
@@ -29,17 +31,16 @@ func (stepPrepareOutputDir) Run(state multistep.StateBag) multistep.StepAction {
 	return multistep.ActionContinue
 }
 
-func (stepPrepareOutputDir) Cleanup(state multistep.StateBag) {
+func (self *StepPrepareOutputDir) Cleanup(state multistep.StateBag) {
 	_, cancelled := state.GetOk(multistep.StateCancelled)
 	_, halted := state.GetOk(multistep.StateHalted)
 
 	if cancelled || halted {
-		config := state.Get("config").(config)
 		ui := state.Get("ui").(packer.Ui)
 
 		ui.Say("Deleting output directory...")
 		for i := 0; i < 5; i++ {
-			err := os.RemoveAll(config.OutputDir)
+			err := os.RemoveAll(self.Path)
 			if err == nil {
 				break
 			}

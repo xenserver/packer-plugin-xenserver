@@ -186,6 +186,8 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	state.Put("hook", hook)
 	state.Put("ui", ui)
 
+	httpReqChan := make(chan string, 1)
+
 	//Build the steps
 	steps := []multistep.Step{
 		&common.StepDownload{
@@ -202,7 +204,9 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		&common.StepCreateFloppy{
 			Files: self.config.FloppyFiles,
 		},
-		new(xscommon.StepHTTPServer),
+		&xscommon.StepHTTPServer{
+			Chan: httpReqChan,
+		},
 		&xscommon.StepUploadVdi{
 			VdiName: "Packer-floppy-disk",
 			ImagePathFunc: func() string {
@@ -250,18 +254,13 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		&xscommon.StepTypeBootCommand{
 			Tpl: self.config.tpl,
 		},
-		new(stepWait),
-		&xscommon.StepDetachVdi{
-			VdiUuidKey: "floppy_vdi_uuid",
+		&xscommon.StepWaitForHTTPRequest{
+			Chan:    httpReqChan,
+			Timeout: self.config.InstallTimeout, // @todo change this
 		},
-		&xscommon.StepDetachVdi{
-			VdiUuidKey: "iso_vdi_uuid",
-		},
-		new(xscommon.StepRemoveDevices),
-		new(xscommon.StepStartOnHIMN),
 		&xscommon.StepForwardPortOverSSH{
-			RemotePort:  xscommon.HimnSSHPort,
-			RemoteDest:  xscommon.HimnSSHIP,
+			RemotePort:  xscommon.InstanceSSHPort,
+			RemoteDest:  xscommon.InstanceSSHIP,
 			HostPortMin: self.config.HostPortMin,
 			HostPortMax: self.config.HostPortMax,
 			ResultKey:   "local_ssh_port",

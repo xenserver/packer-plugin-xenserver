@@ -23,25 +23,27 @@ func appendQuery(urlstring, k, v string) (string, error) {
 	return u.String(), err
 }
 
-func httpUpload(import_url string, fh *os.File, state multistep.StateBag) error {
+func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (result *XenAPIObject, err error) {
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(XenAPIClient)
 
 	task, err := client.CreateTask()
 	if err != nil {
-		return fmt.Errorf("Unable to create task: %s", err.Error())
+		err = fmt.Errorf("Unable to create task: %s", err.Error())
+		return
 	}
 	defer task.Destroy()
 
 	import_task_url, err := appendQuery(import_url, "task_id", task.Ref)
 	if err != nil {
-		return err
+		return
 	}
 
 	// Get file length
 	fstat, err := fh.Stat()
 	if err != nil {
-		return fmt.Errorf("Unable to stat '%s': %s", fh.Name(), err.Error())
+		err = fmt.Errorf("Unable to stat '%s': %s", fh.Name(), err.Error())
+		return
 	}
 	fileLength := fstat.Size()
 
@@ -61,11 +63,12 @@ func httpUpload(import_url string, fh *os.File, state multistep.StateBag) error 
 
 	resp, err := httpClient.Do(request) // Do closes fh for us, according to docs
 	if err != nil {
-		return err
+		return
 	}
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("PUT request got non-200 status code: %s", resp.Status)
+		err = fmt.Errorf("PUT request got non-200 status code: %s", resp.Status)
+		return
 	}
 
 	logIteration := 0
@@ -107,9 +110,16 @@ func httpUpload(import_url string, fh *os.File, state multistep.StateBag) error 
 	resp.Body.Close()
 
 	if err != nil {
-		return fmt.Errorf("Error uploading: %s", err.Error())
+		err = fmt.Errorf("Error uploading: %s", err.Error())
+		return
+	}
+
+	result, err = task.GetResult()
+	if err != nil {
+		err = fmt.Errorf("Error getting result: %s", err.Error())
+		return
 	}
 
 	log.Printf("Upload complete")
-	return nil
+	return
 }

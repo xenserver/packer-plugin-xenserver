@@ -1,56 +1,58 @@
 package xva
 
 import (
-	//	"fmt"
+	"fmt"
+	"os"
 
 	"github.com/mitchellh/multistep"
-	//	"github.com/mitchellh/packer/packer"
+	"github.com/mitchellh/packer/packer"
 	xscommon "github.com/rdobson/packer-builder-xenserver/builder/xenserver/common"
 )
 
-type stepCreateInstance struct {
+type stepImportInstance struct {
 	instance *xscommon.VM
 	vdi      *xscommon.VDI
 }
 
-func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepAction {
+func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepAction {
+
+	client := state.Get("client").(xscommon.XenAPIClient)
+	config := state.Get("config").(config)
+	ui := state.Get("ui").(packer.Ui)
+
+	ui.Say("Step: Import Instance")
+
+	// find the SR
+	sr, err := config.GetSR(client)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
+	// Open the file for reading (NB: httpUpload closes the file for us)
+	fh, err := os.Open(config.SourcePath)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to open XVA '%s': %s", config.SourcePath, err.Error()))
+		return multistep.ActionHalt
+	}
+
+	result, err := xscommon.HTTPUpload(fmt.Sprintf("https://%s/import?session_id=%s&sr_id=%s",
+		client.Host,
+		client.Session.(string),
+		sr.Ref,
+	), fh, state)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to upload VDI: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+	if result == nil {
+		ui.Error("XAPI did not reply with an instance reference")
+		return multistep.ActionHalt
+	}
+
+	instance := xscommon.VM(*result)
 
 	/*
-		client := state.Get("client").(xscommon.XenAPIClient)
-		config := state.Get("config").(config)
-		ui := state.Get("ui").(packer.Ui)
-
-		ui.Say("Step: Create Instance")
-
-		// Get the template to clone from
-
-		vms, err := client.GetVMByNameLabel(config.CloneTemplate)
-
-		switch {
-		case len(vms) == 0:
-			ui.Error(fmt.Sprintf("Couldn't find a template with the name-label '%s'. Aborting.", config.CloneTemplate))
-			return multistep.ActionHalt
-		case len(vms) > 1:
-			ui.Error(fmt.Sprintf("Found more than one template with the name '%s'. The name must be unique. Aborting.", config.CloneTemplate))
-			return multistep.ActionHalt
-		}
-
-		template := vms[0]
-
-		// Clone that VM template
-		instance, err := template.Clone(config.VMName)
-		if err != nil {
-			ui.Error(fmt.Sprintf("Error cloning VM: %s", err.Error()))
-			return multistep.ActionHalt
-		}
-		self.instance = instance
-
-		err = instance.SetIsATemplate(false)
-		if err != nil {
-			ui.Error(fmt.Sprintf("Error setting is_a_template=false: %s", err.Error()))
-			return multistep.ActionHalt
-		}
-
 		err = instance.SetStaticMemoryRange(config.VMMemory*1024*1024, config.VMMemory*1024*1024)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Error setting VM memory=%d: %s", config.VMMemory*1024*1024, err.Error()))
@@ -60,27 +62,6 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		instance.SetPlatform(config.PlatformArgs)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Error setting VM platform: %s", err.Error()))
-			return multistep.ActionHalt
-		}
-
-		// Create VDI for the instance
-
-		sr, err := config.GetSR(client)
-		if err != nil {
-			ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
-			return multistep.ActionHalt
-		}
-
-		vdi, err := sr.CreateVdi("Packer-disk", int64(config.DiskSize*1024*1024))
-		if err != nil {
-			ui.Error(fmt.Sprintf("Unable to create packer disk VDI: %s", err.Error()))
-			return multistep.ActionHalt
-		}
-		self.vdi = vdi
-
-		err = instance.ConnectVdi(vdi, xscommon.Disk)
-		if err != nil {
-			ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 
@@ -151,20 +132,21 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 			ui.Say(err.Error())
 		}
 
-		instanceId, err := instance.GetUuid()
-		if err != nil {
-			ui.Error(fmt.Sprintf("Unable to get VM UUID: %s", err.Error()))
-			return multistep.ActionHalt
-		}
-
-		state.Put("instance_uuid", instanceId)
-		ui.Say(fmt.Sprintf("Created instance '%s'", instanceId))
 	*/
+
+	instanceId, err := instance.GetUuid()
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to get VM UUID: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
+	state.Put("instance_uuid", instanceId)
+	ui.Say(fmt.Sprintf("Imported instance '%s'", instanceId))
 
 	return multistep.ActionContinue
 }
 
-func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
+func (self *stepImportInstance) Cleanup(state multistep.StateBag) {
 	/*
 		config := state.Get("config").(config)
 		if config.ShouldKeepVM(state) {

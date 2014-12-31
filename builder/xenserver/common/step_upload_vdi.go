@@ -35,7 +35,7 @@ func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 		return multistep.ActionHalt
 	}
 
-	// Open the file for reading (NB: httpUpload closes the file for us)
+	// Open the file for reading (NB: HTTPUpload closes the file for us)
 	fh, err := os.Open(imagePath)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to open disk image '%s': %s", imagePath, err.Error()))
@@ -64,7 +64,7 @@ func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 	}
 	state.Put(self.VdiUuidKey, vdiUuid)
 
-	err = httpUpload(fmt.Sprintf("https://%s/import_raw_vdi?vdi=%s&session_id=%s",
+	_, err = HTTPUpload(fmt.Sprintf("https://%s/import_raw_vdi?vdi=%s&session_id=%s",
 		client.Host,
 		vdi.Ref,
 		client.Session.(string),

@@ -15,6 +15,7 @@ type config struct {
 	common.PackerConfig   `mapstructure:",squash"`
 	xscommon.CommonConfig `mapstructure:",squash"`
 
+	SourcePath string `mapstructure:"source_path"`
 	VMMemory      uint   `mapstructure:"vm_memory"`
 	CloneTemplate string `mapstructure:"clone_template"`
 
@@ -65,6 +66,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	// Template substitution
 
 	templates := map[string]*string{
+		"source_path":   &self.config.SourcePath,
 		"clone_template": &self.config.CloneTemplate,
 		"network_name":   &self.config.NetworkName,
 	}
@@ -78,6 +80,10 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	}
 
 	// Validation
+
+	if self.config.SourcePath == "" {
+		errs = packer.MultiErrorAppend(errs, fmt.Errorf("A source_path must be specified"))
+	}
 
 	if len(errs.Errors) > 0 {
 		retErr = errors.New(errs.Error())
@@ -104,6 +110,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	state.Put("cache", cache)
 	state.Put("client", client)
 	state.Put("config", self.config)
+	state.Put("commonconfig", self.config.CommonConfig)
 	state.Put("hook", hook)
 	state.Put("ui", ui)
 
@@ -131,7 +138,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiName:    self.config.ToolsIsoName,
 			VdiUuidKey: "tools_vdi_uuid",
 		},
-		new(stepCreateInstance),
+		new(stepImportInstance),
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 			VdiType:    xscommon.Floppy,
@@ -140,6 +147,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiUuidKey: "tools_vdi_uuid",
 			VdiType:    xscommon.CD,
 		},
+		new(xscommon.StepRemoveDevices),
 		new(xscommon.StepStartOnHIMN),
 		&xscommon.StepForwardPortOverSSH{
 			RemotePort:  xscommon.HimnSSHPort,

@@ -39,7 +39,8 @@ func (self *StepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
 	err = instance.DisconnectVdi(vdi)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to detach VDI '%s': %s", vdiUuid, err.Error()))
-		return multistep.ActionHalt
+		//return multistep.ActionHalt
+		return multistep.ActionContinue
 	}
 
 	log.Printf("Detached VDI '%s'", vdiUuid)

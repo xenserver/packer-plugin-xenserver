@@ -13,9 +13,9 @@ import (
 )
 
 type CommonConfig struct {
-	Username string `mapstructure:"username"`
-	Password string `mapstructure:"password"`
-	HostIp   string `mapstructure:"host_ip"`
+	Username string `mapstructure:"remote_username"`
+	Password string `mapstructure:"remote_password"`
+	HostIp   string `mapstructure:"remote_host"`
 
 	VMName      string   `mapstructure:"vm_name"`
 	SrName      string   `mapstructure:"sr_name"`
@@ -123,9 +123,9 @@ func (c *CommonConfig) Prepare(t *packer.ConfigTemplate, pc *common.PackerConfig
 	// Template substitution
 
 	templates := map[string]*string{
-		"username":         &c.Username,
-		"password":         &c.Password,
-		"host_ip":          &c.HostIp,
+		"remote_username":  &c.Username,
+		"remote_password":  &c.Password,
+		"remote_host":      &c.HostIp,
 		"vm_name":          &c.VMName,
 		"sr_name":          &c.SrName,
 		"shutdown_command": &c.ShutdownCommand,
@@ -156,15 +156,15 @@ func (c *CommonConfig) Prepare(t *packer.ConfigTemplate, pc *common.PackerConfig
 	// Validation
 
 	if c.Username == "" {
-		errs = append(errs, errors.New("A username for the xenserver host must be specified."))
+		errs = append(errs, errors.New("remote_username must be specified."))
 	}
 
 	if c.Password == "" {
-		errs = append(errs, errors.New("A password for the xenserver host must be specified."))
+		errs = append(errs, errors.New("remote_password must be specified."))
 	}
 
 	if c.HostIp == "" {
-		errs = append(errs, errors.New("An ip for the xenserver host must be specified."))
+		errs = append(errs, errors.New("remote_host must be specified."))
 	}
 
 	if c.VMName == "" {

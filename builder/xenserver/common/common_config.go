@@ -112,6 +112,10 @@ func (c *CommonConfig) Prepare(t *packer.ConfigTemplate, pc *common.PackerConfig
 		c.OutputDir = fmt.Sprintf("output-%s", pc.PackerBuildName)
 	}
 
+	if c.VMName == "" {
+		c.VMName = fmt.Sprintf("packer-%s-{{timestamp}}", pc.PackerBuildName)
+	}
+
 	if c.Format == "" {
 		c.Format = "xva"
 	}
@@ -165,10 +169,6 @@ func (c *CommonConfig) Prepare(t *packer.ConfigTemplate, pc *common.PackerConfig
 
 	if c.HostIp == "" {
 		errs = append(errs, errors.New("remote_host must be specified."))
-	}
-
-	if c.VMName == "" {
-		errs = append(errs, errors.New("vm_name must be specified."))
 	}
 
 	if c.HostPortMin > c.HostPortMax {

@@ -22,20 +22,20 @@ type APIResult struct {
 	ErrorDescription string
 }
 
-type VM struct {
+type XenAPIObject struct {
 	Ref    string
 	Client *XenAPIClient
 }
 
-type SR struct {
-	Ref    string
-	Client *XenAPIClient
-}
-
-type VDI struct {
-	Ref    string
-	Client *XenAPIClient
-}
+type VM XenAPIObject
+type SR XenAPIObject
+type VDI XenAPIObject
+type Network XenAPIObject
+type VBD XenAPIObject
+type VIF XenAPIObject
+type PIF XenAPIObject
+type Pool XenAPIObject
+type Task XenAPIObject
 
 type VDIType int
 
@@ -45,36 +45,6 @@ const (
 	CD
 	Floppy
 )
-
-type Network struct {
-	Ref    string
-	Client *XenAPIClient
-}
-
-type VBD struct {
-	Ref    string
-	Client *XenAPIClient
-}
-
-type VIF struct {
-	Ref    string
-	Client *XenAPIClient
-}
-
-type PIF struct {
-	Ref    string
-	Client *XenAPIClient
-}
-
-type Pool struct {
-	Ref    string
-	Client *XenAPIClient
-}
-
-type Task struct {
-	Ref    string
-	Client *XenAPIClient
-}
 
 type TaskStatusType int
 
@@ -899,6 +869,26 @@ func (self *Task) GetProgress() (progress float64, err error) {
 		return
 	}
 	progress = result.Value.(float64)
+	return
+}
+
+func (self *Task) GetResult() (object *XenAPIObject, err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "task.get_result", self.Ref)
+	if err != nil {
+		return
+	}
+	switch ref := result.Value.(type) {
+	case string:
+		object = &XenAPIObject{
+			Ref:    ref.(string),
+			Client: self.Client,
+		}
+	case nil:
+		object = nil
+	default:
+		err = fmt.Errorf("task.get_result: unknown value type %T (expected string or nil)", ref)
+	}
 	return
 }
 

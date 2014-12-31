@@ -105,7 +105,7 @@ func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 		return multistep.ActionHalt
 	}
 
-	logInterval := 0
+	logIteration := 0
 	err = InterruptibleWait{
 		Predicate: func() (bool, error) {
 			status, err := task.GetStatus()
@@ -118,8 +118,8 @@ func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 				if err != nil {
 					return false, fmt.Errorf("Failed to get progress: %s", err.Error())
 				}
-				logInterval = logInterval + 1
-				if logInterval%5 == 0 {
+				logIteration = logIteration + 1
+				if logIteration%5 == 0 {
 					log.Printf("Upload %.0f%% complete", progress*100)
 				}
 				return false, nil

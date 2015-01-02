@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/nilshell/xmlrpc"
 	"log"
+	"regexp"
 )
 
 type XenAPIClient struct {
@@ -880,9 +881,17 @@ func (self *Task) GetResult() (object *XenAPIObject, err error) {
 	}
 	switch ref := result.Value.(type) {
 	case string:
-		object = &XenAPIObject{
-			Ref:    ref.(string),
-			Client: self.Client,
+		// @fixme: xapi currently sends us an xmlrpc-encoded string via xmlrpc.
+		// This seems to be a bug in xapi. Remove this workaround when it's fixed
+		re := regexp.MustCompile("^<value><array><data><value>([^<]*)</value>.*</data></array></value>$")
+		match := re.FindStringSubmatch(ref)
+		if match == nil {
+			object = nil
+		} else {
+			object = &XenAPIObject{
+				Ref:    match[1],
+				Client: self.Client,
+			}
 		}
 	case nil:
 		object = nil

@@ -37,8 +37,6 @@ type CommonConfig struct {
 	HTTPPortMin uint   `mapstructure:"http_port_min"`
 	HTTPPortMax uint   `mapstructure:"http_port_max"`
 
-	LocalIp string `mapstructure:"local_ip"`
-
 	//	SSHHostPortMin    uint   `mapstructure:"ssh_host_port_min"`
 	//	SSHHostPortMax    uint   `mapstructure:"ssh_host_port_max"`
 	SSHKeyPath  string `mapstructure:"ssh_key_path"`
@@ -136,7 +134,6 @@ func (c *CommonConfig) Prepare(t *packer.ConfigTemplate, pc *common.PackerConfig
 		"boot_wait":        &c.RawBootWait,
 		"tools_iso_name":   &c.ToolsIsoName,
 		"http_directory":   &c.HTTPDir,
-		"local_ip":         &c.LocalIp,
 		"ssh_key_path":     &c.SSHKeyPath,
 		"ssh_password":     &c.SSHPassword,
 		"ssh_username":     &c.SSHUser,
@@ -226,12 +223,6 @@ func (c *CommonConfig) Prepare(t *packer.ConfigTemplate, pc *common.PackerConfig
 	default:
 		errs = append(errs, errors.New("keep_vm must be one of 'always', 'never', 'on_success'"))
 	}
-
-	/*
-	   if c.LocalIp == "" {
-	       errs = append(errs, errors.New("A local IP visible to XenServer's mangement interface is required to serve files."))
-	   }
-	*/
 
 	return errs
 }

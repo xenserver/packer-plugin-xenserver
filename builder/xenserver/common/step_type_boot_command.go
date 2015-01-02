@@ -60,10 +60,22 @@ func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 
 	log.Printf("Connected to the VNC console: %s", c.DesktopName)
 
-	// @todo - include http port/ip so kickstarter files can be grabbed
+	// find local ip
+	envVar, err := execute_ssh_cmd("echo $SSH_CLIENT", config.HostIp, "22", config.Username, config.Password)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error detecting local IP: %s", err))
+		return multistep.ActionHalt
+	}
+	if envVar == "" {
+		ui.Error("Error detecting local IP: $SSH_CLIENT was empty")
+		return multistep.ActionHalt
+	}
+	localIp := strings.Split(envVar, " ")[0]
+	ui.Message(fmt.Sprintf("Found local IP: %s", localIp))
+
 	tplData := &bootCommandTemplateData{
 		config.VMName,
-		config.LocalIp,
+		localIp,
 		http_port,
 	}
 

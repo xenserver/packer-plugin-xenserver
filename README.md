@@ -63,42 +63,45 @@ cd packer-builder-xenserver
 If the build is successful, you should now have a `packer-builder-xenserver` binary
 in your `$GOPATH/bin` directory and you are ready to get going with packer.
 
-## Centos 6.4 Example
+## Centos 6.6 Example
 
 Once you've setup the above, you are good to go with an example. 
 
-To get you started, there is an example config file which you can use: [`examples/centos-6.4.conf`](https://github.com/rdobson/packer-builder-xenserver/blob/master/examples/centos-6.4.conf)
+To get you started, there is an example config file which you can use:
+[`examples/centos-6.6.json`](https://github.com/rdobson/packer-builder-xenserver/blob/master/examples/centos-6.6.json)
 
-Currently it is not (easily) possible to take care of the ISO download and upload,
-so you will need to attach an ISO SR to the XenServer host (NFS/CIFS) with the
-ISO you want to use for installation. You will then need to specify the name
-in the config file (this must be unique).
+The example is functional, once suitable `remote_host`, `remote_username` and
+`remote_password` configurations have been substituted.
 
-
-An explanation of what these parameters are doing:
- * `type` - this specifies the builder. This must be 'xenserver'.
- * `username` - this is the username for the XenServer host being used.
- * `password` - this is the password for the XenServer host being used.
- * `host_ip` - this is the IP for the XenServer host being used.
- * `instance_name` - this is the name that should be given to the created VM.
- * `instance_memory` - this is the static memory configuration for the VM.
- * `root_disk_size` - this is the size of the disk the VM should be created with.
- * `iso_name` - this is the name of the ISO visible on a ISO SR connected to the XenServer host.
+A brief explanation of what the config parameters mean:
+ * `type` - specifies the builder type. This is 'xenserver-iso', for installing
+   a VM from scratch, or 'xenserver-xva' to import existing XVA as a starting
+   point.
+ * `remote_username` - the username for the XenServer host being used.
+ * `remote_password` - the password for the XenServer host being used.
+ * `remote_host` - the IP for the XenServer host being used.
+ * `vm_name` - the name that should be given to the created VM.
+ * `vm_memory` - the static memory configuration for the VM, in MB.
+ * `disk_size` - the size of the disk the VM should be created with, in MB.
+ * `iso_name` - the name of the ISO visible on a ISO SR connected to the XenServer host.
  * `http_directory` - the path to a local directory to serve up over http.
- * `local_ip` - the IP on the machine you are running packer that your XenServer can connect too.
  * `ssh_username` - the username set by the installer for the instance.
  * `ssh_password` - the password set by the installer for the instance.
- * `boot_command` - a set of commands to be sent to the instance over VNC.
+ * `boot_command` - a list of commands to be sent to the instance over VNC.
 
-
-Note, the `http_directory` and `local_ip` parameters are only required if you
-want packer to serve up files over HTTP. In this example, the templated variables
-`{{ .HTTPIP }}` and `{{ .HTTPPort }}` will be substituted for the `local_ip` and
-the port that packer starts it's HTTP service on.
+Note, the `http_directory` parameter is only required if you
+want Packer to serve up files over HTTP. In this example, the templated variables
+`{{ .HTTPIP }}` and `{{ .HTTPPort }}` will be substituted for the local IP and
+the port that Packer starts its HTTP service on.
 
 Once you've updated the config file with your own parameters, you can use packer
-to build this VM with the following:
+to build this VM with the following command:
 
 ```
-packer build centos-6.4.conf
+packer build centos-6.6.json
 ```
+
+# Documentation
+
+For complete documentation on configuration commands, see either [the
+xenserver-iso docs](https://github.com/rdobson/packer-builder-xenserver/blob/master/docs/builders/xenserver-iso.html.markdown) or [the xenserver-xva docs](https://github.com/rdobson/packer-builder-xenserver/blob/master/docs/builders/xenserver-xva.html.markdown).

@@ -900,7 +900,7 @@ func (self *Task) GetErrorInfo() (errorInfo []string, err error) {
 	}
 	errorInfo = make([]string, 0)
 	for _, infoRaw := range result.Value.([]interface{}) {
-		errorInfo = append(errorInfo, infoRaw.(string))
+		errorInfo = append(errorInfo, fmt.Sprintf("%v", infoRaw))
 	}
 	return
 }

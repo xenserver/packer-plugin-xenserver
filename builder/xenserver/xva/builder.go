@@ -17,7 +17,6 @@ type config struct {
 
 	SourcePath string `mapstructure:"source_path"`
 	VMMemory      uint   `mapstructure:"vm_memory"`
-	CloneTemplate string `mapstructure:"clone_template"`
 
 	PlatformArgs map[string]string `mapstructure:"platform_args"`
 
@@ -67,7 +66,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 
 	templates := map[string]*string{
 		"source_path":   &self.config.SourcePath,
-		"clone_template": &self.config.CloneTemplate,
 		"network_name":   &self.config.NetworkName,
 	}
 

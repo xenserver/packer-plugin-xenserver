@@ -8,9 +8,9 @@ import (
 
 func testConfig() map[string]interface{} {
 	return map[string]interface{}{
-		"host_ip":           "localhost",
-		"username":          "admin",
-		"password":          "admin",
+		"remote_host":       "localhost",
+		"remote_username":   "admin",
+		"remote_password":   "admin",
 		"vm_name":           "foo",
 		"iso_checksum":      "foo",
 		"iso_checksum_type": "md5",
@@ -53,12 +53,12 @@ func TestBuilderPrepare_Defaults(t *testing.T) {
 		t.Errorf("bad vm name: %s", b.config.VMName)
 	}
 
-	if b.config.ExportFormat != "xva" {
-		t.Errorf("bad format: %s", b.config.ExportFormat)
+	if b.config.Format != "xva" {
+		t.Errorf("bad format: %s", b.config.Format)
 	}
 
-	if b.config.KeepInstance != "never" {
-		t.Errorf("bad keep instance: %s", b.config.KeepInstance)
+	if b.config.KeepVM != "never" {
+		t.Errorf("bad keep instance: %s", b.config.KeepVM)
 	}
 }
 
@@ -99,7 +99,7 @@ func TestBuilderPrepare_Format(t *testing.T) {
 	config := testConfig()
 
 	// Bad
-	config["export_format"] = "foo"
+	config["format"] = "foo"
 	warns, err := b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
@@ -109,7 +109,7 @@ func TestBuilderPrepare_Format(t *testing.T) {
 	}
 
 	// Good
-	config["export_format"] = "vdi_raw"
+	config["format"] = "vdi_raw"
 	b = Builder{}
 	warns, err = b.Prepare(config)
 	if len(warns) > 0 {
@@ -333,12 +333,12 @@ func TestBuilderPrepare_ISOUrl(t *testing.T) {
 	}
 }
 
-func TestBuilderPrepare_KeepInstance(t *testing.T) {
+func TestBuilderPrepare_KeepVM(t *testing.T) {
 	var b Builder
 	config := testConfig()
 
 	// Bad
-	config["keep_instance"] = "foo"
+	config["keep_vm"] = "foo"
 	warns, err := b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
@@ -348,7 +348,7 @@ func TestBuilderPrepare_KeepInstance(t *testing.T) {
 	}
 
 	// Good
-	config["keep_instance"] = "always"
+	config["keep_vm"] = "always"
 	b = Builder{}
 	warns, err = b.Prepare(config)
 	if len(warns) > 0 {

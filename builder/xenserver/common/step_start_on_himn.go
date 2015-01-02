@@ -23,7 +23,6 @@ func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(XenAPIClient)
-	config := state.Get("commonconfig").(CommonConfig)
 
 	ui.Say("Step: Start VM on the Host Internal Mangement Network")
 
@@ -96,7 +95,7 @@ func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	err = InterruptibleWait{
 		Predicate: func() (success bool, err error) {
 			ui.Message(fmt.Sprintf("Attempting to ping interface: %s", ping_cmd))
-			_, err = execute_ssh_cmd(ping_cmd, config.HostIp, "22", config.Username, config.Password)
+			_, err = ExecuteHostSSHCmd(state, ping_cmd)
 
 			switch err.(type) {
 			case nil:

@@ -63,7 +63,7 @@ func (StepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 		if config.ShutdownCommand != "" {
 			ui.Say("Executing shutdown command...")
 
-			_, err := execute_ssh_cmd(config.ShutdownCommand, config.HostIp, "22", config.Username, config.Password)
+			_, err := ExecuteGuestSSHCmd(state, config.ShutdownCommand)
 			if err != nil {
 				ui.Error(fmt.Sprintf("Shutdown command failed: %s", err.Error()))
 				return false

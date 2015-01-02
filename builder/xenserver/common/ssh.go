@@ -20,9 +20,11 @@ func SSHAddress(state multistep.StateBag) (string, error) {
 }
 
 func SSHLocalAddress(state multistep.StateBag) (string, error) {
-	sshLocalPort := state.Get("local_ssh_port").(uint)
+	sshLocalPort, ok := state.Get("local_ssh_port").(uint)
+	if !ok {
+		return "", fmt.Errorf("SSH port forwarding hasn't been set up yet")
+	}
 	conn_str := fmt.Sprintf("%s:%d", "127.0.0.1", sshLocalPort)
-	log.Printf("sshLocalAddress: %s", conn_str)
 	return conn_str, nil
 }
 
@@ -49,24 +51,14 @@ func SSHConfig(state multistep.StateBag) (*gossh.ClientConfig, error) {
 	}, nil
 }
 
-func execute_ssh_cmd(cmd, host, port, username, password string) (stdout string, err error) {
-	// Setup connection config
-	config := &gossh.ClientConfig{
-		User: username,
-		Auth: []gossh.AuthMethod{
-			gossh.Password(password),
-		},
-	}
-
-	client, err := gossh.Dial("tcp", host+":"+port, config)
-
+func doExecuteSSHCmd(cmd, target string, config *gossh.ClientConfig) (stdout string, err error) {
+	client, err := gossh.Dial("tcp", target, config)
 	if err != nil {
 		return "", err
 	}
 
 	//Create session
 	session, err := client.NewSession()
-
 	if err != nil {
 		return "", err
 	}
@@ -80,6 +72,31 @@ func execute_ssh_cmd(cmd, host, port, username, password string) (stdout string,
 	}
 
 	return strings.Trim(b.String(), "\n"), nil
+}
+
+func ExecuteHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err error) {
+	config := state.Get("commonconfig").(CommonConfig)
+	// Setup connection config
+	sshConfig := &gossh.ClientConfig{
+		User: config.Username,
+		Auth: []gossh.AuthMethod{
+			gossh.Password(config.Password),
+		},
+	}
+	return doExecuteSSHCmd(cmd, config.HostIp+":22", sshConfig)
+}
+
+func ExecuteGuestSSHCmd(state multistep.StateBag, cmd string) (stdout string, err error) {
+	localAddress, err := SSHLocalAddress(state)
+	if err != nil {
+		return
+	}
+	sshConfig, err := SSHConfig(state)
+	if err != nil {
+		return
+	}
+
+	return doExecuteSSHCmd(cmd, localAddress, sshConfig)
 }
 
 func forward(local_conn net.Conn, config *gossh.ClientConfig, server, remote_dest string, remote_port uint) error {

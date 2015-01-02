@@ -61,7 +61,7 @@ func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 	log.Printf("Connected to the VNC console: %s", c.DesktopName)
 
 	// find local ip
-	envVar, err := execute_ssh_cmd("echo $SSH_CLIENT", config.HostIp, "22", config.Username, config.Password)
+	envVar, err := ExecuteHostSSHCmd(state, "echo $SSH_CLIENT")
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error detecting local IP: %s", err))
 		return multistep.ActionHalt

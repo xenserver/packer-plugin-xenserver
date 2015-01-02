@@ -38,13 +38,13 @@ Follow these instructions and install golang on your system:
 
 ## Install Packer
 
-Visit https://packer.io and install the latest version of packer. Once the
-install has completed, setup an environment variable 'PACKERPATH' pointing
-to the installation location. E.g.
+Clone the Packer repository:
 
 ```shell
-export PACKERPATH=/usr/local/packer
+git clone https://github.com/mitchellh/packer.git
 ```
+
+Then follow the [instructions to build and install a development version of Packer](https://github.com/mitchellh/packer#developing-packer).
 
 ## Compile the plugin
 
@@ -58,11 +58,10 @@ cd src/github.com/rdobson
 git clone https://github.com/rdobson/packer-builder-xenserver.git
 cd packer-builder-xenserver
 ./build.sh
-
 ```
 
-If the build is successful, you should now have a 'packer-builder-xenserver' binary
-in your $PACKERPATH directory and you are ready to get going with packer.
+If the build is successful, you should now have a `packer-builder-xenserver` binary
+in your `$GOPATH/bin` directory and you are ready to get going with packer.
 
 ## Centos 6.4 Example
 
@@ -103,10 +102,3 @@ to build this VM with the following:
 ```
 packer build centos-6.4.conf
 ```
-
-
-
-
-
-
-

@@ -39,9 +39,9 @@ type CommonConfig struct {
 
 	//	SSHHostPortMin    uint   `mapstructure:"ssh_host_port_min"`
 	//	SSHHostPortMax    uint   `mapstructure:"ssh_host_port_max"`
-	SSHKeyPath  string `mapstructure:"ssh_key_path"`
-	SSHPassword string `mapstructure:"ssh_password"`
-	//	SSHPort           uint   `mapstructure:"ssh_port"`
+	SSHKeyPath        string `mapstructure:"ssh_key_path"`
+	SSHPassword       string `mapstructure:"ssh_password"`
+	SSHPort           uint   `mapstructure:"ssh_port"`
 	SSHUser           string `mapstructure:"ssh_username"`
 	RawSSHWaitTimeout string `mapstructure:"ssh_wait_timeout"`
 	SSHWaitTimeout    time.Duration
@@ -96,11 +96,11 @@ func (c *CommonConfig) Prepare(t *packer.ConfigTemplate, pc *common.PackerConfig
 		if c.SSHHostPortMax == 0 {
 			c.SSHHostPortMax = 4444
 		}
-
-		if c.SSHPort == 0 {
-			c.SSHPort = 22
-		}
 	*/
+
+	if c.SSHPort == 0 {
+		c.SSHPort = 22
+	}
 
 	if c.RawSSHWaitTimeout == "" {
 		c.RawSSHWaitTimeout = "20m"

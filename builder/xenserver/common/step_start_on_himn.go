@@ -131,5 +131,6 @@ func HimnSSHIP(state multistep.StateBag) (string, error) {
 }
 
 func HimnSSHPort(state multistep.StateBag) (uint, error) {
-	return 22, nil
+	config := state.Get("commonconfig").(CommonConfig)
+	return config.SSHPort, nil
 }

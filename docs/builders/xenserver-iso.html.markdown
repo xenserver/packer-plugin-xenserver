@@ -143,6 +143,13 @@ each category, the available options are alphabetized and described.
   must point to the same file (same checksum). By default this is empty
   and `iso_url` is used. Only one of `iso_url` or `iso_urls` can be specified.
 
+* `keep_vm` (string) - Determine when to keep the VM and when to clean it up. This
+  can be "always", "never" or "on_success". By default this is "never", and Packer
+  always deletes the VM regardless of whether the process succeeded and an artifact
+  was produced. "always" asks Packer to leave the VM at the end of the process
+  regardless of success. "on_success" requests that the VM only be cleaned up if an
+  artifact was produced. The latter is useful for debugging templates that fail.
+
 * `output_directory` (string) - This is the path to the directory where the
   resulting virtual machine will be created. This may be relative or absolute.
   If relative, the path is relative to the working directory when `packer`

@@ -11,26 +11,6 @@ You can check out packer [here](https://packer.io).
 * Golang (tested with 1.2.1) 
 
 
-In order for this integration to work you must also configure NATing in Dom0. 
-
-You can do this by executing the following in Dom0:
-
-```shell
-# Install netcat
-yum install --enablerepo=base,extras --disablerepo=citrix -y nc
-# Setup NAT - NB, this _disable the firewall_ - be careful!
-echo 1 > /proc/sys/net/ipv4/ip_forward
-/sbin/iptables -F INPUT
-
-/sbin/iptables -t nat -A POSTROUTING -o xenbr0 -j MASQUERADE
-/sbin/iptables -A INPUT -i xenbr0 -p tcp -m tcp --dport 53 -j ACCEPT
-/sbin/iptables -A INPUT -i xenbr0 -p udp -m udp --dport 53 -j ACCEPT
-/sbin/iptables -A FORWARD -i xenbr0 -o xenapi -m state --state RELATED,ESTABLISHED -j ACCEPT
-/sbin/iptables -A FORWARD -i xenapi -o xenbr0 -j ACCEPT
-```
-(Borrowed from: jonludlam/vagrant-xenserver)
-
-
 ## Install Go
 
 Follow these instructions and install golang on your system:

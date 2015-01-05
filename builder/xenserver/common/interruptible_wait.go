@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 import (
 	"github.com/mitchellh/multistep"

@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/mitchellh/packer/packer/plugin"
-	"github.com/rdobson/packer-builder-xenserver/builder/xenserver"
+	"github.com/rdobson/packer-builder-xenserver/builder/xenserver/xva"
 )
 
 func main() {
@@ -10,6 +10,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	server.RegisterBuilder(new(xenserver.Builder))
+	server.RegisterBuilder(new(xva.Builder))
 	server.Serve()
 }

@@ -1,10 +1,11 @@
-package xenserver
+package common
 
 import (
 	"errors"
 	"fmt"
 	"github.com/nilshell/xmlrpc"
 	"log"
+	"regexp"
 )
 
 type XenAPIClient struct {
@@ -22,64 +23,34 @@ type APIResult struct {
 	ErrorDescription string
 }
 
-type VM struct {
+type XenAPIObject struct {
 	Ref    string
 	Client *XenAPIClient
 }
 
-type SR struct {
-	Ref    string
-	Client *XenAPIClient
-}
-
-type VDI struct {
-	Ref    string
-	Client *XenAPIClient
-}
+type VM XenAPIObject
+type SR XenAPIObject
+type VDI XenAPIObject
+type Network XenAPIObject
+type VBD XenAPIObject
+type VIF XenAPIObject
+type PIF XenAPIObject
+type Pool XenAPIObject
+type Task XenAPIObject
 
 type VDIType int
 
 const (
-	_ = iota
+	_ VDIType = iota
 	Disk
 	CD
 	Floppy
 )
 
-type Network struct {
-	Ref    string
-	Client *XenAPIClient
-}
-
-type VBD struct {
-	Ref    string
-	Client *XenAPIClient
-}
-
-type VIF struct {
-	Ref    string
-	Client *XenAPIClient
-}
-
-type PIF struct {
-	Ref    string
-	Client *XenAPIClient
-}
-
-type Pool struct {
-	Ref    string
-	Client *XenAPIClient
-}
-
-type Task struct {
-	Ref    string
-	Client *XenAPIClient
-}
-
 type TaskStatusType int
 
 const (
-	_ = iota
+	_ TaskStatusType = iota
 	Pending
 	Success
 	Failure
@@ -902,6 +873,34 @@ func (self *Task) GetProgress() (progress float64, err error) {
 	return
 }
 
+func (self *Task) GetResult() (object *XenAPIObject, err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "task.get_result", self.Ref)
+	if err != nil {
+		return
+	}
+	switch ref := result.Value.(type) {
+	case string:
+		// @fixme: xapi currently sends us an xmlrpc-encoded string via xmlrpc.
+		// This seems to be a bug in xapi. Remove this workaround when it's fixed
+		re := regexp.MustCompile("^<value><array><data><value>([^<]*)</value>.*</data></array></value>$")
+		match := re.FindStringSubmatch(ref)
+		if match == nil {
+			object = nil
+		} else {
+			object = &XenAPIObject{
+				Ref:    match[1],
+				Client: self.Client,
+			}
+		}
+	case nil:
+		object = nil
+	default:
+		err = fmt.Errorf("task.get_result: unknown value type %T (expected string or nil)", ref)
+	}
+	return
+}
+
 func (self *Task) GetErrorInfo() (errorInfo []string, err error) {
 	result := APIResult{}
 	err = self.Client.APICall(&result, "task.get_error_info", self.Ref)
@@ -910,7 +909,7 @@ func (self *Task) GetErrorInfo() (errorInfo []string, err error) {
 	}
 	errorInfo = make([]string, 0)
 	for _, infoRaw := range result.Value.([]interface{}) {
-		errorInfo = append(errorInfo, infoRaw.(string))
+		errorInfo = append(errorInfo, fmt.Sprintf("%v", infoRaw))
 	}
 	return
 }

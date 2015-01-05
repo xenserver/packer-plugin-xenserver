@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 import (
 	"fmt"
@@ -6,11 +6,11 @@ import (
 	"github.com/mitchellh/packer/packer"
 )
 
-type stepBootWait struct{}
+type StepBootWait struct{}
 
-func (self *stepBootWait) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepBootWait) Run(state multistep.StateBag) multistep.StepAction {
 	client := state.Get("client").(XenAPIClient)
-	config := state.Get("config").(config)
+	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 
 	instance, _ := client.GetVMByUuid(state.Get("instance_uuid").(string))
@@ -28,4 +28,4 @@ func (self *stepBootWait) Run(state multistep.StateBag) multistep.StepAction {
 	return multistep.ActionContinue
 }
 
-func (self *stepBootWait) Cleanup(state multistep.StateBag) {}
+func (self *StepBootWait) Cleanup(state multistep.StateBag) {}

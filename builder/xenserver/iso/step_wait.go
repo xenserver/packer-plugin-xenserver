@@ -1,11 +1,13 @@
-package xenserver
+package iso
 
 import (
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
 	"log"
 	"time"
+
+	"github.com/mitchellh/multistep"
+	"github.com/mitchellh/packer/packer"
+	xscommon "github.com/rdobson/packer-builder-xenserver/builder/xenserver/common"
 )
 
 type stepWait struct{}
@@ -13,7 +15,7 @@ type stepWait struct{}
 func (self *stepWait) Run(state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(config)
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(XenAPIClient)
+	client := state.Get("client").(xscommon.XenAPIClient)
 
 	ui.Say("Step: Wait for install to complete.")
 
@@ -26,7 +28,7 @@ func (self *stepWait) Run(state multistep.StateBag) multistep.StepAction {
 	}
 
 	//Expect install to be configured to shutdown on completion
-	err = InterruptibleWait{
+	err = xscommon.InterruptibleWait{
 		Predicate: func() (bool, error) {
 			log.Printf("Waiting for install to complete.")
 			power_state, err := instance.GetPowerState()

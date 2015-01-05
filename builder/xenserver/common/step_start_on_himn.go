@@ -1,4 +1,4 @@
-package xenserver
+package common
 
 import (
 	gossh "code.google.com/p/go.crypto/ssh"
@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type stepStartOnHIMN struct{}
+type StepStartOnHIMN struct{}
 
 /*
  * This step starts the installed guest on the Host Internal Management Network
@@ -19,11 +19,10 @@ type stepStartOnHIMN struct{}
  *
  */
 
-func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction {
 
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(XenAPIClient)
-	config := state.Get("config").(config)
 
 	ui.Say("Step: Start VM on the Host Internal Mangement Network")
 
@@ -96,7 +95,7 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	err = InterruptibleWait{
 		Predicate: func() (success bool, err error) {
 			ui.Message(fmt.Sprintf("Attempting to ping interface: %s", ping_cmd))
-			_, err = execute_ssh_cmd(ping_cmd, config.HostIp, "22", config.Username, config.Password)
+			_, err = ExecuteHostSSHCmd(state, ping_cmd)
 
 			switch err.(type) {
 			case nil:
@@ -124,13 +123,14 @@ func (self *stepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 
 }
 
-func (self *stepStartOnHIMN) Cleanup(state multistep.StateBag) {}
+func (self *StepStartOnHIMN) Cleanup(state multistep.StateBag) {}
 
-func himnSSHIP(state multistep.StateBag) (string, error) {
+func HimnSSHIP(state multistep.StateBag) (string, error) {
 	ip := state.Get("himn_ssh_address").(string)
 	return ip, nil
 }
 
-func himnSSHPort(state multistep.StateBag) (uint, error) {
-	return 22, nil
+func HimnSSHPort(state multistep.StateBag) (uint, error) {
+	config := state.Get("commonconfig").(CommonConfig)
+	return config.SSHPort, nil
 }

@@ -1,19 +1,21 @@
-package xenserver
+package iso
 
 import (
 	"fmt"
+
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
+	xscommon "github.com/rdobson/packer-builder-xenserver/builder/xenserver/common"
 )
 
 type stepCreateInstance struct {
-	instance *VM
-	vdi      *VDI
+	instance *xscommon.VM
+	vdi      *xscommon.VDI
 }
 
 func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepAction {
 
-	client := state.Get("client").(XenAPIClient)
+	client := state.Get("client").(xscommon.XenAPIClient)
 	config := state.Get("config").(config)
 	ui := state.Get("ui").(packer.Ui)
 
@@ -75,7 +77,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	}
 	self.vdi = vdi
 
-	err = instance.ConnectVdi(vdi, Disk)
+	err = instance.ConnectVdi(vdi, xscommon.Disk)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
 		return multistep.ActionHalt
@@ -83,11 +85,11 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 	// Connect Network
 
-	var network *Network
+	var network *xscommon.Network
 
 	if config.NetworkName == "" {
 		// No network has be specified. Use the management interface
-		network = new(Network)
+		network = new(xscommon.Network)
 		network.Ref = ""
 		network.Client = &client
 
@@ -162,7 +164,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
 	config := state.Get("config").(config)
-	if config.ShouldKeepInstance(state) {
+	if config.ShouldKeepVM(state) {
 		return
 	}
 

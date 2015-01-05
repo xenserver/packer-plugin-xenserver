@@ -272,7 +272,17 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			SSHWaitTimeout: self.config.SSHWaitTimeout,
 		},
 		new(common.StepProvision),
-		new(xscommon.StepShutdownAndExport),
+		new(xscommon.StepShutdown),
+		&xscommon.StepDetachVdi{
+			VdiUuidKey: "floppy_vdi_uuid",
+		},
+		&xscommon.StepDetachVdi{
+			VdiUuidKey: "iso_vdi_uuid",
+		},
+		&xscommon.StepDetachVdi{
+			VdiUuidKey: "tools_vdi_uuid",
+		},
+		new(xscommon.StepExport),
 	}
 
 	self.runner = &multistep.BasicRunner{Steps: steps}

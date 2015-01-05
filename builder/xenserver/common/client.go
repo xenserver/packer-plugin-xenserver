@@ -491,21 +491,20 @@ func (self *VM) GetGuestMetricsRef() (ref string, err error) {
 }
 
 func (self *VM) GetGuestMetrics() (metrics map[string]interface{}, err error) {
-	metrics = make(map[string]interface{})
 	metrics_ref, err := self.GetGuestMetricsRef()
 	if err != nil {
-		return metrics, err
+		return nil, err
+	}
+	if metrics_ref == "OpaqueRef:NULL" {
+		return nil, nil
 	}
 
 	result := APIResult{}
 	err = self.Client.APICall(&result, "VM_guest_metrics.get_record", metrics_ref)
 	if err != nil {
-		return metrics, nil
+		return nil, err
 	}
-	for k, v := range result.Value.(xmlrpc.Struct) {
-		metrics[k] = v
-	}
-	return metrics, nil
+	return result.Value.(xmlrpc.Struct), nil
 }
 
 func (self *VM) SetStaticMemoryRange(min, max uint) (err error) {

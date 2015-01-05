@@ -254,7 +254,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		&xscommon.StepTypeBootCommand{
 			Tpl: self.config.tpl,
 		},
-		&xscommon.StepWaitForHTTPRequest{
+		&xscommon.StepWaitForIP{
 			Chan:    httpReqChan,
 			Timeout: self.config.InstallTimeout, // @todo change this
 		},

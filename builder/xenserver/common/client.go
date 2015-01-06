@@ -376,6 +376,22 @@ func (self *VM) Unpause() (err error) {
 	return
 }
 
+func (self *VM) SetHVMBoot(policy, bootOrder string) (err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VM.set_HVM_boot_policy", self.Ref, policy)
+	if err != nil {
+		return err
+	}
+	result = APIResult{}
+	params := make(xmlrpc.Struct)
+	params["order"] = bootOrder
+	err = self.Client.APICall(&result, "VM.set_HVM_boot_params", self.Ref, params)
+	if err != nil {
+		return err
+	}
+	return
+}
+
 func (self *VM) SetPVBootloader(pv_bootloader, pv_args string) (err error) {
 	result := APIResult{}
 	err = self.Client.APICall(&result, "VM.set_PV_bootloader", self.Ref, pv_bootloader)

@@ -21,7 +21,7 @@ func (StepShutdown) Run(state multistep.StateBag) multistep.StepAction {
 		return multistep.ActionHalt
 	}
 
-	ui.Say("Step: Shutdown and export")
+	ui.Say("Step: Shutting down VM")
 
 	// Shutdown the VM
 	success := func() bool {

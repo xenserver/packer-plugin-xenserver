@@ -56,6 +56,10 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 	ui.Say("Step: export artifact")
 
 	switch config.Format {
+	case "none":
+		ui.Say("Skipping export")
+		return multistep.ActionContinue
+
 	case "xva":
 		// export the VM
 

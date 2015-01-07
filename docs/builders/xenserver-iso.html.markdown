@@ -113,9 +113,10 @@ each category, the available options are alphabetized and described.
   characters (\*, ?, and []) are allowed. Directory names are also allowed,
   which will add all the files found in the directory to the floppy.
 
-* `format` (string) - Either "xva" or "vdi_raw", this specifies the output
-  format of the exported virtual machine. This defaults to "xva". Set to
-  "vdi_raw" to export just the raw disk image.
+* `format` (string) - Either "xva", "vdi_raw" or "none", this specifies the
+  output format of the exported virtual machine. This defaults to "xva". Set to
+  "vdi_raw" to export just the raw disk image. Set to "none" to export nothing;
+  this is only useful with "keep_vm" set to "always" or "on_success".
 
 * `http_directory` (string) - Path to a directory to serve using an HTTP
   server. The files in this directory will be available over HTTP that will
@@ -142,6 +143,13 @@ each category, the available options are alphabetized and described.
   or while downloading a single URL, it will move on to the next. All URLs
   must point to the same file (same checksum). By default this is empty
   and `iso_url` is used. Only one of `iso_url` or `iso_urls` can be specified.
+
+* `keep_vm` (string) - Determine when to keep the VM and when to clean it up. This
+  can be "always", "never" or "on_success". By default this is "never", and Packer
+  always deletes the VM regardless of whether the process succeeded and an artifact
+  was produced. "always" asks Packer to leave the VM at the end of the process
+  regardless of success. "on_success" requests that the VM only be cleaned up if an
+  artifact was produced. The latter is useful for debugging templates that fail.
 
 * `output_directory` (string) - This is the path to the directory where the
   resulting virtual machine will be created. This may be relative or absolute.

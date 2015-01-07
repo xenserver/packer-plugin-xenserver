@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
+	"log"
 	"net"
 	"net/http"
 )
@@ -21,7 +22,28 @@ import (
 // Produces:
 //   http_port int - The port the HTTP server started on.
 type StepHTTPServer struct {
+	Chan chan<- string
+
 	l net.Listener
+}
+
+type IPSnooper struct {
+	ch      chan<- string
+	handler http.Handler
+}
+
+func (snooper IPSnooper) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	log.Printf("HTTP: %s %s %s", req.RemoteAddr, req.Method, req.URL)
+	ip, _, err := net.SplitHostPort(req.RemoteAddr)
+	if err == nil && ip != "" {
+		select {
+		case snooper.ch <- ip:
+			log.Printf("Remembering remote address '%s'", ip)
+		default:
+			// if ch is already full, don't block waiting to send the address, just drop it
+		}
+	}
+	snooper.handler.ServeHTTP(resp, req)
 }
 
 func (s *StepHTTPServer) Run(state multistep.StateBag) multistep.StepAction {
@@ -45,7 +67,13 @@ func (s *StepHTTPServer) Run(state multistep.StateBag) multistep.StepAction {
 
 	// Start the HTTP server and run it in the background
 	fileServer := http.FileServer(http.Dir(config.HTTPDir))
-	server := &http.Server{Addr: fmt.Sprintf(":%d", httpPort), Handler: fileServer}
+	server := &http.Server{
+		Addr: fmt.Sprintf(":%d", httpPort),
+		Handler: IPSnooper{
+			ch:      s.Chan,
+			handler: fileServer,
+		},
+	}
 	go server.Serve(s.l)
 
 	// Save the address into the state so it can be accessed in the future

@@ -23,6 +23,13 @@ func (self *StepStartVmPaused) Run(state multistep.StateBag) multistep.StepActio
 		return multistep.ActionHalt
 	}
 
+	// note that here "cd" means boot from hard drive ('c') first, then CDROM ('d')
+	err = instance.SetHVMBoot("BIOS order", "cd")
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to set HVM boot params: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
 	err = instance.Start(true, false)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to start VM with UUID '%s': %s", uuid, err.Error()))

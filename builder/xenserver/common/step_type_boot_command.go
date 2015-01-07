@@ -33,6 +33,11 @@ func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 	vnc_port := state.Get("local_vnc_port").(uint)
 	http_port := state.Get("http_port").(uint)
 
+	// skip this step if we have nothing to type
+	if len(config.BootCommand) == 0 {
+		return multistep.ActionContinue
+	}
+
 	// Connect to the local VNC port as we have set up a SSH port forward
 	ui.Say("Connecting to the VM over VNC")
 	ui.Message(fmt.Sprintf("Using local port: %d", vnc_port))
@@ -79,7 +84,7 @@ func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 		http_port,
 	}
 
-	ui.Say("About to type boot commands over VNC...")
+	ui.Say("Typing boot commands over VNC...")
 	for _, command := range config.BootCommand {
 
 		command, err := self.Tpl.Process(command, tplData)

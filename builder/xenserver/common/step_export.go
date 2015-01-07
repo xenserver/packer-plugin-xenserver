@@ -1,7 +1,5 @@
 package common
 
-/* Taken from https://raw.githubusercontent.com/mitchellh/packer/master/builder/qemu/step_prepare_output_dir.go */
-
 import (
 	"crypto/tls"
 	"fmt"
@@ -10,10 +8,9 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"time"
 )
 
-type StepShutdownAndExport struct{}
+type StepExport struct{}
 
 func downloadFile(url, filename string) (err error) {
 
@@ -44,7 +41,7 @@ func downloadFile(url, filename string) (err error) {
 	return nil
 }
 
-func (StepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction {
+func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(XenAPIClient)
@@ -56,60 +53,13 @@ func (StepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 		return multistep.ActionHalt
 	}
 
-	ui.Say("Step: Shutdown and export")
-
-	// Shutdown the VM
-	success := func() bool {
-		if config.ShutdownCommand != "" {
-			ui.Say("Executing shutdown command...")
-
-			_, err := ExecuteGuestSSHCmd(state, config.ShutdownCommand)
-			if err != nil {
-				ui.Error(fmt.Sprintf("Shutdown command failed: %s", err.Error()))
-				return false
-			}
-
-			ui.Say("Waiting for VM to enter Halted state...")
-
-			err = InterruptibleWait{
-				Predicate: func() (bool, error) {
-					power_state, err := instance.GetPowerState()
-					return power_state == "Halted", err
-				},
-				PredicateInterval: 5 * time.Second,
-				Timeout:           300 * time.Second,
-			}.Wait(state)
-
-			if err != nil {
-				ui.Error(fmt.Sprintf("Error waiting for VM to halt: %s", err.Error()))
-				return false
-			}
-
-		} else {
-			ui.Say("Attempting to cleanly shutdown the VM...")
-
-			err = instance.CleanShutdown()
-			if err != nil {
-				ui.Error(fmt.Sprintf("Could not shut down VM: %s", err.Error()))
-				return false
-			}
-
-		}
-		return true
-	}()
-
-	if !success {
-		ui.Say("Forcing hard shutdown of the VM...")
-		err = instance.HardShutdown()
-		if err != nil {
-			ui.Error(fmt.Sprintf("Could not hard shut down VM -- giving up: %s", err.Error()))
-			return multistep.ActionHalt
-		}
-	}
-
-	ui.Say("Successfully shut down VM")
+	ui.Say("Step: export artifact")
 
 	switch config.Format {
+	case "none":
+		ui.Say("Skipping export")
+		return multistep.ActionContinue
+
 	case "xva":
 		// export the VM
 
@@ -172,4 +122,4 @@ func (StepShutdownAndExport) Run(state multistep.StateBag) multistep.StepAction 
 	return multistep.ActionContinue
 }
 
-func (StepShutdownAndExport) Cleanup(state multistep.StateBag) {}
+func (StepExport) Cleanup(state multistep.StateBag) {}

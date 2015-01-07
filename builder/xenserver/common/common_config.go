@@ -213,9 +213,9 @@ func (c *CommonConfig) Prepare(t *packer.ConfigTemplate, pc *common.PackerConfig
 	}
 
 	switch c.Format {
-	case "xva", "vdi_raw":
+	case "xva", "vdi_raw", "none":
 	default:
-		errs = append(errs, errors.New("format must be one of 'xva', 'vdi_raw'"))
+		errs = append(errs, errors.New("format must be one of 'xva', 'vdi_raw', 'none'"))
 	}
 
 	switch c.KeepVM {

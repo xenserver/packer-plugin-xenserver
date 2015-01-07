@@ -11,26 +11,6 @@ You can check out packer [here](https://packer.io).
 * Golang (tested with 1.2.1) 
 
 
-In order for this integration to work you must also configure NATing in Dom0. 
-
-You can do this by executing the following in Dom0:
-
-```shell
-# Install netcat
-yum install --enablerepo=base,extras --disablerepo=citrix -y nc
-# Setup NAT - NB, this _disable the firewall_ - be careful!
-echo 1 > /proc/sys/net/ipv4/ip_forward
-/sbin/iptables -F INPUT
-
-/sbin/iptables -t nat -A POSTROUTING -o xenbr0 -j MASQUERADE
-/sbin/iptables -A INPUT -i xenbr0 -p tcp -m tcp --dport 53 -j ACCEPT
-/sbin/iptables -A INPUT -i xenbr0 -p udp -m udp --dport 53 -j ACCEPT
-/sbin/iptables -A FORWARD -i xenbr0 -o xenapi -m state --state RELATED,ESTABLISHED -j ACCEPT
-/sbin/iptables -A FORWARD -i xenapi -o xenbr0 -j ACCEPT
-```
-(Borrowed from: jonludlam/vagrant-xenserver)
-
-
 ## Install Go
 
 Follow these instructions and install golang on your system:
@@ -60,10 +40,24 @@ cd packer-builder-xenserver
 ./build.sh
 ```
 
-If the build is successful, you should now have a `packer-builder-xenserver` binary
-in your `$GOPATH/bin` directory and you are ready to get going with packer.
+If the build is successful, you should now have `packer-builder-xenserver-iso` and
+`packer-builder-xenserver-xva` binaries in your `$GOPATH/bin` directory and you are
+ready to get going with packer; skip to the CentOS 6.6 example below.
 
-## Centos 6.6 Example
+In order to do a cross-compile, run instead:
+```shell
+XC_OS="windows linux" XC_ARCH="386 amd64" ./build.sh
+```
+This builds 32 and 64 bit binaries for both Windows and Linux. Native binaries will
+be installed in `$GOPATH/bin` as above, and cross-compiled ones in the `pkg/` directory.
+
+Don't forget to also cross compile Packer, by running
+```shell
+XC_OS="windows linux" XC_ARCH="386 amd64" make bin
+```
+(instead of `make dev`) in the directory where you checked out Packer.
+
+## CentOS 6.6 Example
 
 Once you've setup the above, you are good to go with an example. 
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/common"
@@ -112,6 +113,8 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	state.Put("hook", hook)
 	state.Put("ui", ui)
 
+	httpReqChan := make(chan string, 1)
+
 	//Build the steps
 	steps := []multistep.Step{
 		&xscommon.StepPrepareOutputDir{
@@ -145,11 +148,26 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiUuidKey: "tools_vdi_uuid",
 			VdiType:    xscommon.CD,
 		},
-		new(xscommon.StepRemoveDevices),
-		new(xscommon.StepStartOnHIMN),
+		new(xscommon.StepStartVmPaused),
+		new(xscommon.StepGetVNCPort),
 		&xscommon.StepForwardPortOverSSH{
-			RemotePort:  xscommon.HimnSSHPort,
-			RemoteDest:  xscommon.HimnSSHIP,
+			RemotePort:  xscommon.InstanceVNCPort,
+			RemoteDest:  xscommon.InstanceVNCIP,
+			HostPortMin: self.config.HostPortMin,
+			HostPortMax: self.config.HostPortMax,
+			ResultKey:   "local_vnc_port",
+		},
+		new(xscommon.StepBootWait),
+		&xscommon.StepTypeBootCommand{
+			Tpl: self.config.tpl,
+		},
+		&xscommon.StepWaitForIP{
+			Chan:    httpReqChan,
+			Timeout: 300 * time.Minute /*self.config.InstallTimeout*/, // @todo change this
+		},
+		&xscommon.StepForwardPortOverSSH{
+			RemotePort:  xscommon.InstanceSSHPort,
+			RemoteDest:  xscommon.InstanceSSHIP,
 			HostPortMin: self.config.HostPortMin,
 			HostPortMax: self.config.HostPortMax,
 			ResultKey:   "local_ssh_port",
@@ -160,13 +178,14 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			SSHWaitTimeout: self.config.SSHWaitTimeout,
 		},
 		new(common.StepProvision),
+		new(xscommon.StepShutdown),
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
 		&xscommon.StepDetachVdi{
-			VdiUuidKey: "iso_vdi_uuid",
+			VdiUuidKey: "tools_vdi_uuid",
 		},
-		new(xscommon.StepShutdownAndExport),
+		new(xscommon.StepExport),
 	}
 
 	self.runner = &multistep.BasicRunner{Steps: steps}

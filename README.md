@@ -40,14 +40,16 @@ cd packer-builder-xenserver
 ./build.sh
 ```
 
-If the build is successful, you should now have a `packer-builder-xenserver` binary
-in your `$GOPATH/bin` directory and you are ready to get going with packer.
+If the build is successful, you should now have `packer-builder-xenserver-iso` and
+`packer-builder-xenserver-xva` binaries in your `$GOPATH/bin` directory and you are
+ready to get going with packer; skip to the CentOS 6.6 example below.
 
 In order to do a cross-compile, run instead:
 ```shell
 XC_OS="windows linux" XC_ARCH="386 amd64" ./build.sh
 ```
-This builds 32 and 64 bit binaries for both Windows and Linux. Native binaries will be installed in `$GOPATH/bin` as above, and cross-compiled ones in the `pkg/` directory.
+This builds 32 and 64 bit binaries for both Windows and Linux. Native binaries will
+be installed in `$GOPATH/bin` as above, and cross-compiled ones in the `pkg/` directory.
 
 Don't forget to also cross compile Packer, by running
 ```shell

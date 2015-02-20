@@ -46,6 +46,8 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(XenAPIClient)
 	instance_uuid := state.Get("instance_uuid").(string)
+	suffix := ".vhd"
+	extrauri := "&format=vhd"
 
 	instance, err := client.GetVMByUuid(instance_uuid)
 	if err != nil {
@@ -79,6 +81,10 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 		}
 
 	case "vdi_raw":
+	        suffix = ".raw"
+                extrauri = ""
+	        fallthrough
+	case "vdi_vhd":
 		// export the disks
 
 		disks, err := instance.GetDisks()
@@ -96,14 +102,14 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 			// Basic auth in URL request is required as session token is not
 			// accepted for some reason.
 			// @todo: raise with XAPI team.
-			disk_export_url := fmt.Sprintf("https://%s:%s@%s/export_raw_vdi?vdi=%s",
+			disk_export_url := fmt.Sprintf("https://%s:%s@%s/export_raw_vdi?vdi=%s%s",
 				client.Username,
 				client.Password,
 				client.Host,
 				disk_uuid,
-			)
+				extrauri)
 
-			disk_export_filename := fmt.Sprintf("%s/%s.raw", config.OutputDir, disk_uuid)
+			disk_export_filename := fmt.Sprintf("%s/%s%s", config.OutputDir, disk_uuid, suffix)
 
 			ui.Say("Getting VDI " + disk_export_url)
 			err = downloadFile(disk_export_url, disk_export_filename)

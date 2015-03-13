@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
+	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
 type StepFindVdi struct {
@@ -14,7 +15,7 @@ type StepFindVdi struct {
 
 func (self *StepFindVdi) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(XenAPIClient)
+	client := state.Get("client").(xsclient.XenAPIClient)
 
 	vdis, err := client.GetVdiByNameLabel(self.VdiName)
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
+	xsclient "github.com/xenserver/go-xenserver-client"
 	"log"
 	"net/http"
 	"net/url"
@@ -23,9 +24,9 @@ func appendQuery(urlstring, k, v string) (string, error) {
 	return u.String(), err
 }
 
-func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (result *XenAPIObject, err error) {
+func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (result *xsclient.XenAPIObject, err error) {
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(XenAPIClient)
+	client := state.Get("client").(xsclient.XenAPIClient)
 
 	task, err := client.CreateTask()
 	if err != nil {
@@ -79,7 +80,7 @@ func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (resul
 				return false, fmt.Errorf("Failed to get task status: %s", err.Error())
 			}
 			switch status {
-			case Pending:
+			case xsclient.Pending:
 				progress, err := task.GetProgress()
 				if err != nil {
 					return false, fmt.Errorf("Failed to get progress: %s", err.Error())
@@ -89,15 +90,15 @@ func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (resul
 					log.Printf("Upload %.0f%% complete", progress*100)
 				}
 				return false, nil
-			case Success:
+			case xsclient.Success:
 				return true, nil
-			case Failure:
+			case xsclient.Failure:
 				errorInfo, err := task.GetErrorInfo()
 				if err != nil {
 					errorInfo = []string{fmt.Sprintf("furthermore, failed to get error info: %s", err.Error())}
 				}
 				return false, fmt.Errorf("Task failed: %s", errorInfo)
-			case Cancelling, Cancelled:
+			case xsclient.Cancelling, xsclient.Cancelled:
 				return false, fmt.Errorf("Task cancelled")
 			default:
 				return false, fmt.Errorf("Unknown task status %v", status)

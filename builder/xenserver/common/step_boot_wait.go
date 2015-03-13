@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
+	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
 type StepBootWait struct{}
 
 func (self *StepBootWait) Run(state multistep.StateBag) multistep.StepAction {
-	client := state.Get("client").(XenAPIClient)
+	client := state.Get("client").(xsclient.XenAPIClient)
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 

@@ -12,6 +12,7 @@ import (
 	"github.com/mitchellh/packer/common"
 	"github.com/mitchellh/packer/packer"
 	xscommon "github.com/rdobson/packer-builder-xenserver/builder/xenserver/common"
+	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
 type config struct {
@@ -167,7 +168,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 
 func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packer.Artifact, error) {
 	//Setup XAPI client
-	client := xscommon.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
+	client := xsclient.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
 
 	err := client.Login()
 	if err != nil {
@@ -231,15 +232,15 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		new(stepCreateInstance),
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
-			VdiType:    xscommon.Floppy,
+			VdiType:    xsclient.Floppy,
 		},
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "iso_vdi_uuid",
-			VdiType:    xscommon.CD,
+			VdiType:    xsclient.CD,
 		},
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
-			VdiType:    xscommon.CD,
+			VdiType:    xsclient.CD,
 		},
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepGetVNCPort),

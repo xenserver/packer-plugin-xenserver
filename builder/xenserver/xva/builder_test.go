@@ -7,13 +7,13 @@ import (
 
 func testConfig() map[string]interface{} {
 	return map[string]interface{}{
-		"remote_host":       "localhost",
-		"remote_username":   "admin",
-		"remote_password":   "admin",
-		"vm_name":           "foo",
-		"shutdown_command":  "yes",
-		"ssh_username":      "foo",
-		"source_path":       ".",
+		"remote_host":      "localhost",
+		"remote_username":  "admin",
+		"remote_password":  "admin",
+		"vm_name":          "foo",
+		"shutdown_command": "yes",
+		"ssh_username":     "foo",
+		"source_path":      ".",
 
 		packer.BuildNameConfigKey: "foo",
 	}

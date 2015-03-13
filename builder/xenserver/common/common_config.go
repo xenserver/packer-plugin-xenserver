@@ -10,6 +10,7 @@ import (
 	"github.com/mitchellh/packer/common"
 	commonssh "github.com/mitchellh/packer/common/ssh"
 	"github.com/mitchellh/packer/packer"
+	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
 type CommonConfig struct {
@@ -244,7 +245,7 @@ func (c CommonConfig) ShouldKeepVM(state multistep.StateBag) bool {
 	}
 }
 
-func (config CommonConfig) GetSR(client XenAPIClient) (*SR, error) {
+func (config CommonConfig) GetSR(client xsclient.XenAPIClient) (*xsclient.SR, error) {
 	if config.SrName == "" {
 		// Find the default SR
 		return client.GetDefaultSR()

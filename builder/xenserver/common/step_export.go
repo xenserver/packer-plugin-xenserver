@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
+	xsclient "github.com/xenserver/go-xenserver-client"
 	"io"
 	"net/http"
 	"os"
@@ -44,7 +45,7 @@ func downloadFile(url, filename string) (err error) {
 func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(XenAPIClient)
+	client := state.Get("client").(xsclient.XenAPIClient)
 	instance_uuid := state.Get("instance_uuid").(string)
 	suffix := ".vhd"
 	extrauri := "&format=vhd"
@@ -81,9 +82,9 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 		}
 
 	case "vdi_raw":
-	        suffix = ".raw"
-                extrauri = ""
-	        fallthrough
+		suffix = ".raw"
+		extrauri = ""
+		fallthrough
 	case "vdi_vhd":
 		// export the disks
 

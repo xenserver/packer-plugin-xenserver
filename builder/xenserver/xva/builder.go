@@ -10,6 +10,7 @@ import (
 	"github.com/mitchellh/packer/common"
 	"github.com/mitchellh/packer/packer"
 	xscommon "github.com/rdobson/packer-builder-xenserver/builder/xenserver/common"
+	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
 type config struct {
@@ -17,7 +18,7 @@ type config struct {
 	xscommon.CommonConfig `mapstructure:",squash"`
 
 	SourcePath string `mapstructure:"source_path"`
-	VMMemory      uint   `mapstructure:"vm_memory"`
+	VMMemory   uint   `mapstructure:"vm_memory"`
 
 	PlatformArgs map[string]string `mapstructure:"platform_args"`
 
@@ -66,8 +67,8 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	// Template substitution
 
 	templates := map[string]*string{
-		"source_path":   &self.config.SourcePath,
-		"network_name":   &self.config.NetworkName,
+		"source_path":  &self.config.SourcePath,
+		"network_name": &self.config.NetworkName,
 	}
 
 	for n, ptr := range templates {
@@ -94,7 +95,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 
 func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packer.Artifact, error) {
 	//Setup XAPI client
-	client := xscommon.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
+	client := xsclient.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
 
 	err := client.Login()
 	if err != nil {
@@ -142,11 +143,11 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		new(stepImportInstance),
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
-			VdiType:    xscommon.Floppy,
+			VdiType:    xsclient.Floppy,
 		},
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
-			VdiType:    xscommon.CD,
+			VdiType:    xsclient.CD,
 		},
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepGetVNCPort),
@@ -163,7 +164,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		},
 		&xscommon.StepWaitForIP{
 			Chan:    httpReqChan,
-			Timeout: 300 * time.Minute /*self.config.InstallTimeout*/, // @todo change this
+			Timeout: 300 * time.Minute, /*self.config.InstallTimeout*/ // @todo change this
 		},
 		&xscommon.StepForwardPortOverSSH{
 			RemotePort:  xscommon.InstanceSSHPort,

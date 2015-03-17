@@ -7,6 +7,7 @@ import (
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
 	"github.com/nilshell/xmlrpc"
+	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
 type StepWaitForIP struct {
@@ -16,7 +17,7 @@ type StepWaitForIP struct {
 
 func (self *StepWaitForIP) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(XenAPIClient)
+	client := state.Get("client").(xsclient.XenAPIClient)
 
 	ui.Say("Step: Wait for VM's IP to become known to us.")
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
+	xsclient "github.com/xenserver/go-xenserver-client"
 	"log"
 )
 
@@ -11,7 +12,7 @@ type StepStartVmPaused struct{}
 
 func (self *StepStartVmPaused) Run(state multistep.StateBag) multistep.StepAction {
 
-	client := state.Get("client").(XenAPIClient)
+	client := state.Get("client").(xsclient.XenAPIClient)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Start VM Paused")
@@ -48,7 +49,7 @@ func (self *StepStartVmPaused) Run(state multistep.StateBag) multistep.StepActio
 
 func (self *StepStartVmPaused) Cleanup(state multistep.StateBag) {
 	config := state.Get("commonconfig").(CommonConfig)
-	client := state.Get("client").(XenAPIClient)
+	client := state.Get("client").(xsclient.XenAPIClient)
 
 	if config.ShouldKeepVM(state) {
 		return

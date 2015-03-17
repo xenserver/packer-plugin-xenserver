@@ -5,17 +5,17 @@ import (
 
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	xscommon "github.com/rdobson/packer-builder-xenserver/builder/xenserver/common"
+	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
 type stepCreateInstance struct {
-	instance *xscommon.VM
-	vdi      *xscommon.VDI
+	instance *xsclient.VM
+	vdi      *xsclient.VDI
 }
 
 func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepAction {
 
-	client := state.Get("client").(xscommon.XenAPIClient)
+	client := state.Get("client").(xsclient.XenAPIClient)
 	config := state.Get("config").(config)
 	ui := state.Get("ui").(packer.Ui)
 
@@ -77,7 +77,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	}
 	self.vdi = vdi
 
-	err = instance.ConnectVdi(vdi, xscommon.Disk)
+	err = instance.ConnectVdi(vdi, xsclient.Disk)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
 		return multistep.ActionHalt
@@ -85,11 +85,11 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 	// Connect Network
 
-	var network *xscommon.Network
+	var network *xsclient.Network
 
 	if config.NetworkName == "" {
 		// No network has be specified. Use the management interface
-		network = new(xscommon.Network)
+		network = new(xsclient.Network)
 		network.Ref = ""
 		network.Client = &client
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
+	xsclient "github.com/xenserver/go-xenserver-client"
 	"log"
 )
 
@@ -13,7 +14,7 @@ type StepDetachVdi struct {
 
 func (self *StepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(XenAPIClient)
+	client := state.Get("client").(xsclient.XenAPIClient)
 
 	var vdiUuid string
 	if vdiUuidRaw, ok := state.GetOk(self.VdiUuidKey); ok {

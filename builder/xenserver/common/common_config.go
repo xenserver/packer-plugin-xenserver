@@ -50,6 +50,7 @@ type CommonConfig struct {
 	OutputDir string `mapstructure:"output_directory"`
 	Format    string `mapstructure:"format"`
 	KeepVM    string `mapstructure:"keep_vm"`
+    IPGetter  string `mapstructure:"ip_getter"`
 }
 
 func (c *CommonConfig) Prepare(t *packer.ConfigTemplate, pc *common.PackerConfig) []error {
@@ -123,6 +124,10 @@ func (c *CommonConfig) Prepare(t *packer.ConfigTemplate, pc *common.PackerConfig
 		c.KeepVM = "never"
 	}
 
+    if c.IPGetter == "" {
+        c.IPGetter = "auto"
+    }
+
 	// Template substitution
 
 	templates := map[string]*string{
@@ -142,6 +147,7 @@ func (c *CommonConfig) Prepare(t *packer.ConfigTemplate, pc *common.PackerConfig
 		"output_directory": &c.OutputDir,
 		"format":           &c.Format,
 		"keep_vm":          &c.KeepVM,
+        "ip_getter":        &c.IPGetter,
 	}
 	for i := range c.FloppyFiles {
 		templates[fmt.Sprintf("floppy_files[%d]", i)] = &c.FloppyFiles[i]
@@ -224,6 +230,12 @@ func (c *CommonConfig) Prepare(t *packer.ConfigTemplate, pc *common.PackerConfig
 	default:
 		errs = append(errs, errors.New("keep_vm must be one of 'always', 'never', 'on_success'"))
 	}
+
+    switch c.IPGetter {
+    case "auto", "tools", "http":
+    default:
+        errs = append(errs, errors.New("ip_getter must be one of 'auto', 'tools', 'http'"))
+    }
 
 	return errs
 }

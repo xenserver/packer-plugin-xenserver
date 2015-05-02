@@ -62,6 +62,12 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		return multistep.ActionHalt
 	}
 
+	instance.SetDescription(config.VMDescription)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting VM description: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
 	// Create VDI for the instance
 
 	sr, err := config.GetSR(client)

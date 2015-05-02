@@ -20,7 +20,8 @@
       "ssh_username": "root",
       "ssh_password": "vmpassword",
       "ssh_wait_timeout": "10000s",
-      "vm_name": "packer-centos-6.6-x86_64"
+      "vm_name": "packer-centos-6.6-x86_64",
+      "vm_description": "Build time: {{isotime}}"
     }
   ],
 

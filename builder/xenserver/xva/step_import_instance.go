@@ -140,8 +140,14 @@ func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepActi
 		ui.Error(fmt.Sprintf("Unable to get VM UUID: %s", err.Error()))
 		return multistep.ActionHalt
 	}
-
 	state.Put("instance_uuid", instanceId)
+
+	instance.SetDescription(config.VMDescription)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting VM description: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
 	ui.Say(fmt.Sprintf("Imported instance '%s'", instanceId))
 
 	return multistep.ActionContinue

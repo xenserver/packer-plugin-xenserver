@@ -204,6 +204,9 @@ each category, the available options are alphabetized and described.
 * `tools_iso_name` (string) - The name of the XenServer Tools ISO. Defaults to
   "xs-tools.iso".
 
+* `vm_description` (string) - The description of the new virtual
+  machine. By default this is the empty string.
+
 * `vm_name` (string) - This is the name of the new virtual
   machine, without the file extension. By default this is
   "packer-BUILDNAME-TIMESTAMP", where "BUILDNAME" is the name of the build.

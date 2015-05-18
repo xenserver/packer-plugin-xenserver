@@ -18,10 +18,11 @@ type CommonConfig struct {
 	Password string `mapstructure:"remote_password"`
 	HostIp   string `mapstructure:"remote_host"`
 
-	VMName      string   `mapstructure:"vm_name"`
-	SrName      string   `mapstructure:"sr_name"`
-	FloppyFiles []string `mapstructure:"floppy_files"`
-	NetworkName string   `mapstructure:"network_name"`
+	VMName        string   `mapstructure:"vm_name"`
+	VMDescription string   `mapstructure:"vm_description"`
+	SrName        string   `mapstructure:"sr_name"`
+	FloppyFiles   []string `mapstructure:"floppy_files"`
+	NetworkName   string   `mapstructure:"network_name"`
 
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`
@@ -135,6 +136,7 @@ func (c *CommonConfig) Prepare(t *packer.ConfigTemplate, pc *common.PackerConfig
 		"remote_password":  &c.Password,
 		"remote_host":      &c.HostIp,
 		"vm_name":          &c.VMName,
+		"vm_description":   &c.VMDescription,
 		"sr_name":          &c.SrName,
 		"shutdown_command": &c.ShutdownCommand,
 		"boot_wait":        &c.RawBootWait,

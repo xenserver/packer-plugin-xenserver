@@ -27,7 +27,7 @@ type config struct {
 	ISOChecksumType string   `mapstructure:"iso_checksum_type"`
 	ISOUrls         []string `mapstructure:"iso_urls"`
 	ISOUrl          string   `mapstructure:"iso_url"`
-    ISOName         string   `mapstructure:"iso_name"`
+	ISOName         string   `mapstructure:"iso_name"`
 
 	PlatformArgs map[string]string `mapstructure:"platform_args"`
 
@@ -96,7 +96,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		"iso_checksum":      &self.config.ISOChecksum,
 		"iso_checksum_type": &self.config.ISOChecksumType,
 		"iso_url":           &self.config.ISOUrl,
-        "iso_name":          &self.config.ISOName,
+		"iso_name":          &self.config.ISOName,
 		"install_timeout":   &self.config.RawInstallTimeout,
 	}
 	for i := range self.config.ISOUrls {
@@ -119,55 +119,55 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 			errs, fmt.Errorf("Failed to parse install_timeout: %s", err))
 	}
 
-    if self.config.ISOName == "" {
+	if self.config.ISOName == "" {
 
-        // If ISO name is not specified, assume a URL and checksum has been provided.
+		// If ISO name is not specified, assume a URL and checksum has been provided.
 
-        if self.config.ISOChecksumType == "" {
-            errs = packer.MultiErrorAppend(
-                errs, errors.New("The iso_checksum_type must be specified."))
-        } else {
-            self.config.ISOChecksumType = strings.ToLower(self.config.ISOChecksumType)
-            if self.config.ISOChecksumType != "none" {
-                if self.config.ISOChecksum == "" {
-                    errs = packer.MultiErrorAppend(
-                        errs, errors.New("Due to the file size being large, an iso_checksum is required."))
-                } else {
-                    self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
-                }
+		if self.config.ISOChecksumType == "" {
+			errs = packer.MultiErrorAppend(
+				errs, errors.New("The iso_checksum_type must be specified."))
+		} else {
+			self.config.ISOChecksumType = strings.ToLower(self.config.ISOChecksumType)
+			if self.config.ISOChecksumType != "none" {
+				if self.config.ISOChecksum == "" {
+					errs = packer.MultiErrorAppend(
+						errs, errors.New("Due to the file size being large, an iso_checksum is required."))
+				} else {
+					self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
+				}
 
-                if hash := common.HashForType(self.config.ISOChecksumType); hash == nil {
-                    errs = packer.MultiErrorAppend(
-                        errs, fmt.Errorf("Unsupported checksum type: %s", self.config.ISOChecksumType))
-                }
+				if hash := common.HashForType(self.config.ISOChecksumType); hash == nil {
+					errs = packer.MultiErrorAppend(
+						errs, fmt.Errorf("Unsupported checksum type: %s", self.config.ISOChecksumType))
+				}
 
-            }
-        }
+			}
+		}
 
-        if len(self.config.ISOUrls) == 0 {
-            if self.config.ISOUrl == "" {
-                errs = packer.MultiErrorAppend(
-                    errs, errors.New("One of iso_url or iso_urls must be specified."))
-            } else {
-                self.config.ISOUrls = []string{self.config.ISOUrl}
-            }
-        } else if self.config.ISOUrl != "" {
-            errs = packer.MultiErrorAppend(
-                errs, errors.New("Only one of iso_url or iso_urls may be specified."))
-        }
+		if len(self.config.ISOUrls) == 0 {
+			if self.config.ISOUrl == "" {
+				errs = packer.MultiErrorAppend(
+					errs, errors.New("One of iso_url or iso_urls must be specified."))
+			} else {
+				self.config.ISOUrls = []string{self.config.ISOUrl}
+			}
+		} else if self.config.ISOUrl != "" {
+			errs = packer.MultiErrorAppend(
+				errs, errors.New("Only one of iso_url or iso_urls may be specified."))
+		}
 
-        for i, url := range self.config.ISOUrls {
-            self.config.ISOUrls[i], err = common.DownloadableURL(url)
-            if err != nil {
-                errs = packer.MultiErrorAppend(
-                    errs, fmt.Errorf("Failed to parse iso_urls[%d]: %s", i, err))
-            }
-        }
-    } else {
+		for i, url := range self.config.ISOUrls {
+			self.config.ISOUrls[i], err = common.DownloadableURL(url)
+			if err != nil {
+				errs = packer.MultiErrorAppend(
+					errs, fmt.Errorf("Failed to parse iso_urls[%d]: %s", i, err))
+			}
+		}
+	} else {
 
-        // An ISO name has been provided. It should be attached from an available SR.
+		// An ISO name has been provided. It should be attached from an available SR.
 
-    }
+	}
 
 	if len(errs.Errors) > 0 {
 		retErr = errors.New(errs.Error())
@@ -201,7 +201,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	httpReqChan := make(chan string, 1)
 
 	//Build the steps
-    download_steps := []multistep.Step{
+	download_steps := []multistep.Step{
 		&common.StepDownload{
 			Checksum:     self.config.ISOChecksum,
 			ChecksumType: self.config.ISOChecksumType,
@@ -209,7 +209,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			ResultKey:    "iso_path",
 			Url:          self.config.ISOUrls,
 		},
-    }
+	}
 
 	steps := []multistep.Step{
 		&xscommon.StepPrepareOutputDir{
@@ -224,8 +224,8 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		},
 		&xscommon.StepUploadVdi{
 			VdiNameFunc: func() string {
-                return "Packer-floppy-disk"
-            },
+				return "Packer-floppy-disk"
+			},
 			ImagePathFunc: func() string {
 				if floppyPath, ok := state.GetOk("floppy_path"); ok {
 					return floppyPath.(string)
@@ -235,17 +235,17 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
 		&xscommon.StepUploadVdi{
-            VdiNameFunc: func() string {
-                if len(self.config.ISOUrls) > 0 {
-                    return path.Base(self.config.ISOUrls[0])
-                }
-                return ""
-            },
+			VdiNameFunc: func() string {
+				if len(self.config.ISOUrls) > 0 {
+					return path.Base(self.config.ISOUrls[0])
+				}
+				return ""
+			},
 			ImagePathFunc: func() string {
-                if isoPath, ok := state.GetOk("iso_path"); ok {
-                    return isoPath.(string)
-                }
-                return ""
+				if isoPath, ok := state.GetOk("iso_path"); ok {
+					return isoPath.(string)
+				}
+				return ""
 			},
 			VdiUuidKey: "iso_vdi_uuid",
 		},
@@ -253,10 +253,10 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiName:    self.config.ToolsIsoName,
 			VdiUuidKey: "tools_vdi_uuid",
 		},
-        &xscommon.StepFindVdi{
-            VdiName:    self.config.ISOName,
-            VdiUuidKey: "isoname_vdi_uuid",
-        },
+		&xscommon.StepFindVdi{
+			VdiName:    self.config.ISOName,
+			VdiUuidKey: "isoname_vdi_uuid",
+		},
 		new(stepCreateInstance),
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
@@ -266,10 +266,10 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiUuidKey: "iso_vdi_uuid",
 			VdiType:    xsclient.CD,
 		},
-        &xscommon.StepAttachVdi{
-            VdiUuidKey: "isoname_vdi_uuid",
-            VdiType:    xsclient.CD,
-        },
+		&xscommon.StepAttachVdi{
+			VdiUuidKey: "isoname_vdi_uuid",
+			VdiType:    xsclient.CD,
+		},
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
 			VdiType:    xsclient.CD,
@@ -325,10 +325,9 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		new(xscommon.StepExport),
 	}
 
-    if self.config.ISOName == "" {
-        steps = append(download_steps, steps...)
-    }
-
+	if self.config.ISOName == "" {
+		steps = append(download_steps, steps...)
+	}
 
 	self.runner = &multistep.BasicRunner{Steps: steps}
 	self.runner.Run(state)

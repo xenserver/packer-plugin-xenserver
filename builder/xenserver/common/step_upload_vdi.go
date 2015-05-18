@@ -22,7 +22,7 @@ func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 	client := state.Get("client").(xsclient.XenAPIClient)
 
 	imagePath := self.ImagePathFunc()
-    vdiName := self.VdiNameFunc()
+	vdiName := self.VdiNameFunc()
 	if imagePath == "" {
 		// skip if no disk image to attach
 		return multistep.ActionContinue
@@ -84,7 +84,7 @@ func (self *StepUploadVdi) Cleanup(state multistep.StateBag) {
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(xsclient.XenAPIClient)
 
-    vdiName := self.VdiNameFunc()
+	vdiName := self.VdiNameFunc()
 
 	if config.ShouldKeepVM(state) {
 		return

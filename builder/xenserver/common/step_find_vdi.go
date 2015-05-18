@@ -17,10 +17,10 @@ func (self *StepFindVdi) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(xsclient.XenAPIClient)
 
-    // Ignore if VdiName is not specified
-    if self.VdiName == "" {
-        return multistep.ActionContinue
-    }
+	// Ignore if VdiName is not specified
+	if self.VdiName == "" {
+		return multistep.ActionContinue
+	}
 
 	vdis, err := client.GetVdiByNameLabel(self.VdiName)
 

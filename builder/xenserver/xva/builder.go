@@ -128,8 +128,8 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		new(xscommon.StepHTTPServer),
 		&xscommon.StepUploadVdi{
 			VdiNameFunc: func() string {
-                return "Packer-floppy-disk"
-            },
+				return "Packer-floppy-disk"
+			},
 			ImagePathFunc: func() string {
 				if floppyPath, ok := state.GetOk("floppy_path"); ok {
 					return floppyPath.(string)

@@ -142,23 +142,13 @@ func forward(local_conn net.Conn, config *gossh.ClientConfig, server, remote_des
 	return nil
 }
 
-func ssh_port_forward(local_port uint, remote_port uint, remote_dest, host, username, password string) error {
+func ssh_port_forward(local_listener net.Listener, remote_port uint, remote_dest, host, username, password string) error {
 
 	config := &gossh.ClientConfig{
 		User: username,
 		Auth: []gossh.AuthMethod{
 			gossh.Password(password),
 		},
-	}
-
-	// Listen on a local port
-	local_listener, err := net.Listen("tcp",
-		fmt.Sprintf("%s:%d",
-			"127.0.0.1",
-			local_port))
-	if err != nil {
-		log.Printf("Local listen failed: %s", err)
-		return err
 	}
 
 	for {

@@ -30,14 +30,12 @@ func (self *StepForwardPortOverSSH) Run(state multistep.StateBag) multistep.Step
 		return multistep.ActionHalt
 	}
 
-	l.Close()
-
 	ui.Say(fmt.Sprintf("Creating a local port forward over SSH on local port %d", sshHostPort))
 
 	remotePort, _ := self.RemotePort(state)
 	remoteDest, _ := self.RemoteDest(state)
 
-	go ssh_port_forward(sshHostPort, remotePort, remoteDest, config.HostIp, config.Username, config.Password)
+	go ssh_port_forward(l, remotePort, remoteDest, config.HostIp, config.Username, config.Password)
 	ui.Say(fmt.Sprintf("Port forward setup. %d ---> %s:%d on %s", sshHostPort, remoteDest, remotePort, config.HostIp))
 
 	// Provide the local port to future steps.

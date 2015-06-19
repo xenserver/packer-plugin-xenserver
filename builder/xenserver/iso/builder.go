@@ -303,24 +303,16 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			SSHConfig:      xscommon.SSHConfig,
 			SSHWaitTimeout: self.config.SSHWaitTimeout,
 		},
-		new(xscommon.StepShutdown),
-		&xscommon.StepDetachVdi{
-			VdiUuidKey: "floppy_vdi_uuid",
-		},
-		&xscommon.StepDetachVdi{
-			VdiUuidKey: "iso_vdi_uuid",
-		},
-		new(xscommon.StepStartVmPaused),
-		new(xscommon.StepBootWait),
-		&common.StepConnectSSH{
-			SSHAddress:     xscommon.SSHLocalAddress,
-			SSHConfig:      xscommon.SSHConfig,
-			SSHWaitTimeout: self.config.SSHWaitTimeout,
-		},
 		new(common.StepProvision),
 		new(xscommon.StepShutdown),
 		&xscommon.StepDetachVdi{
+			VdiUuidKey: "iso_vdi_uuid",
+		},
+		&xscommon.StepDetachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
+		},
+		&xscommon.StepDetachVdi{
+			VdiUuidKey: "floppy_vdi_uuid",
 		},
 		new(xscommon.StepExport),
 	}

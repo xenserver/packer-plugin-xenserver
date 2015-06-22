@@ -64,6 +64,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 
 	errs = packer.MultiErrorAppend(
 		errs, self.config.CommonConfig.Prepare(&self.config.ctx, &self.config.PackerConfig)...)
+	errs = packer.MultiErrorAppend(errs, self.config.SSHConfig.Prepare(&self.config.ctx)...)
 
 	// Set default values
 

@@ -1,8 +1,9 @@
 package common
 
 import (
-	"github.com/mitchellh/multistep"
 	"time"
+
+	"github.com/mitchellh/multistep"
 )
 
 type InterruptibleWait struct {

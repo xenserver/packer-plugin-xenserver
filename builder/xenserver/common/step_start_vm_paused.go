@@ -2,10 +2,11 @@ package common
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
-	"log"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 )
 
 type StepStartVmPaused struct{}

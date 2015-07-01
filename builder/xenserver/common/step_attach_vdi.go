@@ -2,10 +2,11 @@ package common
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
-	"log"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 )
 
 type StepAttachVdi struct {
@@ -15,25 +16,25 @@ type StepAttachVdi struct {
 	vdi *xsclient.VDI
 }
 
-func (self *StepAttachVdi) Run(state multistep.StateBag) multistep.StepAction {
+func (s *StepAttachVdi) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(xsclient.XenAPIClient)
 
 	var vdiUuid string
-	if vdiUuidRaw, ok := state.GetOk(self.VdiUuidKey); ok {
+	if vdiUuidRaw, ok := state.GetOk(s.VdiUuidKey); ok {
 		vdiUuid = vdiUuidRaw.(string)
 	} else {
-		log.Printf("Skipping attach of '%s'", self.VdiUuidKey)
+		log.Printf("Skipping attach of '%s'", s.VdiUuidKey)
 		return multistep.ActionContinue
 	}
 
 	var err error
-	self.vdi, err = client.GetVdiByUuid(vdiUuid)
+	s.vdi, err = client.GetVdiByUuid(vdiUuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VDI from UUID '%s': %s", vdiUuid, err.Error()))
 		return multistep.ActionHalt
 	}
-
+	log.Printf("VDIUUIDKEY: %s", s.VdiUuidKey)
 	uuid := state.Get("instance_uuid").(string)
 	instance, err := client.GetVMByUuid(uuid)
 	if err != nil {
@@ -41,25 +42,23 @@ func (self *StepAttachVdi) Run(state multistep.StateBag) multistep.StepAction {
 		return multistep.ActionHalt
 	}
 
-	err = instance.ConnectVdi(self.vdi, self.VdiType, "")
+	err = instance.ConnectVdi(s.vdi, s.VdiType, "")
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error attaching VDI '%s': '%s'", vdiUuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
-	log.Printf("Attached VDI '%s'", vdiUuid)
-
 	return multistep.ActionContinue
 }
 
-func (self *StepAttachVdi) Cleanup(state multistep.StateBag) {
+func (s *StepAttachVdi) Cleanup(state multistep.StateBag) {
 	config := state.Get("commonconfig").(CommonConfig)
 	client := state.Get("client").(xsclient.XenAPIClient)
 	if config.ShouldKeepVM(state) {
 		return
 	}
 
-	if self.vdi == nil {
+	if s.vdi == nil {
 		return
 	}
 
@@ -70,9 +69,9 @@ func (self *StepAttachVdi) Cleanup(state multistep.StateBag) {
 		return
 	}
 
-	vdiUuid := state.Get(self.VdiUuidKey).(string)
+	vdiUuid := state.Get(s.VdiUuidKey).(string)
 
-	err = instance.DisconnectVdi(self.vdi)
+	err = instance.DisconnectVdi(s.vdi)
 	if err != nil {
 		log.Printf("Unable to disconnect VDI '%s': %s", vdiUuid, err.Error())
 		return

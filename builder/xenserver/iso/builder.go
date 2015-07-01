@@ -11,14 +11,19 @@ import (
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/common"
 	"github.com/mitchellh/packer/helper/communicator"
-	hconfig "github.com/mitchellh/packer/helper/config"
+	"github.com/mitchellh/packer/helper/config"
 	"github.com/mitchellh/packer/packer"
 	"github.com/mitchellh/packer/template/interpolate"
 	xscommon "github.com/rdobson/packer-builder-xenserver/builder/xenserver/common"
-	xsclient "github.com/xenserver/go-xenserver-client"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 )
 
-type config struct {
+type Builder struct {
+	config Config
+	runner multistep.Runner
+}
+
+type Config struct {
 	common.PackerConfig   `mapstructure:",squash"`
 	xscommon.CommonConfig `mapstructure:",squash"`
 
@@ -40,17 +45,13 @@ type config struct {
 	ctx interpolate.Context
 }
 
-type Builder struct {
-	config config
-	runner multistep.Runner
-}
-
-func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error) {
+func (b *Builder) Prepare(raws ...interface{}) (params []string, retErr error) {
 
 	var errs *packer.MultiError
 
-	err := hconfig.Decode(&self.config, &hconfig.DecodeOpts{
-		Interpolate: true,
+	err := config.Decode(&b.config, &config.DecodeOpts{
+		Interpolate:        true,
+		InterpolateContext: &b.config.ctx,
 		InterpolateFilter: &interpolate.RenderFilter{
 			Exclude: []string{
 				"boot_command",
@@ -63,28 +64,28 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	}
 
 	errs = packer.MultiErrorAppend(
-		errs, self.config.CommonConfig.Prepare(&self.config.ctx, &self.config.PackerConfig)...)
-	errs = packer.MultiErrorAppend(errs, self.config.SSHConfig.Prepare(&self.config.ctx)...)
+		errs, b.config.CommonConfig.Prepare(&b.config.ctx, &b.config.PackerConfig)...)
+	errs = packer.MultiErrorAppend(errs, b.config.SSHConfig.Prepare(&b.config.ctx)...)
 
 	// Set default values
 
-	if self.config.RawInstallTimeout == "" {
-		self.config.RawInstallTimeout = "200m"
+	if b.config.RawInstallTimeout == "" {
+		b.config.RawInstallTimeout = "200m"
 	}
 
-	if self.config.DiskSize == 0 {
-		self.config.DiskSize = 40000
+	if b.config.DiskSize == 0 {
+		b.config.DiskSize = 40000
 	}
 
-	if self.config.VMMemory == 0 {
-		self.config.VMMemory = 1024
+	if b.config.VMMemory == 0 {
+		b.config.VMMemory = 1024
 	}
 
-	if self.config.CloneTemplate == "" {
-		self.config.CloneTemplate = "Other install media"
+	if b.config.CloneTemplate == "" {
+		b.config.CloneTemplate = "Other install media"
 	}
 
-	if len(self.config.PlatformArgs) == 0 {
+	if len(b.config.PlatformArgs) == 0 {
 		pargs := make(map[string]string)
 		pargs["viridian"] = "false"
 		pargs["nx"] = "true"
@@ -92,71 +93,71 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		pargs["apic"] = "true"
 		pargs["timeoffset"] = "0"
 		pargs["acpi"] = "1"
-		self.config.PlatformArgs = pargs
+		b.config.PlatformArgs = pargs
 	}
 
 	// Template substitution
 
 	templates := map[string]*string{
-		"clone_template":    &self.config.CloneTemplate,
-		"network_name":      &self.config.NetworkName,
-		"iso_checksum":      &self.config.ISOChecksum,
-		"iso_checksum_type": &self.config.ISOChecksumType,
-		"iso_url":           &self.config.ISOUrl,
-		"iso_name":          &self.config.ISOName,
-		"install_timeout":   &self.config.RawInstallTimeout,
+		"clone_template":    &b.config.CloneTemplate,
+		"network_name":      &b.config.NetworkName,
+		"iso_checksum":      &b.config.ISOChecksum,
+		"iso_checksum_type": &b.config.ISOChecksumType,
+		"iso_url":           &b.config.ISOUrl,
+		"iso_name":          &b.config.ISOName,
+		"install_timeout":   &b.config.RawInstallTimeout,
 	}
-	for i := range self.config.ISOUrls {
-		templates[fmt.Sprintf("iso_urls[%d]", i)] = &self.config.ISOUrls[i]
+	for i := range b.config.ISOUrls {
+		templates[fmt.Sprintf("iso_urls[%d]", i)] = &b.config.ISOUrls[i]
 	}
 
 	// Validation
 
-	self.config.InstallTimeout, err = time.ParseDuration(self.config.RawInstallTimeout)
+	b.config.InstallTimeout, err = time.ParseDuration(b.config.RawInstallTimeout)
 	if err != nil {
 		errs = packer.MultiErrorAppend(
 			errs, fmt.Errorf("Failed to parse install_timeout: %s", err))
 	}
 
-	if self.config.ISOName == "" {
+	if b.config.ISOName == "" {
 
 		// If ISO name is not specified, assume a URL and checksum has been provided.
 
-		if self.config.ISOChecksumType == "" {
+		if b.config.ISOChecksumType == "" {
 			errs = packer.MultiErrorAppend(
 				errs, errors.New("The iso_checksum_type must be specified."))
 		} else {
-			self.config.ISOChecksumType = strings.ToLower(self.config.ISOChecksumType)
-			if self.config.ISOChecksumType != "none" {
-				if self.config.ISOChecksum == "" {
+			b.config.ISOChecksumType = strings.ToLower(b.config.ISOChecksumType)
+			if b.config.ISOChecksumType != "none" {
+				if b.config.ISOChecksum == "" {
 					errs = packer.MultiErrorAppend(
 						errs, errors.New("Due to the file size being large, an iso_checksum is required."))
 				} else {
-					self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
+					b.config.ISOChecksum = strings.ToLower(b.config.ISOChecksum)
 				}
 
-				if hash := common.HashForType(self.config.ISOChecksumType); hash == nil {
+				if hash := common.HashForType(b.config.ISOChecksumType); hash == nil {
 					errs = packer.MultiErrorAppend(
-						errs, fmt.Errorf("Unsupported checksum type: %s", self.config.ISOChecksumType))
+						errs, fmt.Errorf("Unsupported checksum type: %s", b.config.ISOChecksumType))
 				}
 
 			}
 		}
 
-		if len(self.config.ISOUrls) == 0 {
-			if self.config.ISOUrl == "" {
+		if len(b.config.ISOUrls) == 0 {
+			if b.config.ISOUrl == "" {
 				errs = packer.MultiErrorAppend(
 					errs, errors.New("One of iso_url or iso_urls must be specified."))
 			} else {
-				self.config.ISOUrls = []string{self.config.ISOUrl}
+				b.config.ISOUrls = []string{b.config.ISOUrl}
 			}
-		} else if self.config.ISOUrl != "" {
+		} else if b.config.ISOUrl != "" {
 			errs = packer.MultiErrorAppend(
 				errs, errors.New("Only one of iso_url or iso_urls may be specified."))
 		}
 
-		for i, url := range self.config.ISOUrls {
-			self.config.ISOUrls[i], err = common.DownloadableURL(url)
+		for i, url := range b.config.ISOUrls {
+			b.config.ISOUrls[i], err = common.DownloadableURL(url)
 			if err != nil {
 				errs = packer.MultiErrorAppend(
 					errs, fmt.Errorf("Failed to parse iso_urls[%d]: %s", i, err))
@@ -176,9 +177,9 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 
 }
 
-func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packer.Artifact, error) {
+func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packer.Artifact, error) {
 	//Setup XAPI client
-	client := xsclient.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
+	client := xsclient.NewXenAPIClient(b.config.HostIp, b.config.Username, b.config.Password)
 
 	err := client.Login()
 	if err != nil {
@@ -192,8 +193,8 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	state := new(multistep.BasicStateBag)
 	state.Put("cache", cache)
 	state.Put("client", client)
-	state.Put("config", self.config)
-	state.Put("commonconfig", self.config.CommonConfig)
+	state.Put("config", b.config)
+	state.Put("commonconfig", b.config.CommonConfig)
 	state.Put("hook", hook)
 	state.Put("ui", ui)
 
@@ -202,21 +203,21 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	//Build the steps
 	download_steps := []multistep.Step{
 		&common.StepDownload{
-			Checksum:     self.config.ISOChecksum,
-			ChecksumType: self.config.ISOChecksumType,
+			Checksum:     b.config.ISOChecksum,
+			ChecksumType: b.config.ISOChecksumType,
 			Description:  "ISO",
 			ResultKey:    "iso_path",
-			Url:          self.config.ISOUrls,
+			Url:          b.config.ISOUrls,
 		},
 	}
 
 	steps := []multistep.Step{
 		&xscommon.StepPrepareOutputDir{
-			Force: self.config.PackerForce,
-			Path:  self.config.OutputDir,
+			Force: b.config.PackerForce,
+			Path:  b.config.OutputDir,
 		},
 		&common.StepCreateFloppy{
-			Files: self.config.FloppyFiles,
+			Files: b.config.FloppyFiles,
 		},
 		&xscommon.StepHTTPServer{
 			Chan: httpReqChan,
@@ -235,8 +236,8 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		},
 		&xscommon.StepUploadVdi{
 			VdiNameFunc: func() string {
-				if len(self.config.ISOUrls) > 0 {
-					return path.Base(self.config.ISOUrls[0])
+				if len(b.config.ISOUrls) > 0 {
+					return path.Base(b.config.ISOUrls[0])
 				}
 				return ""
 			},
@@ -249,11 +250,11 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiUuidKey: "iso_vdi_uuid",
 		},
 		&xscommon.StepFindVdi{
-			VdiName:    self.config.ToolsIsoName,
+			VdiName:    b.config.ToolsIsoName,
 			VdiUuidKey: "tools_vdi_uuid",
 		},
 		&xscommon.StepFindVdi{
-			VdiName:    self.config.ISOName,
+			VdiName:    b.config.ISOName,
 			VdiUuidKey: "isoname_vdi_uuid",
 		},
 		new(stepCreateInstance),
@@ -274,33 +275,33 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiType:    xsclient.CD,
 		},
 		new(xscommon.StepStartVmPaused),
-		new(xscommon.StepGetVNCPort),
-		&xscommon.StepForwardPortOverSSH{
-			RemotePort:  xscommon.InstanceVNCPort,
-			RemoteDest:  xscommon.InstanceVNCIP,
-			HostPortMin: self.config.HostPortMin,
-			HostPortMax: self.config.HostPortMax,
-			ResultKey:   "local_vnc_port",
+		new(xscommon.StepGetConsoleLocation),
+		&xscommon.StepTCPVNCProxy{
+			RemoteConsole: xscommon.InstanceConsoleLocation,
+			HostPortMin:   b.config.HostPortMin,
+			HostPortMax:   b.config.HostPortMax,
 		},
 		new(xscommon.StepBootWait),
 		&xscommon.StepTypeBootCommand{
-			Ctx: self.config.ctx,
+			BootCommand: b.config.BootCommand,
+			VMName:      b.config.VMName,
+			Ctx:         b.config.ctx,
 		},
 		&xscommon.StepWaitForIP{
 			Chan:    httpReqChan,
-			Timeout: self.config.InstallTimeout, // @todo change this
+			Timeout: b.config.InstallTimeout, // @todo change this
 		},
 		&xscommon.StepForwardPortOverSSH{
 			RemotePort:  xscommon.InstanceSSHPort,
 			RemoteDest:  xscommon.InstanceSSHIP,
-			HostPortMin: self.config.HostPortMin,
-			HostPortMax: self.config.HostPortMax,
+			HostPortMin: b.config.HostPortMin,
+			HostPortMax: b.config.HostPortMax,
 			ResultKey:   "local_ssh_port",
 		},
 		&communicator.StepConnect{
-			Config:    &self.config.SSHConfig.Comm,
+			Config:    &b.config.SSHConfig.Comm,
 			Host:      xscommon.CommHost,
-			SSHConfig: xscommon.SSHConfigFunc(self.config.CommonConfig.SSHConfig),
+			SSHConfig: xscommon.SSHConfigFunc(b.config.CommonConfig.SSHConfig),
 			SSHPort:   xscommon.SSHPort,
 		},
 		new(xscommon.StepShutdown),
@@ -313,9 +314,9 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepBootWait),
 		&communicator.StepConnectSSH{
-			Config:    &self.config.SSHConfig.Comm,
+			Config:    &b.config.SSHConfig.Comm,
 			Host:      xscommon.CommHost,
-			SSHConfig: xscommon.SSHConfigFunc(self.config.CommonConfig.SSHConfig),
+			SSHConfig: xscommon.SSHConfigFunc(b.config.CommonConfig.SSHConfig),
 			SSHPort:   xscommon.SSHPort,
 		},
 		new(common.StepProvision),
@@ -326,12 +327,12 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		new(xscommon.StepExport),
 	}
 
-	if self.config.ISOName == "" {
+	if b.config.ISOName == "" {
 		steps = append(download_steps, steps...)
 	}
 
-	self.runner = &multistep.BasicRunner{Steps: steps}
-	self.runner.Run(state)
+	b.runner = &multistep.BasicRunner{Steps: steps}
+	b.runner.Run(state)
 
 	if rawErr, ok := state.GetOk("error"); ok {
 		return nil, rawErr.(error)
@@ -345,15 +346,15 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		return nil, errors.New("Build was halted.")
 	}
 
-	artifact, _ := xscommon.NewArtifact(self.config.OutputDir)
+	artifact, _ := xscommon.NewArtifact(b.config.OutputDir)
 
 	return artifact, nil
 }
 
-func (self *Builder) Cancel() {
-	if self.runner != nil {
+func (b *Builder) Cancel() {
+	if b.runner != nil {
 		log.Println("Cancelling the step runner...")
-		self.runner.Cancel()
+		b.runner.Cancel()
 	}
 	fmt.Println("Cancelling the builder")
 }

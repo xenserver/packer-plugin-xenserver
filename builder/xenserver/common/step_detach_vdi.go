@@ -2,25 +2,26 @@ package common
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
-	"log"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 )
 
 type StepDetachVdi struct {
 	VdiUuidKey string
 }
 
-func (self *StepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
+func (s *StepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(xsclient.XenAPIClient)
 
 	var vdiUuid string
-	if vdiUuidRaw, ok := state.GetOk(self.VdiUuidKey); ok {
+	if vdiUuidRaw, ok := state.GetOk(s.VdiUuidKey); ok {
 		vdiUuid = vdiUuidRaw.(string)
 	} else {
-		log.Printf("Skipping detach of '%s'", self.VdiUuidKey)
+		log.Printf("Skipping detach of '%s'", s.VdiUuidKey)
 		return multistep.ActionContinue
 	}
 
@@ -49,4 +50,4 @@ func (self *StepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
 	return multistep.ActionContinue
 }
 
-func (self *StepDetachVdi) Cleanup(state multistep.StateBag) {}
+func (s *StepDetachVdi) Cleanup(state multistep.StateBag) {}

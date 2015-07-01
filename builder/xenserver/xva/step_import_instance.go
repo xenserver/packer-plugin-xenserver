@@ -6,8 +6,8 @@ import (
 
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 	xscommon "github.com/rdobson/packer-builder-xenserver/builder/xenserver/common"
-	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
 type stepImportInstance struct {
@@ -15,10 +15,10 @@ type stepImportInstance struct {
 	vdi      *xsclient.VDI
 }
 
-func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepAction {
+func (s *stepImportInstance) Run(state multistep.StateBag) multistep.StepAction {
 
 	client := state.Get("client").(xsclient.XenAPIClient)
-	config := state.Get("config").(config)
+	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Import Instance")
@@ -153,7 +153,7 @@ func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepActi
 	return multistep.ActionContinue
 }
 
-func (self *stepImportInstance) Cleanup(state multistep.StateBag) {
+func (s *stepImportInstance) Cleanup(state multistep.StateBag) {
 	/*
 		config := state.Get("config").(config)
 		if config.ShouldKeepVM(state) {

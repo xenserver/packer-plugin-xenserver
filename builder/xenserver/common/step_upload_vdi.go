@@ -2,12 +2,13 @@ package common
 
 import (
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
 	"log"
 	"os"
 	"time"
+
+	"github.com/mitchellh/multistep"
+	"github.com/mitchellh/packer/packer"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 )
 
 type StepUploadVdi struct {
@@ -16,13 +17,13 @@ type StepUploadVdi struct {
 	VdiUuidKey    string
 }
 
-func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
+func (s *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(xsclient.XenAPIClient)
 
-	imagePath := self.ImagePathFunc()
-	vdiName := self.VdiNameFunc()
+	imagePath := s.ImagePathFunc()
+	vdiName := s.VdiNameFunc()
 	if imagePath == "" {
 		// skip if no disk image to attach
 		return multistep.ActionContinue
@@ -64,7 +65,7 @@ func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 		ui.Error(fmt.Sprintf("Unable to get UUID of VDI '%s': %s", vdiName, err.Error()))
 		return multistep.ActionHalt
 	}
-	state.Put(self.VdiUuidKey, vdiUuid)
+	state.Put(s.VdiUuidKey, vdiUuid)
 
 	_, err = HTTPUpload(fmt.Sprintf("https://%s/import_raw_vdi?vdi=%s&session_id=%s",
 		client.Host,
@@ -79,18 +80,18 @@ func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 	return multistep.ActionContinue
 }
 
-func (self *StepUploadVdi) Cleanup(state multistep.StateBag) {
+func (s *StepUploadVdi) Cleanup(state multistep.StateBag) {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(xsclient.XenAPIClient)
 
-	vdiName := self.VdiNameFunc()
+	vdiName := s.VdiNameFunc()
 
 	if config.ShouldKeepVM(state) {
 		return
 	}
 
-	vdiUuidRaw, ok := state.GetOk(self.VdiUuidKey)
+	vdiUuidRaw, ok := state.GetOk(s.VdiUuidKey)
 	if !ok {
 		// VDI doesn't exist
 		return
@@ -124,5 +125,5 @@ func (self *StepUploadVdi) Cleanup(state multistep.StateBag) {
 	}
 	ui.Say(fmt.Sprintf("Destroyed VDI '%s'", vdiName))
 
-	state.Put(self.VdiUuidKey, "")
+	state.Put(s.VdiUuidKey, "")
 }

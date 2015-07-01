@@ -1,13 +1,14 @@
 package common
 
 import (
-	gossh "code.google.com/p/go.crypto/ssh"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
 	"log"
 	"time"
+
+	gossh "code.google.com/p/go.crypto/ssh"
+	"github.com/mitchellh/multistep"
+	"github.com/mitchellh/packer/packer"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 )
 
 type StepStartOnHIMN struct{}
@@ -20,7 +21,7 @@ type StepStartOnHIMN struct{}
  *
  */
 
-func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction {
+func (s *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction {
 
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(xsclient.XenAPIClient)
@@ -124,7 +125,7 @@ func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 
 }
 
-func (self *StepStartOnHIMN) Cleanup(state multistep.StateBag) {}
+func (s *StepStartOnHIMN) Cleanup(state multistep.StateBag) {}
 
 func HimnSSHIP(state multistep.StateBag) (string, error) {
 	ip := state.Get("himn_ssh_address").(string)

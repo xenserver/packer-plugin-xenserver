@@ -9,14 +9,14 @@ import (
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/common"
 	"github.com/mitchellh/packer/helper/communicator"
-	hconfig "github.com/mitchellh/packer/helper/config"
+	"github.com/mitchellh/packer/helper/config"
 	"github.com/mitchellh/packer/packer"
 	"github.com/mitchellh/packer/template/interpolate"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 	xscommon "github.com/rdobson/packer-builder-xenserver/builder/xenserver/common"
-	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
-type config struct {
+type Config struct {
 	common.PackerConfig   `mapstructure:",squash"`
 	xscommon.CommonConfig `mapstructure:",squash"`
 
@@ -29,16 +29,17 @@ type config struct {
 }
 
 type Builder struct {
-	config config
+	config Config
 	runner multistep.Runner
 }
 
-func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error) {
+func (b *Builder) Prepare(raws ...interface{}) (params []string, retErr error) {
 
 	var errs *packer.MultiError
 
-	err := hconfig.Decode(&self.config, &hconfig.DecodeOpts{
-		Interpolate: true,
+	err := config.Decode(&b.config, &config.DecodeOpts{
+		Interpolate:        true,
+		InterpolateContext: &b.config.ctx,
 		InterpolateFilter: &interpolate.RenderFilter{
 			Exclude: []string{
 				"boot_command",
@@ -51,15 +52,15 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	}
 
 	errs = packer.MultiErrorAppend(
-		errs, self.config.CommonConfig.Prepare(&self.config.ctx, &self.config.PackerConfig)...)
+		errs, b.config.CommonConfig.Prepare(&b.config.ctx, &b.config.PackerConfig)...)
 
 	// Set default values
 
-	if self.config.VMMemory == 0 {
-		self.config.VMMemory = 1024
+	if b.config.VMMemory == 0 {
+		b.config.VMMemory = 1024
 	}
 
-	if len(self.config.PlatformArgs) == 0 {
+	if len(b.config.PlatformArgs) == 0 {
 		pargs := make(map[string]string)
 		pargs["viridian"] = "false"
 		pargs["nx"] = "true"
@@ -67,12 +68,12 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		pargs["apic"] = "true"
 		pargs["timeoffset"] = "0"
 		pargs["acpi"] = "1"
-		self.config.PlatformArgs = pargs
+		b.config.PlatformArgs = pargs
 	}
 
 	// Validation
 
-	if self.config.SourcePath == "" {
+	if b.config.SourcePath == "" {
 		errs = packer.MultiErrorAppend(errs, fmt.Errorf("A source_path must be specified"))
 	}
 
@@ -84,9 +85,9 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 
 }
 
-func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packer.Artifact, error) {
+func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packer.Artifact, error) {
 	//Setup XAPI client
-	client := xsclient.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
+	client := xsclient.NewXenAPIClient(b.config.HostIp, b.config.Username, b.config.Password)
 
 	err := client.Login()
 	if err != nil {
@@ -100,8 +101,8 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	state := new(multistep.BasicStateBag)
 	state.Put("cache", cache)
 	state.Put("client", client)
-	state.Put("config", self.config)
-	state.Put("commonconfig", self.config.CommonConfig)
+	state.Put("config", b.config)
+	state.Put("commonconfig", b.config.CommonConfig)
 	state.Put("hook", hook)
 	state.Put("ui", ui)
 
@@ -110,11 +111,11 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	//Build the steps
 	steps := []multistep.Step{
 		&xscommon.StepPrepareOutputDir{
-			Force: self.config.PackerForce,
-			Path:  self.config.OutputDir,
+			Force: b.config.PackerForce,
+			Path:  b.config.OutputDir,
 		},
 		&common.StepCreateFloppy{
-			Files: self.config.FloppyFiles,
+			Files: b.config.FloppyFiles,
 		},
 		new(xscommon.StepHTTPServer),
 		&xscommon.StepUploadVdi{
@@ -130,7 +131,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
 		&xscommon.StepFindVdi{
-			VdiName:    self.config.ToolsIsoName,
+			VdiName:    b.config.ToolsIsoName,
 			VdiUuidKey: "tools_vdi_uuid",
 		},
 		new(stepImportInstance),
@@ -143,17 +144,17 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiType:    xsclient.CD,
 		},
 		new(xscommon.StepStartVmPaused),
-		new(xscommon.StepGetVNCPort),
-		&xscommon.StepForwardPortOverSSH{
-			RemotePort:  xscommon.InstanceVNCPort,
-			RemoteDest:  xscommon.InstanceVNCIP,
-			HostPortMin: self.config.HostPortMin,
-			HostPortMax: self.config.HostPortMax,
-			ResultKey:   "local_vnc_port",
+		new(xscommon.StepGetConsoleLocation),
+		&xscommon.StepTCPVNCProxy{
+			RemoteConsole: xscommon.InstanceConsoleLocation,
+			HostPortMin:   b.config.HostPortMin,
+			HostPortMax:   b.config.HostPortMax,
 		},
 		new(xscommon.StepBootWait),
 		&xscommon.StepTypeBootCommand{
-			Ctx: self.config.ctx,
+			BootCommand: b.config.BootCommand,
+			VMName:      b.config.VMName,
+			Ctx:         b.config.ctx,
 		},
 		&xscommon.StepWaitForIP{
 			Chan:    httpReqChan,
@@ -162,14 +163,14 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		&xscommon.StepForwardPortOverSSH{
 			RemotePort:  xscommon.InstanceSSHPort,
 			RemoteDest:  xscommon.InstanceSSHIP,
-			HostPortMin: self.config.HostPortMin,
-			HostPortMax: self.config.HostPortMax,
+			HostPortMin: b.config.HostPortMin,
+			HostPortMax: b.config.HostPortMax,
 			ResultKey:   "local_ssh_port",
 		},
 		&communicator.StepConnect{
-			Config:    &self.config.SSHConfig.Comm,
+			Config:    &b.config.SSHConfig.Comm,
 			Host:      xscommon.CommHost,
-			SSHConfig: xscommon.SSHConfigFunc(self.config.CommonConfig.SSHConfig),
+			SSHConfig: xscommon.SSHConfigFunc(b.config.CommonConfig.SSHConfig),
 			SSHPort:   xscommon.SSHPort,
 		},
 		new(common.StepProvision),
@@ -183,8 +184,8 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		new(xscommon.StepExport),
 	}
 
-	self.runner = &multistep.BasicRunner{Steps: steps}
-	self.runner.Run(state)
+	b.runner = &multistep.BasicRunner{Steps: steps}
+	b.runner.Run(state)
 
 	if rawErr, ok := state.GetOk("error"); ok {
 		return nil, rawErr.(error)
@@ -198,15 +199,15 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		return nil, errors.New("Build was halted.")
 	}
 
-	artifact, _ := xscommon.NewArtifact(self.config.OutputDir)
+	artifact, _ := xscommon.NewArtifact(b.config.OutputDir)
 
 	return artifact, nil
 }
 
-func (self *Builder) Cancel() {
-	if self.runner != nil {
+func (b *Builder) Cancel() {
+	if b.runner != nil {
 		log.Println("Cancelling the step runner...")
-		self.runner.Cancel()
+		b.runner.Cancel()
 	}
 	fmt.Println("Cancelling the builder")
 }

@@ -2,10 +2,11 @@ package common
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
-	"time"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 )
 
 type StepShutdown struct{}

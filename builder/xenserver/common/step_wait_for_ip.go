@@ -7,7 +7,7 @@ import (
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
 	"github.com/nilshell/xmlrpc"
-	xsclient "github.com/xenserver/go-xenserver-client"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 )
 
 type StepWaitForIP struct {
@@ -15,7 +15,7 @@ type StepWaitForIP struct {
 	Timeout time.Duration
 }
 
-func (self *StepWaitForIP) Run(state multistep.StateBag) multistep.StepAction {
+func (s *StepWaitForIP) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(xsclient.XenAPIClient)
 	config := state.Get("commonconfig").(CommonConfig)
@@ -31,7 +31,7 @@ func (self *StepWaitForIP) Run(state multistep.StateBag) multistep.StepAction {
 
 	var ip string
 	err = InterruptibleWait{
-		Timeout:           self.Timeout,
+		Timeout:           s.Timeout,
 		PredicateInterval: 5 * time.Second,
 		Predicate: func() (result bool, err error) {
 
@@ -39,7 +39,7 @@ func (self *StepWaitForIP) Run(state multistep.StateBag) multistep.StepAction {
 
 				// Snoop IP from HTTP fetch
 				select {
-				case ip = <-self.Chan:
+				case ip = <-s.Chan:
 					ui.Message(fmt.Sprintf("Got IP '%s' from HTTP request", ip))
 					return true, nil
 				default:
@@ -81,7 +81,7 @@ func (self *StepWaitForIP) Run(state multistep.StateBag) multistep.StepAction {
 	return multistep.ActionContinue
 }
 
-func (self *StepWaitForIP) Cleanup(state multistep.StateBag) {}
+func (s *StepWaitForIP) Cleanup(state multistep.StateBag) {}
 
 func InstanceSSHIP(state multistep.StateBag) (string, error) {
 	ip := state.Get("instance_ssh_address").(string)

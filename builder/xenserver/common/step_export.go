@@ -3,12 +3,13 @@ package common
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/mitchellh/multistep"
+	"github.com/mitchellh/packer/packer"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 )
 
 type StepExport struct{}

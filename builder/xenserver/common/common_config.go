@@ -10,7 +10,7 @@ import (
 	"github.com/mitchellh/packer/common"
 	commonssh "github.com/mitchellh/packer/common/ssh"
 	"github.com/mitchellh/packer/template/interpolate"
-	xsclient "github.com/xenserver/go-xenserver-client"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 )
 
 type CommonConfig struct {
@@ -243,4 +243,21 @@ func (config CommonConfig) GetSR(client xsclient.XenAPIClient) (*xsclient.SR, er
 
 		return srs[0], nil
 	}
+}
+
+func (config CommonConfig) GetISOSR(client xsclient.XenAPIClient) (*xsclient.SR, error) {
+	srs, err := client.GetSRs()
+	if err != nil {
+		return nil, err
+	}
+	for _, sr := range srs {
+		srrec, err := sr.GetRecord()
+		if err != nil {
+			return nil, err
+		}
+		if srrec["type"] == "iso" {
+			return sr, nil
+		}
+	}
+	return srs[0], nil
 }

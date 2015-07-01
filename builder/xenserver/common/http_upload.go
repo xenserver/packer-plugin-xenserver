@@ -3,14 +3,15 @@ package common
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
+
+	"github.com/mitchellh/multistep"
+	"github.com/mitchellh/packer/packer"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 )
 
 func appendQuery(urlstring, k, v string) (string, error) {

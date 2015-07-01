@@ -1,9 +1,10 @@
 package iso
 
 import (
-	"github.com/mitchellh/packer/packer"
 	"reflect"
 	"testing"
+
+	"github.com/mitchellh/packer/packer"
 )
 
 func testConfig() map[string]interface{} {

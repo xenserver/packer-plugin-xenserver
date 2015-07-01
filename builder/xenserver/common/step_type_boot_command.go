@@ -4,31 +4,34 @@ package common
 
 import (
 	"fmt"
-	"github.com/mitchellh/go-vnc"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	"github.com/mitchellh/packer/template/interpolate"
 	"log"
 	"net"
 	"strings"
 	"time"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/mitchellh/go-vnc"
+	"github.com/mitchellh/multistep"
+	"github.com/mitchellh/packer/packer"
+	"github.com/mitchellh/packer/template/interpolate"
 )
 
 const KeyLeftShift uint = 0xFFE1
 
 type bootCommandTemplateData struct {
-	Name     string
 	HTTPIP   string
 	HTTPPort uint
+	Name     string
 }
 
 type StepTypeBootCommand struct {
-	Ctx interpolate.Context
+	BootCommand []string
+	VMName      string
+	Ctx         interpolate.Context
 }
 
-func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAction {
+func (s *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	vnc_port := state.Get("local_vnc_port").(uint)
@@ -38,7 +41,7 @@ func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 	if len(config.BootCommand) == 0 {
 		return multistep.ActionContinue
 	}
-
+	log.Printf("sdsadasds: %s", config.BootCommand)
 	// Connect to the local VNC port as we have set up a SSH port forward
 	ui.Say("Connecting to the VM over VNC")
 	ui.Message(fmt.Sprintf("Using local port: %d", vnc_port))
@@ -79,23 +82,23 @@ func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 	localIp := strings.Split(envVar, " ")[0]
 	ui.Message(fmt.Sprintf("Found local IP: %s", localIp))
 
-	self.Ctx.Data = &bootCommandTemplateData{
-		config.VMName,
+	s.Ctx.Data = &bootCommandTemplateData{
 		localIp,
 		http_port,
+		config.VMName,
 	}
 
 	ui.Say("Typing boot commands over VNC...")
-	for _, command := range config.BootCommand {
 
-		command, err := interpolate.Render(command, &self.Ctx)
+	for _, command := range s.BootCommand {
+		command, err := interpolate.Render(command, &s.Ctx)
 		if err != nil {
 			err := fmt.Errorf("Error preparing boot command: %s", err)
 			state.Put("error", err)
 			ui.Error(err.Error())
 			return multistep.ActionHalt
 		}
-
+		log.Printf("interpolate.Render: %s", command)
 		// Check for interrupts
 		if _, ok := state.GetOk(multistep.StateCancelled); ok {
 			return multistep.ActionHalt
@@ -109,7 +112,7 @@ func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 	return multistep.ActionContinue
 }
 
-func (self *StepTypeBootCommand) Cleanup(multistep.StateBag) {}
+func (s *StepTypeBootCommand) Cleanup(multistep.StateBag) {}
 
 // Taken from qemu's builder plugin - not an exported function.
 func vncSendString(c *vnc.ClientConn, original string) {

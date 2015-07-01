@@ -5,7 +5,7 @@ import (
 
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
+	xsclient "github.com/simonfuhrer/go-xenserver-client"
 )
 
 type stepCreateInstance struct {
@@ -13,10 +13,10 @@ type stepCreateInstance struct {
 	vdi      *xsclient.VDI
 }
 
-func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepAction {
+func (s *stepCreateInstance) Run(state multistep.StateBag) multistep.StepAction {
 
 	client := state.Get("client").(xsclient.XenAPIClient)
-	config := state.Get("config").(config)
+	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Create Instance")
@@ -42,7 +42,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		ui.Error(fmt.Sprintf("Error cloning VM: %s", err.Error()))
 		return multistep.ActionHalt
 	}
-	self.instance = instance
+	s.instance = instance
 
 	err = instance.SetIsATemplate(false)
 	if err != nil {
@@ -76,12 +76,12 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		return multistep.ActionHalt
 	}
 
-	vdi, err := sr.CreateVdi("Packer-disk", int64(config.DiskSize*1024*1024))
+	vdi, err := sr.CreateVdi(config.VMName, int64(config.DiskSize*1024*1024))
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to create packer disk VDI: %s", err.Error()))
 		return multistep.ActionHalt
 	}
-	self.vdi = vdi
+	s.vdi = vdi
 
 	err = instance.ConnectVdi(vdi, xsclient.Disk, "")
 	if err != nil {
@@ -108,7 +108,6 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 		for _, pif := range pifs {
 			pif_rec, err := pif.GetRecord()
-
 			if err != nil {
 				ui.Error(fmt.Sprintf("Error getting PIF record: %s", err.Error()))
 				return multistep.ActionHalt
@@ -168,26 +167,26 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	return multistep.ActionContinue
 }
 
-func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
-	config := state.Get("config").(config)
+func (s *stepCreateInstance) Cleanup(state multistep.StateBag) {
+	config := state.Get("config").(Config)
 	if config.ShouldKeepVM(state) {
 		return
 	}
 
 	ui := state.Get("ui").(packer.Ui)
 
-	if self.instance != nil {
+	if s.instance != nil {
 		ui.Say("Destroying VM")
-		_ = self.instance.HardShutdown() // redundant, just in case
-		err := self.instance.Destroy()
+		_ = s.instance.HardShutdown() // redundant, just in case
+		err := s.instance.Destroy()
 		if err != nil {
 			ui.Error(err.Error())
 		}
 	}
 
-	if self.vdi != nil {
+	if s.vdi != nil {
 		ui.Say("Destroying VDI")
-		err := self.vdi.Destroy()
+		err := s.vdi.Destroy()
 		if err != nil {
 			ui.Error(err.Error())
 		}

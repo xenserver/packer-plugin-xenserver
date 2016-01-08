@@ -180,6 +180,10 @@ each category, the available options are alphabetized and described.
   If it doesn't shut down in this time, it is an error. By default, the timeout
   is "5m", or five minutes.
 
+* `ssh_host` - The IP address to use for the virtual machine.  This is useful for
+  building in an environment where static IP assignment must be used.  The
+  `ip_getter` option must also be set to `static`.
+
 * `ssh_host_port_min` and `ssh_host_port_max` (integer) - The minimum and
   maximum port to use for the SSH port on the host machine which is forwarded
   to the SSH port on the guest machine. Because Packer often runs in parallel,

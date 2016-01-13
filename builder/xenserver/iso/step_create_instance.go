@@ -11,6 +11,8 @@ import (
 type stepCreateInstance struct {
 	instance *xsclient.VM
 	vdi      *xsclient.VDI
+	vdiB     *xsclient.VDI
+	vdiC     *xsclient.VDI
 }
 
 func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepAction {
@@ -192,4 +194,5 @@ func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
 			ui.Error(err.Error())
 		}
 	}
+
 }

@@ -576,14 +576,18 @@ func (self *VM) SetStaticMemoryRange(min, max uint) (err error) {
 	return
 }
 
-func (self *VM) ConnectVdi(vdi *VDI, vdiType VDIType) (err error) {
+func (self *VM) ConnectVdi(vdi *VDI, vdiType VDIType, userdevice string) (err error) {
 
 	// 1. Create a VBD
 
 	vbd_rec := make(xmlrpc.Struct)
 	vbd_rec["VM"] = self.Ref
 	vbd_rec["VDI"] = vdi.Ref
-	vbd_rec["userdevice"] = "autodetect"
+	if (userdevice == nil) {
+	    vbd_rec["userdevice"] = "autodetect"
+	} else {
+        vbd_rec["userdevice"] = userdevice
+    }
 	vbd_rec["empty"] = false
 	vbd_rec["other_config"] = make(xmlrpc.Struct)
 	vbd_rec["qos_algorithm_type"] = ""

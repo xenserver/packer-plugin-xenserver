@@ -42,6 +42,7 @@ func (self *StepAttachVdi) Run(state multistep.StateBag) multistep.StepAction {
 	}
 
 	err = instance.ConnectVdi(self.vdi, self.VdiType, "")
+	ui.Error(fmt.Sprintf("VDI %s", self.vdi))
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error attaching VDI '%s': '%s'", vdiUuid, err.Error()))
 		return multistep.ActionHalt

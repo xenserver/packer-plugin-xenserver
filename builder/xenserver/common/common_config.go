@@ -55,6 +55,9 @@ type CommonConfig struct {
 	Format    string `mapstructure:"format"`
 	KeepVM    string `mapstructure:"keep_vm"`
 	IPGetter  string `mapstructure:"ip_getter"`
+
+	DiskBSize  uint   `mapstructure:"diskb_size"`
+	DiskCSize  uint   `mapstructure:"diskc_size"`
 }
 
 func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig) []error {

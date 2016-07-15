@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/mitchellh/packer/packer/plugin"
-	"github.com/rdobson/packer-builder-xenserver/builder/xenserver/iso"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/iso"
 )
 
 func main() {

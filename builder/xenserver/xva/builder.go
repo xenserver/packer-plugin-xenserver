@@ -12,8 +12,8 @@ import (
 	hconfig "github.com/mitchellh/packer/helper/config"
 	"github.com/mitchellh/packer/packer"
 	"github.com/mitchellh/packer/template/interpolate"
-	xscommon "github.com/rdobson/packer-builder-xenserver/builder/xenserver/common"
 	xsclient "github.com/xenserver/go-xenserver-client"
+	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
 
 type config struct {

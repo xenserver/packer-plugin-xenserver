@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 )
 
 type StepExport struct{}
@@ -20,6 +21,7 @@ func downloadFile(url, filename string, ui packer.Ui) (err error) {
 	if err != nil {
 		return err
 	}
+	defer fh.Close()
 
 	// Define a new transport which allows self-signed certs
 	tr := &http.Transport{
@@ -101,16 +103,36 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 	case "xva":
 		// export the VM
 
-		export_url := fmt.Sprintf("https://%s/export?uuid=%s&session_id=%s",
-			client.Host,
-			instance_uuid,
-			client.Session.(string),
-		)
-
 		export_filename := fmt.Sprintf("%s/%s.xva", config.OutputDir, config.VMName)
 
-		ui.Say("Getting XVA " + export_url)
-		err = downloadFile(export_url, export_filename, ui)
+		use_xe := os.Getenv("USE_XE") == "1"
+		if xe, e := exec.LookPath("xe"); e == nil && use_xe {
+			cmd := exec.Command(
+				xe,
+				"-s", client.Host,
+				"-p", "443",
+				"-u", client.Username,
+				"-pw", client.Password,
+				"vm-export",
+				"vm="+instance_uuid,
+				"compress=true",
+				"filename="+export_filename,
+			)
+
+			ui.Say(fmt.Sprintf("Getting XVA %+v %+v", cmd.Path, cmd.Args))
+
+			err = cmd.Run()
+		} else {
+			export_url := fmt.Sprintf("https://%s/export?uuid=%s&session_id=%s",
+				client.Host,
+				instance_uuid,
+				client.Session.(string),
+			)
+
+			ui.Say("Getting XVA " + export_url)
+			err = downloadFile(export_url, export_filename, ui)
+		}
+
 		if err != nil {
 			ui.Error(fmt.Sprintf("Could not download XVA: %s", err.Error()))
 			return multistep.ActionHalt

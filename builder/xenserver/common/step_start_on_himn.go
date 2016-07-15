@@ -1,11 +1,11 @@
 package common
 
 import (
-	gossh "code.google.com/p/go.crypto/ssh"
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
 	xsclient "github.com/xenserver/go-xenserver-client"
+	gossh "golang.org/x/crypto/ssh"
 	"log"
 	"time"
 )

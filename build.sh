@@ -6,15 +6,13 @@
 # Determine the arch/os combos we're building for
 XC_OS=${XC_OS:-$(go env GOOS)}
 XC_ARCH=${XC_ARCH:-$(go env GOARCH)}
-
-# Install dependencies
-echo "==> Getting dependencies..."
-go get ./...
+GOPATH=${GOPATH:-$(go env GOPATH)}
 
 # Delete the old dir
 echo "==> Removing old directory..."
 rm -f bin/*
 rm -rf pkg/*
+rm -rf $GOPATH/pkg/*
 mkdir -p bin/
 
 gox \

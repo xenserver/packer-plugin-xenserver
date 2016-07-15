@@ -3935,7 +3935,7 @@ func (_ fastpathT) EncMapIntfIntfV(v map[interface{}]interface{}, checkNil bool,
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -3988,7 +3988,7 @@ func (_ fastpathT) EncMapIntfStringV(v map[interface{}]string, checkNil bool, e 
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4041,7 +4041,7 @@ func (_ fastpathT) EncMapIntfUintV(v map[interface{}]uint, checkNil bool, e *Enc
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4094,7 +4094,7 @@ func (_ fastpathT) EncMapIntfUint8V(v map[interface{}]uint8, checkNil bool, e *E
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4147,7 +4147,7 @@ func (_ fastpathT) EncMapIntfUint16V(v map[interface{}]uint16, checkNil bool, e 
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4200,7 +4200,7 @@ func (_ fastpathT) EncMapIntfUint32V(v map[interface{}]uint32, checkNil bool, e 
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4253,7 +4253,7 @@ func (_ fastpathT) EncMapIntfUint64V(v map[interface{}]uint64, checkNil bool, e 
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4306,7 +4306,7 @@ func (_ fastpathT) EncMapIntfUintptrV(v map[interface{}]uintptr, checkNil bool, 
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4359,7 +4359,7 @@ func (_ fastpathT) EncMapIntfIntV(v map[interface{}]int, checkNil bool, e *Encod
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4412,7 +4412,7 @@ func (_ fastpathT) EncMapIntfInt8V(v map[interface{}]int8, checkNil bool, e *Enc
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4465,7 +4465,7 @@ func (_ fastpathT) EncMapIntfInt16V(v map[interface{}]int16, checkNil bool, e *E
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4518,7 +4518,7 @@ func (_ fastpathT) EncMapIntfInt32V(v map[interface{}]int32, checkNil bool, e *E
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4571,7 +4571,7 @@ func (_ fastpathT) EncMapIntfInt64V(v map[interface{}]int64, checkNil bool, e *E
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4624,7 +4624,7 @@ func (_ fastpathT) EncMapIntfFloat32V(v map[interface{}]float32, checkNil bool, 
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4677,7 +4677,7 @@ func (_ fastpathT) EncMapIntfFloat64V(v map[interface{}]float64, checkNil bool, 
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4730,7 +4730,7 @@ func (_ fastpathT) EncMapIntfBoolV(v map[interface{}]bool, checkNil bool, e *Enc
 		v2 := make([]bytesI, len(v))
 		var i, l int
 		var vp *bytesI
-		for k2, _ := range v {
+		for k2 := range v {
 			l = len(mksv)
 			e2.MustEncode(k2)
 			vp = &v2[i]
@@ -4781,7 +4781,7 @@ func (_ fastpathT) EncMapStringIntfV(v map[string]interface{}, checkNil bool, e 
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -4836,7 +4836,7 @@ func (_ fastpathT) EncMapStringStringV(v map[string]string, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -4891,7 +4891,7 @@ func (_ fastpathT) EncMapStringUintV(v map[string]uint, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -4946,7 +4946,7 @@ func (_ fastpathT) EncMapStringUint8V(v map[string]uint8, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -5001,7 +5001,7 @@ func (_ fastpathT) EncMapStringUint16V(v map[string]uint16, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -5056,7 +5056,7 @@ func (_ fastpathT) EncMapStringUint32V(v map[string]uint32, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -5111,7 +5111,7 @@ func (_ fastpathT) EncMapStringUint64V(v map[string]uint64, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -5166,7 +5166,7 @@ func (_ fastpathT) EncMapStringUintptrV(v map[string]uintptr, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -5221,7 +5221,7 @@ func (_ fastpathT) EncMapStringIntV(v map[string]int, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -5276,7 +5276,7 @@ func (_ fastpathT) EncMapStringInt8V(v map[string]int8, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -5331,7 +5331,7 @@ func (_ fastpathT) EncMapStringInt16V(v map[string]int16, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -5386,7 +5386,7 @@ func (_ fastpathT) EncMapStringInt32V(v map[string]int32, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -5441,7 +5441,7 @@ func (_ fastpathT) EncMapStringInt64V(v map[string]int64, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -5496,7 +5496,7 @@ func (_ fastpathT) EncMapStringFloat32V(v map[string]float32, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -5551,7 +5551,7 @@ func (_ fastpathT) EncMapStringFloat64V(v map[string]float64, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -5606,7 +5606,7 @@ func (_ fastpathT) EncMapStringBoolV(v map[string]bool, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]string, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = string(k)
 			i++
 		}
@@ -5660,7 +5660,7 @@ func (_ fastpathT) EncMapFloat32IntfV(v map[float32]interface{}, checkNil bool, 
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -5706,7 +5706,7 @@ func (_ fastpathT) EncMapFloat32StringV(v map[float32]string, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -5752,7 +5752,7 @@ func (_ fastpathT) EncMapFloat32UintV(v map[float32]uint, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -5798,7 +5798,7 @@ func (_ fastpathT) EncMapFloat32Uint8V(v map[float32]uint8, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -5844,7 +5844,7 @@ func (_ fastpathT) EncMapFloat32Uint16V(v map[float32]uint16, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -5890,7 +5890,7 @@ func (_ fastpathT) EncMapFloat32Uint32V(v map[float32]uint32, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -5936,7 +5936,7 @@ func (_ fastpathT) EncMapFloat32Uint64V(v map[float32]uint64, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -5982,7 +5982,7 @@ func (_ fastpathT) EncMapFloat32UintptrV(v map[float32]uintptr, checkNil bool, e
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6028,7 +6028,7 @@ func (_ fastpathT) EncMapFloat32IntV(v map[float32]int, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6074,7 +6074,7 @@ func (_ fastpathT) EncMapFloat32Int8V(v map[float32]int8, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6120,7 +6120,7 @@ func (_ fastpathT) EncMapFloat32Int16V(v map[float32]int16, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6166,7 +6166,7 @@ func (_ fastpathT) EncMapFloat32Int32V(v map[float32]int32, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6212,7 +6212,7 @@ func (_ fastpathT) EncMapFloat32Int64V(v map[float32]int64, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6258,7 +6258,7 @@ func (_ fastpathT) EncMapFloat32Float32V(v map[float32]float32, checkNil bool, e
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6304,7 +6304,7 @@ func (_ fastpathT) EncMapFloat32Float64V(v map[float32]float64, checkNil bool, e
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6350,7 +6350,7 @@ func (_ fastpathT) EncMapFloat32BoolV(v map[float32]bool, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6396,7 +6396,7 @@ func (_ fastpathT) EncMapFloat64IntfV(v map[float64]interface{}, checkNil bool, 
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6442,7 +6442,7 @@ func (_ fastpathT) EncMapFloat64StringV(v map[float64]string, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6488,7 +6488,7 @@ func (_ fastpathT) EncMapFloat64UintV(v map[float64]uint, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6534,7 +6534,7 @@ func (_ fastpathT) EncMapFloat64Uint8V(v map[float64]uint8, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6580,7 +6580,7 @@ func (_ fastpathT) EncMapFloat64Uint16V(v map[float64]uint16, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6626,7 +6626,7 @@ func (_ fastpathT) EncMapFloat64Uint32V(v map[float64]uint32, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6672,7 +6672,7 @@ func (_ fastpathT) EncMapFloat64Uint64V(v map[float64]uint64, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6718,7 +6718,7 @@ func (_ fastpathT) EncMapFloat64UintptrV(v map[float64]uintptr, checkNil bool, e
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6764,7 +6764,7 @@ func (_ fastpathT) EncMapFloat64IntV(v map[float64]int, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6810,7 +6810,7 @@ func (_ fastpathT) EncMapFloat64Int8V(v map[float64]int8, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6856,7 +6856,7 @@ func (_ fastpathT) EncMapFloat64Int16V(v map[float64]int16, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6902,7 +6902,7 @@ func (_ fastpathT) EncMapFloat64Int32V(v map[float64]int32, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6948,7 +6948,7 @@ func (_ fastpathT) EncMapFloat64Int64V(v map[float64]int64, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -6994,7 +6994,7 @@ func (_ fastpathT) EncMapFloat64Float32V(v map[float64]float32, checkNil bool, e
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -7040,7 +7040,7 @@ func (_ fastpathT) EncMapFloat64Float64V(v map[float64]float64, checkNil bool, e
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -7086,7 +7086,7 @@ func (_ fastpathT) EncMapFloat64BoolV(v map[float64]bool, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]float64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = float64(k)
 			i++
 		}
@@ -7132,7 +7132,7 @@ func (_ fastpathT) EncMapUintIntfV(v map[uint]interface{}, checkNil bool, e *Enc
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7178,7 +7178,7 @@ func (_ fastpathT) EncMapUintStringV(v map[uint]string, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7224,7 +7224,7 @@ func (_ fastpathT) EncMapUintUintV(v map[uint]uint, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7270,7 +7270,7 @@ func (_ fastpathT) EncMapUintUint8V(v map[uint]uint8, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7316,7 +7316,7 @@ func (_ fastpathT) EncMapUintUint16V(v map[uint]uint16, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7362,7 +7362,7 @@ func (_ fastpathT) EncMapUintUint32V(v map[uint]uint32, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7408,7 +7408,7 @@ func (_ fastpathT) EncMapUintUint64V(v map[uint]uint64, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7454,7 +7454,7 @@ func (_ fastpathT) EncMapUintUintptrV(v map[uint]uintptr, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7500,7 +7500,7 @@ func (_ fastpathT) EncMapUintIntV(v map[uint]int, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7546,7 +7546,7 @@ func (_ fastpathT) EncMapUintInt8V(v map[uint]int8, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7592,7 +7592,7 @@ func (_ fastpathT) EncMapUintInt16V(v map[uint]int16, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7638,7 +7638,7 @@ func (_ fastpathT) EncMapUintInt32V(v map[uint]int32, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7684,7 +7684,7 @@ func (_ fastpathT) EncMapUintInt64V(v map[uint]int64, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7730,7 +7730,7 @@ func (_ fastpathT) EncMapUintFloat32V(v map[uint]float32, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7776,7 +7776,7 @@ func (_ fastpathT) EncMapUintFloat64V(v map[uint]float64, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7822,7 +7822,7 @@ func (_ fastpathT) EncMapUintBoolV(v map[uint]bool, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7868,7 +7868,7 @@ func (_ fastpathT) EncMapUint8IntfV(v map[uint8]interface{}, checkNil bool, e *E
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7914,7 +7914,7 @@ func (_ fastpathT) EncMapUint8StringV(v map[uint8]string, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -7960,7 +7960,7 @@ func (_ fastpathT) EncMapUint8UintV(v map[uint8]uint, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8006,7 +8006,7 @@ func (_ fastpathT) EncMapUint8Uint8V(v map[uint8]uint8, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8052,7 +8052,7 @@ func (_ fastpathT) EncMapUint8Uint16V(v map[uint8]uint16, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8098,7 +8098,7 @@ func (_ fastpathT) EncMapUint8Uint32V(v map[uint8]uint32, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8144,7 +8144,7 @@ func (_ fastpathT) EncMapUint8Uint64V(v map[uint8]uint64, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8190,7 +8190,7 @@ func (_ fastpathT) EncMapUint8UintptrV(v map[uint8]uintptr, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8236,7 +8236,7 @@ func (_ fastpathT) EncMapUint8IntV(v map[uint8]int, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8282,7 +8282,7 @@ func (_ fastpathT) EncMapUint8Int8V(v map[uint8]int8, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8328,7 +8328,7 @@ func (_ fastpathT) EncMapUint8Int16V(v map[uint8]int16, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8374,7 +8374,7 @@ func (_ fastpathT) EncMapUint8Int32V(v map[uint8]int32, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8420,7 +8420,7 @@ func (_ fastpathT) EncMapUint8Int64V(v map[uint8]int64, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8466,7 +8466,7 @@ func (_ fastpathT) EncMapUint8Float32V(v map[uint8]float32, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8512,7 +8512,7 @@ func (_ fastpathT) EncMapUint8Float64V(v map[uint8]float64, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8558,7 +8558,7 @@ func (_ fastpathT) EncMapUint8BoolV(v map[uint8]bool, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8604,7 +8604,7 @@ func (_ fastpathT) EncMapUint16IntfV(v map[uint16]interface{}, checkNil bool, e 
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8650,7 +8650,7 @@ func (_ fastpathT) EncMapUint16StringV(v map[uint16]string, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8696,7 +8696,7 @@ func (_ fastpathT) EncMapUint16UintV(v map[uint16]uint, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8742,7 +8742,7 @@ func (_ fastpathT) EncMapUint16Uint8V(v map[uint16]uint8, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8788,7 +8788,7 @@ func (_ fastpathT) EncMapUint16Uint16V(v map[uint16]uint16, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8834,7 +8834,7 @@ func (_ fastpathT) EncMapUint16Uint32V(v map[uint16]uint32, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8880,7 +8880,7 @@ func (_ fastpathT) EncMapUint16Uint64V(v map[uint16]uint64, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8926,7 +8926,7 @@ func (_ fastpathT) EncMapUint16UintptrV(v map[uint16]uintptr, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -8972,7 +8972,7 @@ func (_ fastpathT) EncMapUint16IntV(v map[uint16]int, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9018,7 +9018,7 @@ func (_ fastpathT) EncMapUint16Int8V(v map[uint16]int8, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9064,7 +9064,7 @@ func (_ fastpathT) EncMapUint16Int16V(v map[uint16]int16, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9110,7 +9110,7 @@ func (_ fastpathT) EncMapUint16Int32V(v map[uint16]int32, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9156,7 +9156,7 @@ func (_ fastpathT) EncMapUint16Int64V(v map[uint16]int64, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9202,7 +9202,7 @@ func (_ fastpathT) EncMapUint16Float32V(v map[uint16]float32, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9248,7 +9248,7 @@ func (_ fastpathT) EncMapUint16Float64V(v map[uint16]float64, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9294,7 +9294,7 @@ func (_ fastpathT) EncMapUint16BoolV(v map[uint16]bool, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9340,7 +9340,7 @@ func (_ fastpathT) EncMapUint32IntfV(v map[uint32]interface{}, checkNil bool, e 
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9386,7 +9386,7 @@ func (_ fastpathT) EncMapUint32StringV(v map[uint32]string, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9432,7 +9432,7 @@ func (_ fastpathT) EncMapUint32UintV(v map[uint32]uint, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9478,7 +9478,7 @@ func (_ fastpathT) EncMapUint32Uint8V(v map[uint32]uint8, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9524,7 +9524,7 @@ func (_ fastpathT) EncMapUint32Uint16V(v map[uint32]uint16, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9570,7 +9570,7 @@ func (_ fastpathT) EncMapUint32Uint32V(v map[uint32]uint32, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9616,7 +9616,7 @@ func (_ fastpathT) EncMapUint32Uint64V(v map[uint32]uint64, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9662,7 +9662,7 @@ func (_ fastpathT) EncMapUint32UintptrV(v map[uint32]uintptr, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9708,7 +9708,7 @@ func (_ fastpathT) EncMapUint32IntV(v map[uint32]int, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9754,7 +9754,7 @@ func (_ fastpathT) EncMapUint32Int8V(v map[uint32]int8, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9800,7 +9800,7 @@ func (_ fastpathT) EncMapUint32Int16V(v map[uint32]int16, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9846,7 +9846,7 @@ func (_ fastpathT) EncMapUint32Int32V(v map[uint32]int32, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9892,7 +9892,7 @@ func (_ fastpathT) EncMapUint32Int64V(v map[uint32]int64, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9938,7 +9938,7 @@ func (_ fastpathT) EncMapUint32Float32V(v map[uint32]float32, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -9984,7 +9984,7 @@ func (_ fastpathT) EncMapUint32Float64V(v map[uint32]float64, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10030,7 +10030,7 @@ func (_ fastpathT) EncMapUint32BoolV(v map[uint32]bool, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10076,7 +10076,7 @@ func (_ fastpathT) EncMapUint64IntfV(v map[uint64]interface{}, checkNil bool, e 
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10122,7 +10122,7 @@ func (_ fastpathT) EncMapUint64StringV(v map[uint64]string, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10168,7 +10168,7 @@ func (_ fastpathT) EncMapUint64UintV(v map[uint64]uint, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10214,7 +10214,7 @@ func (_ fastpathT) EncMapUint64Uint8V(v map[uint64]uint8, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10260,7 +10260,7 @@ func (_ fastpathT) EncMapUint64Uint16V(v map[uint64]uint16, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10306,7 +10306,7 @@ func (_ fastpathT) EncMapUint64Uint32V(v map[uint64]uint32, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10352,7 +10352,7 @@ func (_ fastpathT) EncMapUint64Uint64V(v map[uint64]uint64, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10398,7 +10398,7 @@ func (_ fastpathT) EncMapUint64UintptrV(v map[uint64]uintptr, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10444,7 +10444,7 @@ func (_ fastpathT) EncMapUint64IntV(v map[uint64]int, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10490,7 +10490,7 @@ func (_ fastpathT) EncMapUint64Int8V(v map[uint64]int8, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10536,7 +10536,7 @@ func (_ fastpathT) EncMapUint64Int16V(v map[uint64]int16, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10582,7 +10582,7 @@ func (_ fastpathT) EncMapUint64Int32V(v map[uint64]int32, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10628,7 +10628,7 @@ func (_ fastpathT) EncMapUint64Int64V(v map[uint64]int64, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10674,7 +10674,7 @@ func (_ fastpathT) EncMapUint64Float32V(v map[uint64]float32, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10720,7 +10720,7 @@ func (_ fastpathT) EncMapUint64Float64V(v map[uint64]float64, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10766,7 +10766,7 @@ func (_ fastpathT) EncMapUint64BoolV(v map[uint64]bool, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10812,7 +10812,7 @@ func (_ fastpathT) EncMapUintptrIntfV(v map[uintptr]interface{}, checkNil bool, 
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10858,7 +10858,7 @@ func (_ fastpathT) EncMapUintptrStringV(v map[uintptr]string, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10904,7 +10904,7 @@ func (_ fastpathT) EncMapUintptrUintV(v map[uintptr]uint, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10950,7 +10950,7 @@ func (_ fastpathT) EncMapUintptrUint8V(v map[uintptr]uint8, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -10996,7 +10996,7 @@ func (_ fastpathT) EncMapUintptrUint16V(v map[uintptr]uint16, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -11042,7 +11042,7 @@ func (_ fastpathT) EncMapUintptrUint32V(v map[uintptr]uint32, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -11088,7 +11088,7 @@ func (_ fastpathT) EncMapUintptrUint64V(v map[uintptr]uint64, checkNil bool, e *
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -11134,7 +11134,7 @@ func (_ fastpathT) EncMapUintptrUintptrV(v map[uintptr]uintptr, checkNil bool, e
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -11180,7 +11180,7 @@ func (_ fastpathT) EncMapUintptrIntV(v map[uintptr]int, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -11226,7 +11226,7 @@ func (_ fastpathT) EncMapUintptrInt8V(v map[uintptr]int8, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -11272,7 +11272,7 @@ func (_ fastpathT) EncMapUintptrInt16V(v map[uintptr]int16, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -11318,7 +11318,7 @@ func (_ fastpathT) EncMapUintptrInt32V(v map[uintptr]int32, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -11364,7 +11364,7 @@ func (_ fastpathT) EncMapUintptrInt64V(v map[uintptr]int64, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -11410,7 +11410,7 @@ func (_ fastpathT) EncMapUintptrFloat32V(v map[uintptr]float32, checkNil bool, e
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -11456,7 +11456,7 @@ func (_ fastpathT) EncMapUintptrFloat64V(v map[uintptr]float64, checkNil bool, e
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -11502,7 +11502,7 @@ func (_ fastpathT) EncMapUintptrBoolV(v map[uintptr]bool, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]uint64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = uint64(k)
 			i++
 		}
@@ -11548,7 +11548,7 @@ func (_ fastpathT) EncMapIntIntfV(v map[int]interface{}, checkNil bool, e *Encod
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -11594,7 +11594,7 @@ func (_ fastpathT) EncMapIntStringV(v map[int]string, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -11640,7 +11640,7 @@ func (_ fastpathT) EncMapIntUintV(v map[int]uint, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -11686,7 +11686,7 @@ func (_ fastpathT) EncMapIntUint8V(v map[int]uint8, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -11732,7 +11732,7 @@ func (_ fastpathT) EncMapIntUint16V(v map[int]uint16, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -11778,7 +11778,7 @@ func (_ fastpathT) EncMapIntUint32V(v map[int]uint32, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -11824,7 +11824,7 @@ func (_ fastpathT) EncMapIntUint64V(v map[int]uint64, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -11870,7 +11870,7 @@ func (_ fastpathT) EncMapIntUintptrV(v map[int]uintptr, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -11916,7 +11916,7 @@ func (_ fastpathT) EncMapIntIntV(v map[int]int, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -11962,7 +11962,7 @@ func (_ fastpathT) EncMapIntInt8V(v map[int]int8, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12008,7 +12008,7 @@ func (_ fastpathT) EncMapIntInt16V(v map[int]int16, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12054,7 +12054,7 @@ func (_ fastpathT) EncMapIntInt32V(v map[int]int32, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12100,7 +12100,7 @@ func (_ fastpathT) EncMapIntInt64V(v map[int]int64, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12146,7 +12146,7 @@ func (_ fastpathT) EncMapIntFloat32V(v map[int]float32, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12192,7 +12192,7 @@ func (_ fastpathT) EncMapIntFloat64V(v map[int]float64, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12238,7 +12238,7 @@ func (_ fastpathT) EncMapIntBoolV(v map[int]bool, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12284,7 +12284,7 @@ func (_ fastpathT) EncMapInt8IntfV(v map[int8]interface{}, checkNil bool, e *Enc
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12330,7 +12330,7 @@ func (_ fastpathT) EncMapInt8StringV(v map[int8]string, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12376,7 +12376,7 @@ func (_ fastpathT) EncMapInt8UintV(v map[int8]uint, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12422,7 +12422,7 @@ func (_ fastpathT) EncMapInt8Uint8V(v map[int8]uint8, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12468,7 +12468,7 @@ func (_ fastpathT) EncMapInt8Uint16V(v map[int8]uint16, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12514,7 +12514,7 @@ func (_ fastpathT) EncMapInt8Uint32V(v map[int8]uint32, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12560,7 +12560,7 @@ func (_ fastpathT) EncMapInt8Uint64V(v map[int8]uint64, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12606,7 +12606,7 @@ func (_ fastpathT) EncMapInt8UintptrV(v map[int8]uintptr, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12652,7 +12652,7 @@ func (_ fastpathT) EncMapInt8IntV(v map[int8]int, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12698,7 +12698,7 @@ func (_ fastpathT) EncMapInt8Int8V(v map[int8]int8, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12744,7 +12744,7 @@ func (_ fastpathT) EncMapInt8Int16V(v map[int8]int16, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12790,7 +12790,7 @@ func (_ fastpathT) EncMapInt8Int32V(v map[int8]int32, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12836,7 +12836,7 @@ func (_ fastpathT) EncMapInt8Int64V(v map[int8]int64, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12882,7 +12882,7 @@ func (_ fastpathT) EncMapInt8Float32V(v map[int8]float32, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12928,7 +12928,7 @@ func (_ fastpathT) EncMapInt8Float64V(v map[int8]float64, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -12974,7 +12974,7 @@ func (_ fastpathT) EncMapInt8BoolV(v map[int8]bool, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13020,7 +13020,7 @@ func (_ fastpathT) EncMapInt16IntfV(v map[int16]interface{}, checkNil bool, e *E
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13066,7 +13066,7 @@ func (_ fastpathT) EncMapInt16StringV(v map[int16]string, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13112,7 +13112,7 @@ func (_ fastpathT) EncMapInt16UintV(v map[int16]uint, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13158,7 +13158,7 @@ func (_ fastpathT) EncMapInt16Uint8V(v map[int16]uint8, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13204,7 +13204,7 @@ func (_ fastpathT) EncMapInt16Uint16V(v map[int16]uint16, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13250,7 +13250,7 @@ func (_ fastpathT) EncMapInt16Uint32V(v map[int16]uint32, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13296,7 +13296,7 @@ func (_ fastpathT) EncMapInt16Uint64V(v map[int16]uint64, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13342,7 +13342,7 @@ func (_ fastpathT) EncMapInt16UintptrV(v map[int16]uintptr, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13388,7 +13388,7 @@ func (_ fastpathT) EncMapInt16IntV(v map[int16]int, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13434,7 +13434,7 @@ func (_ fastpathT) EncMapInt16Int8V(v map[int16]int8, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13480,7 +13480,7 @@ func (_ fastpathT) EncMapInt16Int16V(v map[int16]int16, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13526,7 +13526,7 @@ func (_ fastpathT) EncMapInt16Int32V(v map[int16]int32, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13572,7 +13572,7 @@ func (_ fastpathT) EncMapInt16Int64V(v map[int16]int64, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13618,7 +13618,7 @@ func (_ fastpathT) EncMapInt16Float32V(v map[int16]float32, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13664,7 +13664,7 @@ func (_ fastpathT) EncMapInt16Float64V(v map[int16]float64, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13710,7 +13710,7 @@ func (_ fastpathT) EncMapInt16BoolV(v map[int16]bool, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13756,7 +13756,7 @@ func (_ fastpathT) EncMapInt32IntfV(v map[int32]interface{}, checkNil bool, e *E
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13802,7 +13802,7 @@ func (_ fastpathT) EncMapInt32StringV(v map[int32]string, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13848,7 +13848,7 @@ func (_ fastpathT) EncMapInt32UintV(v map[int32]uint, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13894,7 +13894,7 @@ func (_ fastpathT) EncMapInt32Uint8V(v map[int32]uint8, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13940,7 +13940,7 @@ func (_ fastpathT) EncMapInt32Uint16V(v map[int32]uint16, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -13986,7 +13986,7 @@ func (_ fastpathT) EncMapInt32Uint32V(v map[int32]uint32, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14032,7 +14032,7 @@ func (_ fastpathT) EncMapInt32Uint64V(v map[int32]uint64, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14078,7 +14078,7 @@ func (_ fastpathT) EncMapInt32UintptrV(v map[int32]uintptr, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14124,7 +14124,7 @@ func (_ fastpathT) EncMapInt32IntV(v map[int32]int, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14170,7 +14170,7 @@ func (_ fastpathT) EncMapInt32Int8V(v map[int32]int8, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14216,7 +14216,7 @@ func (_ fastpathT) EncMapInt32Int16V(v map[int32]int16, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14262,7 +14262,7 @@ func (_ fastpathT) EncMapInt32Int32V(v map[int32]int32, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14308,7 +14308,7 @@ func (_ fastpathT) EncMapInt32Int64V(v map[int32]int64, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14354,7 +14354,7 @@ func (_ fastpathT) EncMapInt32Float32V(v map[int32]float32, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14400,7 +14400,7 @@ func (_ fastpathT) EncMapInt32Float64V(v map[int32]float64, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14446,7 +14446,7 @@ func (_ fastpathT) EncMapInt32BoolV(v map[int32]bool, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14492,7 +14492,7 @@ func (_ fastpathT) EncMapInt64IntfV(v map[int64]interface{}, checkNil bool, e *E
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14538,7 +14538,7 @@ func (_ fastpathT) EncMapInt64StringV(v map[int64]string, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14584,7 +14584,7 @@ func (_ fastpathT) EncMapInt64UintV(v map[int64]uint, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14630,7 +14630,7 @@ func (_ fastpathT) EncMapInt64Uint8V(v map[int64]uint8, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14676,7 +14676,7 @@ func (_ fastpathT) EncMapInt64Uint16V(v map[int64]uint16, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14722,7 +14722,7 @@ func (_ fastpathT) EncMapInt64Uint32V(v map[int64]uint32, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14768,7 +14768,7 @@ func (_ fastpathT) EncMapInt64Uint64V(v map[int64]uint64, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14814,7 +14814,7 @@ func (_ fastpathT) EncMapInt64UintptrV(v map[int64]uintptr, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14860,7 +14860,7 @@ func (_ fastpathT) EncMapInt64IntV(v map[int64]int, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14906,7 +14906,7 @@ func (_ fastpathT) EncMapInt64Int8V(v map[int64]int8, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14952,7 +14952,7 @@ func (_ fastpathT) EncMapInt64Int16V(v map[int64]int16, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -14998,7 +14998,7 @@ func (_ fastpathT) EncMapInt64Int32V(v map[int64]int32, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -15044,7 +15044,7 @@ func (_ fastpathT) EncMapInt64Int64V(v map[int64]int64, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -15090,7 +15090,7 @@ func (_ fastpathT) EncMapInt64Float32V(v map[int64]float32, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -15136,7 +15136,7 @@ func (_ fastpathT) EncMapInt64Float64V(v map[int64]float64, checkNil bool, e *En
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -15182,7 +15182,7 @@ func (_ fastpathT) EncMapInt64BoolV(v map[int64]bool, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]int64, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = int64(k)
 			i++
 		}
@@ -15228,7 +15228,7 @@ func (_ fastpathT) EncMapBoolIntfV(v map[bool]interface{}, checkNil bool, e *Enc
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15274,7 +15274,7 @@ func (_ fastpathT) EncMapBoolStringV(v map[bool]string, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15320,7 +15320,7 @@ func (_ fastpathT) EncMapBoolUintV(v map[bool]uint, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15366,7 +15366,7 @@ func (_ fastpathT) EncMapBoolUint8V(v map[bool]uint8, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15412,7 +15412,7 @@ func (_ fastpathT) EncMapBoolUint16V(v map[bool]uint16, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15458,7 +15458,7 @@ func (_ fastpathT) EncMapBoolUint32V(v map[bool]uint32, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15504,7 +15504,7 @@ func (_ fastpathT) EncMapBoolUint64V(v map[bool]uint64, checkNil bool, e *Encode
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15550,7 +15550,7 @@ func (_ fastpathT) EncMapBoolUintptrV(v map[bool]uintptr, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15596,7 +15596,7 @@ func (_ fastpathT) EncMapBoolIntV(v map[bool]int, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15642,7 +15642,7 @@ func (_ fastpathT) EncMapBoolInt8V(v map[bool]int8, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15688,7 +15688,7 @@ func (_ fastpathT) EncMapBoolInt16V(v map[bool]int16, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15734,7 +15734,7 @@ func (_ fastpathT) EncMapBoolInt32V(v map[bool]int32, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15780,7 +15780,7 @@ func (_ fastpathT) EncMapBoolInt64V(v map[bool]int64, checkNil bool, e *Encoder)
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15826,7 +15826,7 @@ func (_ fastpathT) EncMapBoolFloat32V(v map[bool]float32, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15872,7 +15872,7 @@ func (_ fastpathT) EncMapBoolFloat64V(v map[bool]float64, checkNil bool, e *Enco
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}
@@ -15918,7 +15918,7 @@ func (_ fastpathT) EncMapBoolBoolV(v map[bool]bool, checkNil bool, e *Encoder) {
 	if e.h.Canonical {
 		v2 := make([]bool, len(v))
 		var i int
-		for k, _ := range v {
+		for k := range v {
 			v2[i] = bool(k)
 			i++
 		}

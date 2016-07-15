@@ -125,7 +125,7 @@ func NewDirectoryCluster(start uint32, parent uint32, t time.Time) *DirectoryClu
 
 	// Create the "." and ".." entries
 	cluster.entries = []*DirectoryClusterEntry{
-		&DirectoryClusterEntry{
+		{
 			accessTime: t,
 			attr:       AttrDirectory,
 			cluster:    start,
@@ -133,7 +133,7 @@ func NewDirectoryCluster(start uint32, parent uint32, t time.Time) *DirectoryClu
 			name:       ".",
 			writeTime:  t,
 		},
-		&DirectoryClusterEntry{
+		{
 			accessTime: t,
 			attr:       AttrDirectory,
 			cluster:    parent,
@@ -159,8 +159,8 @@ func NewFat16RootDirectoryCluster(bs *BootSectorCommon, label string) (*Director
 
 	// Create the volume ID entry
 	result.entries[0] = &DirectoryClusterEntry{
-		attr: AttrVolumeId,
-		name: label,
+		attr:    AttrVolumeId,
+		name:    label,
 		cluster: 0,
 	}
 

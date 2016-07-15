@@ -135,15 +135,15 @@ func unmarshalId(key string, rawJSON json.RawMessage) (string, error) {
 		// ok so this isn't good, but it doens't mean the end of the world
 		// go find that response key and see if it pattern matches the input key
 		for responseKey, value := range result {
-			if strings.Contains (strings.ToLower(key), strings.ToLower(responseKey) ) {
+			if strings.Contains(strings.ToLower(key), strings.ToLower(responseKey)) {
 				found = true
 				key = responseKey
 				rawResult = value
 				break
 			}
 		}
-		
-		if (!found) {
+
+		if !found {
 			return "", fmt.Errorf("Unable to find key '%s' in result: %v", key, result)
 		}
 	}
@@ -157,7 +157,6 @@ func unmarshalId(key string, rawJSON json.RawMessage) (string, error) {
 	}
 	return id[0].Id, nil
 }
-
 
 // this one is exported to allow for callers to readily obtain the real response data
 func UnmarshalResponse(key string, rawJSON json.RawMessage) (json.RawMessage, error) {
@@ -180,22 +179,21 @@ func UnmarshalResponse(key string, rawJSON json.RawMessage) (json.RawMessage, er
 		// ok so this isn't good, but it doens't mean the end of the world
 		// go find that response key and see if it pattern matches the input key
 		for responseKey, value := range result {
-			if strings.Contains (strings.ToLower(key), strings.ToLower(responseKey) ) {
+			if strings.Contains(strings.ToLower(key), strings.ToLower(responseKey)) {
 				found = true
 				key = responseKey
 				rawResult = value
 				break
 			}
 		}
-		
-		if (!found) {
+
+		if !found {
 			return nil, fmt.Errorf("Unable to find key '%s' in result: %v", key, result)
 		}
 	}
 
 	return rawResult, nil
 }
-
 
 func unmarshalAsyncResponse(rawJSON json.RawMessage) (*asyncResult, error) {
 	rawResponse, err := getRawValue(rawJSON)

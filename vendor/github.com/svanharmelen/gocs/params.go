@@ -79,7 +79,7 @@ func parseParams(rawParams string) (csparams, error) {
 // Test to see of all the required parameters are set
 func verifyRequiredParams(cs *CloudStackClient, cmd *command, rawParams *csparams) error {
 	params := *rawParams
-	for key, _ := range cmd.RequiredParams {
+	for key := range cmd.RequiredParams {
 		if _, found := params[key]; !found {
 			if _, found := params[strings.TrimSuffix(key, "id")]; found {
 				if err := convertToId(cs, strings.TrimSuffix(key, "id"), &params); err != nil {
@@ -99,7 +99,7 @@ func verifyAllUsedParams(cs *CloudStackClient, cmd *command, rawParams *csparams
 	// Make a slice of keys to walk over, as we could be changing the params value
 	// during the loop, if we find a key that needs to be resolved to an id
 	keys := []string{}
-	for key, _ := range params {
+	for key := range params {
 		keys = append(keys, key)
 	}
 	for _, key := range keys {

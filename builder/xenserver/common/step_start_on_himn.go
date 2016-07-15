@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	gossh "golang.org/x/crypto/ssh"
 	xsclient "github.com/xenserver/go-xenserver-client"
+	gossh "golang.org/x/crypto/ssh"
 	"log"
 	"time"
 )

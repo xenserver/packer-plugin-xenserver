@@ -1,0 +1,202 @@
+{
+	"ImportPath": "github.com/xenserver/packer-builder-xenserver",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v74",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.10.0-19-gf3cfb45",
+			"Rev": "f3cfb454f4c209e6668c95216c4744b8fddb2356"
+		},
+		{
+			"ImportPath": "github.com/dylanmei/iso8601",
+			"Comment": "v0.1.0",
+			"Rev": "2075bf119b58e5576c6ed9f867b8f3d17f2e54d4"
+		},
+		{
+			"ImportPath": "github.com/dylanmei/winrmtest",
+			"Rev": "025617847eb2cf9bd1d851bc3b22ed28e6245ce5"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/errwrap",
+			"Rev": "7554cd9344cec97297fa6649b055a8c98c2a1e55"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/go-multierror",
+			"Rev": "d30f09973e19c1dfcd120b2d9c4f168e68d6b5d5"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/go-version",
+			"Rev": "7e3c02b30806fa5779d3bdfc152ce4c6f40e7b38"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/yamux",
+			"Rev": "df949784da9ed028ee76df44652e42d37a09d7e4"
+		},
+		{
+			"ImportPath": "github.com/kr/fs",
+			"Rev": "2788f0dbd16903de03cb8186e5c7d97b69ad387b"
+		},
+		{
+			"ImportPath": "github.com/masterzen/simplexml/dom",
+			"Rev": "95ba30457eb1121fa27753627c774c7cd4e90083"
+		},
+		{
+			"ImportPath": "github.com/masterzen/winrm/soap",
+			"Rev": "54ea5d01478cfc2afccec1504bd0dfcd8c260cfa"
+		},
+		{
+			"ImportPath": "github.com/masterzen/winrm/winrm",
+			"Rev": "54ea5d01478cfc2afccec1504bd0dfcd8c260cfa"
+		},
+		{
+			"ImportPath": "github.com/masterzen/xmlpath",
+			"Rev": "13f4951698adc0fa9c1dda3e275d489a24201161"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/go-fs",
+			"Rev": "a34c1b9334e86165685a9449b782f20465eb8c69"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/go-fs/fat",
+			"Rev": "a34c1b9334e86165685a9449b782f20465eb8c69"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/iochan",
+			"Rev": "87b45ffd0e9581375c491fef3d32130bb15c5bd7"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/mapstructure",
+			"Rev": "281073eb9eb092240d33ef253c404f1cca550309"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/multistep",
+			"Rev": "162146fc57112954184d90266f4733e900ed05a5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/osext",
+			"Rev": "5e2d6d41470f99c881826dedd8c526728b783c9c"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/packer/common",
+			"Comment": "v0.10.1-135-g63edbd4",
+			"Rev": "63edbd40edc5a55394f8532aa9958bbe257b31b5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/packer/common/ssh",
+			"Comment": "v0.10.1-135-g63edbd4",
+			"Rev": "63edbd40edc5a55394f8532aa9958bbe257b31b5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/packer/common/uuid",
+			"Comment": "v0.10.1-135-g63edbd4",
+			"Rev": "63edbd40edc5a55394f8532aa9958bbe257b31b5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/packer/communicator/none",
+			"Comment": "v0.10.1-135-g63edbd4",
+			"Rev": "63edbd40edc5a55394f8532aa9958bbe257b31b5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/packer/communicator/ssh",
+			"Comment": "v0.10.1-135-g63edbd4",
+			"Rev": "63edbd40edc5a55394f8532aa9958bbe257b31b5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/packer/communicator/winrm",
+			"Comment": "v0.10.1-135-g63edbd4",
+			"Rev": "63edbd40edc5a55394f8532aa9958bbe257b31b5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/packer/helper/communicator",
+			"Comment": "v0.10.1-135-g63edbd4",
+			"Rev": "63edbd40edc5a55394f8532aa9958bbe257b31b5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/packer/helper/config",
+			"Comment": "v0.10.1-135-g63edbd4",
+			"Rev": "63edbd40edc5a55394f8532aa9958bbe257b31b5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/packer/packer",
+			"Comment": "v0.10.1-135-g63edbd4",
+			"Rev": "63edbd40edc5a55394f8532aa9958bbe257b31b5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/packer/packer/plugin",
+			"Comment": "v0.10.1-135-g63edbd4",
+			"Rev": "63edbd40edc5a55394f8532aa9958bbe257b31b5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/packer/packer/rpc",
+			"Comment": "v0.10.1-135-g63edbd4",
+			"Rev": "63edbd40edc5a55394f8532aa9958bbe257b31b5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/packer/template",
+			"Comment": "v0.10.1-135-g63edbd4",
+			"Rev": "63edbd40edc5a55394f8532aa9958bbe257b31b5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/packer/template/interpolate",
+			"Comment": "v0.10.1-135-g63edbd4",
+			"Rev": "63edbd40edc5a55394f8532aa9958bbe257b31b5"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/reflectwalk",
+			"Rev": "eecf4c70c626c7cfbb95c90195bc34d386c74ac6"
+		},
+		{
+			"ImportPath": "github.com/nilshell/xmlrpc",
+			"Rev": "41b9444050f7a0494a44cd5644f5048aa8261b17"
+		},
+		{
+			"ImportPath": "github.com/nu7hatch/gouuid",
+			"Rev": "179d4d0c4d8d407a32af483c2354df1d2c91e6c3"
+		},
+		{
+			"ImportPath": "github.com/packer-community/winrmcp/winrmcp",
+			"Rev": "f1bcf36a69fa2945e65dd099eee11b560fbd3346"
+		},
+		{
+			"ImportPath": "github.com/pkg/sftp",
+			"Rev": "e84cc8c755ca39b7b64f510fe1fffc1b51f210a5"
+		},
+		{
+			"ImportPath": "github.com/satori/go.uuid",
+			"Rev": "d41af8bb6a7704f00bc3b7cba9355ae6a5a80048"
+		},
+		{
+			"ImportPath": "github.com/svanharmelen/gocs",
+			"Comment": "v1.0.0-4-ga53656b",
+			"Rev": "a53656b67c7b6db48362e3b4edb5e335a7162bf0"
+		},
+		{
+			"ImportPath": "github.com/ugorji/go/codec",
+			"Rev": "646ae4a518c1c3be0739df898118d9bccf993858"
+		},
+		{
+			"ImportPath": "github.com/xenserver/go-xenserver-client",
+			"Rev": "42dc9035c2e805b844614741d804f308bacb7490"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/curve25519",
+			"Rev": "1f22c0103821b9390939b6776727195525381532"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ssh",
+			"Rev": "1f22c0103821b9390939b6776727195525381532"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ssh/agent",
+			"Rev": "1f22c0103821b9390939b6776727195525381532"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "50c6bc5e4292a1d4e65c6e9be5f53be28bcbe28e"
+		}
+	]
+}

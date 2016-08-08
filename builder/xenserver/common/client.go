@@ -1,10 +1,12 @@
 package common
 
 import (
+	"crypto/rand"
 	"encoding/xml"
 	"errors"
 	"fmt"
 	"github.com/nilshell/xmlrpc"
+	"io"
 	"log"
 	"regexp"
 )
@@ -681,11 +683,15 @@ func (self *VM) SetPlatform(params map[string]string) (err error) {
 
 func (self *VM) ConnectNetwork(network *Network, device string) (vif *VIF, err error) {
 	// Create the VIF
+	vmMacSeed, err := pseudoMAC()
+	if err != nil {
+		return nil, err
+	}
 
 	vif_rec := make(xmlrpc.Struct)
 	vif_rec["network"] = network.Ref
 	vif_rec["VM"] = self.Ref
-	vif_rec["MAC"] = ""
+	vif_rec["MAC"] = vmMacSeed
 	vif_rec["device"] = device
 	vif_rec["MTU"] = "1504"
 	vif_rec["other_config"] = make(xmlrpc.Struct)
@@ -1086,4 +1092,14 @@ func NewXenAPIClient(host, username, password string) (client XenAPIClient) {
 	client.Password = password
 	client.RPC, _ = xmlrpc.NewClient(client.Url, nil)
 	return
+}
+
+func pseudoMAC() (string, error) {
+	b := make([]byte, 6)
+	_, err := io.ReadFull(rand.Reader, b)
+	if err != nil {
+		return "", err
+	}
+	mac := fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", b[0], b[1], b[2], b[3], b[4], b[5])
+	return mac, nil
 }

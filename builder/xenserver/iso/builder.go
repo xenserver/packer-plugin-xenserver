@@ -22,9 +22,10 @@ type config struct {
 	common.PackerConfig   `mapstructure:",squash"`
 	xscommon.CommonConfig `mapstructure:",squash"`
 
-	VMMemory      uint   `mapstructure:"vm_memory"`
-	DiskSize      uint   `mapstructure:"disk_size"`
-	CloneTemplate string `mapstructure:"clone_template"`
+	VMMemory      uint              `mapstructure:"vm_memory"`
+	DiskSize      uint              `mapstructure:"disk_size"`
+	CloneTemplate string            `mapstructure:"clone_template"`
+	VMOtherConfig map[string]string `mapstructure:"vm_other_config"`
 
 	ISOChecksum     string   `mapstructure:"iso_checksum"`
 	ISOChecksumType string   `mapstructure:"iso_checksum_type"`

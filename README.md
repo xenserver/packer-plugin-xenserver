@@ -10,7 +10,7 @@ You can check out packer [here](https://packer.io).
 ## Dependencies
 * Packer >= 0.7.2 (https://packer.io)
 * XenServer > 6.2 (http://xenserver.org)
-* Golang >= 1.6
+* Golang >= 1.6; < 2.0
 
 ## Install Go
 

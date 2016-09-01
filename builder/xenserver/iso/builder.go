@@ -304,25 +304,16 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			SSHConfig: xscommon.SSHConfigFunc(self.config.CommonConfig.SSHConfig),
 			SSHPort:   xscommon.SSHPort,
 		},
-		new(xscommon.StepShutdown),
-		&xscommon.StepDetachVdi{
-			VdiUuidKey: "floppy_vdi_uuid",
-		},
-		&xscommon.StepDetachVdi{
-			VdiUuidKey: "iso_vdi_uuid",
-		},
-		new(xscommon.StepStartVmPaused),
-		new(xscommon.StepBootWait),
-		&communicator.StepConnectSSH{
-			Config:    &self.config.SSHConfig.Comm,
-			Host:      xscommon.CommHost,
-			SSHConfig: xscommon.SSHConfigFunc(self.config.CommonConfig.SSHConfig),
-			SSHPort:   xscommon.SSHPort,
-		},
 		new(common.StepProvision),
 		new(xscommon.StepShutdown),
 		&xscommon.StepDetachVdi{
+			VdiUuidKey: "iso_vdi_uuid",
+		},
+		&xscommon.StepDetachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
+		},
+		&xscommon.StepDetachVdi{
+			VdiUuidKey: "floppy_vdi_uuid",
 		},
 		new(xscommon.StepExport),
 	}

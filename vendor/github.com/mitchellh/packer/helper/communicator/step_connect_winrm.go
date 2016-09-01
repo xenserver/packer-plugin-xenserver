@@ -101,12 +101,10 @@ func (s *StepConnectWinRM) waitForWinRM(state multistep.StateBag, cancel <-chan 
 
 		var err error
 		port := s.Config.WinRMPort
-		if s.WinRMPort != nil {
-			port, err = s.WinRMPort(state)
-			if err != nil {
-				log.Printf("[DEBUG] Error getting WinRM port: %s", err)
-				continue
-			}
+		if port == 0 && s.Config.WinRMUseSSL {
+			port = 5986
+		} else if port == 0 {
+			port = 5985
 		}
 
 		user := s.Config.WinRMUser

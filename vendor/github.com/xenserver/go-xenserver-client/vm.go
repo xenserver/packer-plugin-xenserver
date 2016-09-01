@@ -521,6 +521,21 @@ func (self *VM) SetIsATemplate(is_a_template bool) (err error) {
 	return
 }
 
+func (self *VM) GetOtherConfig() (other_config map[string]string, err error) {
+	result := APIResult{}
+	other_config = make(map[string]string)
+	err = self.Client.APICall(&result, "VM.get_other_config", self.Ref)
+	if err != nil {
+		return
+	}
+	for key, value := range result.Value.(xmlrpc.Struct) {
+		if valueStr, ok := value.(string); ok {
+			other_config[key] = valueStr
+		}
+	}
+	return
+}
+
 func (self *VM) SetOtherConfig(other_config map[string]string) (err error) {
 	result := APIResult{}
 	other_config_rec := make(xmlrpc.Struct)

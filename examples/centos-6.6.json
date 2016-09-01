@@ -15,6 +15,13 @@
       "iso_checksum": "4ed6c56d365bd3ab12cd88b8a480f4a62e7c66d2",
       "iso_checksum_type": "sha1",
       "iso_url": "{{user `mirror`}}/6.6/isos/x86_64/CentOS-6.6-x86_64-minimal.iso",
+      "vm_other_config": {
+          "conversionvm":"true"
+      },
+      "network_names": [
+          "Host internal management network",
+          "Pool-wide network associated with eth0"
+      ],
       "output_directory": "packer-centos-6.6-x86_64-xenserver",
       "shutdown_command": "/sbin/halt",
       "ssh_username": "root",

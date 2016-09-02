@@ -100,7 +100,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 
 	templates := map[string]*string{
 		"clone_template":    &self.config.CloneTemplate,
-		"network_name":      &self.config.NetworkName,
 		"iso_checksum":      &self.config.ISOChecksum,
 		"iso_checksum_type": &self.config.ISOChecksumType,
 		"iso_url":           &self.config.ISOUrl,

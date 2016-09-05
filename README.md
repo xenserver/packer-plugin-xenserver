@@ -84,6 +84,8 @@ A brief explanation of what the config parameters mean:
  * `ssh_username` - the username set by the installer for the instance.
  * `ssh_password` - the password set by the installer for the instance.
  * `boot_command` - a list of commands to be sent to the instance over VNC.
+ * `vm_other_config` - a map of string to string for setting vm's other-config.
+ * `network_names` - a list of network name for the VIFs to connect with.
 
 Note, the `http_directory` parameter is only required if you
 want Packer to serve up files over HTTP. In this example, the templated variables

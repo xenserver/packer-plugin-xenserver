@@ -22,7 +22,7 @@ type CommonConfig struct {
 	VMDescription string   `mapstructure:"vm_description"`
 	SrName        string   `mapstructure:"sr_name"`
 	FloppyFiles   []string `mapstructure:"floppy_files"`
-	NetworkName   string   `mapstructure:"network_name"`
+	NetworkNames  []string `mapstructure:"network_names"`
 
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`

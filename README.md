@@ -35,9 +35,9 @@ resulting binary.
 
 ```shell
 cd $GOROOT
-mkdir -p src/github.com/rdobson/
-cd src/github.com/rdobson
-git clone https://github.com/rdobson/packer-builder-xenserver.git
+mkdir -p src/github.com/xenserver/
+cd src/github.com/xenserver
+git clone https://github.com/xenserver/packer-builder-xenserver.git
 cd packer-builder-xenserver
 ./build.sh
 ```
@@ -64,7 +64,7 @@ XC_OS="windows linux" XC_ARCH="386 amd64" make bin
 Once you've setup the above, you are good to go with an example. 
 
 To get you started, there is an example config file which you can use:
-[`examples/centos-6.6.json`](https://github.com/rdobson/packer-builder-xenserver/blob/master/examples/centos-6.6.json)
+[`examples/centos-6.6.json`](https://github.com/xenserver/packer-builder-xenserver/blob/master/examples/centos-6.6.json)
 
 The example is functional, once suitable `remote_host`, `remote_username` and
 `remote_password` configurations have been substituted.

@@ -109,22 +109,48 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 	var network *xsclient.Network
 
-	if len(config.NetworkNames) == 0 {
-		// No network has be specified. Use the management interface
+	var vifStartIndex uint = 0
+	if config.ConnectManagementNetwork {
+		networkNameLabel := "Host internal management network"
+		networks, err := client.GetNetworkByNameLabel(networkNameLabel)
+
+		if err != nil {
+			ui.Error(fmt.Sprintf("Error occured getting Network by name-label: %s", err.Error()))
+			return multistep.ActionHalt
+		}
+
+		switch {
+		case len(networks) == 0:
+			ui.Error(fmt.Sprintf("Couldn't find a network with the specified name-label '%s'. Aborting.", networkNameLabel))
+			return multistep.ActionHalt
+		case len(networks) > 1:
+			ui.Error(fmt.Sprintf("Found more than one network with the name '%s'. The name must be unique. Aborting.", networkNameLabel))
+			return multistep.ActionHalt
+		}
+
+		_, err = instance.ConnectNetwork(networks[0], "0")
+		vifStartIndex++
+
+		if err != nil {
+			ui.Say(err.Error())
+		}
+	}
+
+	pifs, err := client.GetPIFs()
+
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error getting PIFs: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
+	var vifIndex, pifIndex uint = 0, 0
+	for ; vifIndex < config.NetworkCount; vifIndex++ {
 		network = new(xsclient.Network)
 		network.Ref = ""
 		network.Client = &client
 
-		pifs, err := client.GetPIFs()
-
-		if err != nil {
-			ui.Error(fmt.Sprintf("Error getting PIFs: %s", err.Error()))
-			return multistep.ActionHalt
-		}
-
-		for _, pif := range pifs {
-			pif_rec, err := pif.GetRecord()
-
+		for ; pifIndex < uint(len(pifs)); pifIndex++ {
+			pif_rec, err := pifs[pifIndex].GetRecord()
 			if err != nil {
 				ui.Error(fmt.Sprintf("Error getting PIF record: %s", err.Error()))
 				return multistep.ActionHalt
@@ -133,7 +159,6 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 			if pif_rec["management"].(bool) {
 				network.Ref = pif_rec["network"].(string)
 			}
-
 		}
 
 		if network.Ref == "" {
@@ -141,39 +166,12 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 			return multistep.ActionHalt
 		}
 
-		_, err = instance.ConnectNetwork(network, "0")
+		_, err = instance.ConnectNetwork(network, fmt.Sprint(int(vifStartIndex+vifIndex)))
 
 		if err != nil {
 			ui.Say(err.Error())
 		}
 
-	} else {
-		// Look up each network by it's name label
-		for i, networkNameLabel := range config.NetworkNames {
-			networks, err := client.GetNetworkByNameLabel(networkNameLabel)
-
-			if err != nil {
-				ui.Error(fmt.Sprintf("Error occured getting Network by name-label: %s", err.Error()))
-				return multistep.ActionHalt
-			}
-
-			switch {
-			case len(networks) == 0:
-				ui.Error(fmt.Sprintf("Couldn't find a network with the specified name-label '%s'. Aborting.", networkNameLabel))
-				return multistep.ActionHalt
-			case len(networks) > 1:
-				ui.Error(fmt.Sprintf("Found more than one network with the name '%s'. The name must be unique. Aborting.", networkNameLabel))
-				return multistep.ActionHalt
-			}
-
-			//we need the VIF index string
-			vifIndexString := fmt.Sprintf("%d", i)
-			_, err = instance.ConnectNetwork(networks[0], vifIndexString)
-
-			if err != nil {
-				ui.Say(err.Error())
-			}
-		}
 	}
 
 	instanceId, err := instance.GetUuid()

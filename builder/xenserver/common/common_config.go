@@ -18,11 +18,12 @@ type CommonConfig struct {
 	Password string `mapstructure:"remote_password"`
 	HostIp   string `mapstructure:"remote_host"`
 
-	VMName        string   `mapstructure:"vm_name"`
-	VMDescription string   `mapstructure:"vm_description"`
-	SrName        string   `mapstructure:"sr_name"`
-	FloppyFiles   []string `mapstructure:"floppy_files"`
-	NetworkNames  []string `mapstructure:"network_names"`
+	VMName                   string   `mapstructure:"vm_name"`
+	VMDescription            string   `mapstructure:"vm_description"`
+	SrName                   string   `mapstructure:"sr_name"`
+	FloppyFiles              []string `mapstructure:"floppy_files"`
+	ConnectManagementNetwork bool     `mapstructure:"connect_management_network"`
+	NetworkCount             uint     `mapstructure:"network_count"`
 
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`

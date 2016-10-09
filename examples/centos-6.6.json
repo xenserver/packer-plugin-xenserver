@@ -18,10 +18,8 @@
       "vm_other_config": {
           "conversionvm":"true"
       },
-      "network_names": [
-          "Host internal management network",
-          "Pool-wide network associated with eth0"
-      ],
+      "connect_management_network": true,
+      "network_count":1,
       "output_directory": "packer-centos-6.6-x86_64-xenserver",
       "shutdown_command": "/sbin/halt",
       "ssh_username": "root",

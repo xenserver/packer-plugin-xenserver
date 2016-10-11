@@ -309,6 +309,9 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiUuidKey: "iso_vdi_uuid",
 		},
 		&xscommon.StepDetachVdi{
+			VdiUuidKey: "isoname_vdi_uuid",
+		},
+		&xscommon.StepDetachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
 		},
 		&xscommon.StepDetachVdi{

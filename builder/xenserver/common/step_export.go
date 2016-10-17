@@ -100,6 +100,21 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 		ui.Say("Skipping export")
 		return multistep.ActionContinue
 
+	case "xva_template":
+		ui.Say("Converting VM to template before export")
+		err = instance.SetIsATemplate(true)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Error converting VM to a template prior to export: %s", err.Error()))
+			return multistep.ActionHalt
+		}
+		if !config.KeepTemplateVIFs {
+			vifs, _ := instance.GetVIFs()
+			for _, vif := range vifs {
+				ui.Say("Destroying VM network interfaces for template export")
+				vif.Destroy()
+			}
+		}
+		fallthrough
 	case "xva":
 		// export the VM
 

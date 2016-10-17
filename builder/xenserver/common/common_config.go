@@ -50,10 +50,11 @@ type CommonConfig struct {
 	RawSSHWaitTimeout string `mapstructure:"ssh_wait_timeout"`
 	SSHWaitTimeout    time.Duration
 
-	OutputDir string `mapstructure:"output_directory"`
-	Format    string `mapstructure:"format"`
-	KeepVM    string `mapstructure:"keep_vm"`
-	IPGetter  string `mapstructure:"ip_getter"`
+	OutputDir        string `mapstructure:"output_directory"`
+	Format           string `mapstructure:"format"`
+	KeepTemplateVIFs bool   `mapstructure:"keep_template_vifs"`
+	KeepVM           string `mapstructure:"keep_vm"`
+	IPGetter         string `mapstructure:"ip_getter"`
 }
 
 func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig) []error {
@@ -184,9 +185,9 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	}
 
 	switch c.Format {
-	case "xva", "vdi_raw", "vdi_vhd", "none":
+	case "xva", "xva_template", "vdi_raw", "vdi_vhd", "none":
 	default:
-		errs = append(errs, errors.New("format must be one of 'xva', 'vdi_raw', 'vdi_vhd', 'none'"))
+		errs = append(errs, errors.New("format must be one of 'xva', 'xva_template', 'vdi_raw', 'vdi_vhd', 'none'"))
 	}
 
 	switch c.KeepVM {

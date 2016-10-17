@@ -113,7 +113,7 @@ each category, the available options are alphabetized and described.
   characters (\*, ?, and []) are allowed. Directory names are also allowed,
   which will add all the files found in the directory to the floppy.
 
-* `format` (string) - Either "xva", "vdi_raw" or "none", this specifies the
+* `format` (string) - Either "xva", "xva_template", "vdi_raw" or "none", this specifies the
   output format of the exported virtual machine. This defaults to "xva". Set to
   "vdi_raw" to export just the raw disk image. Set to "none" to export nothing;
   this is only useful with "keep_vm" set to "always" or "on_success".
@@ -143,6 +143,10 @@ each category, the available options are alphabetized and described.
   or while downloading a single URL, it will move on to the next. All URLs
   must point to the same file (same checksum). By default this is empty
   and `iso_url` is used. Only one of `iso_url` or `iso_urls` can be specified.
+
+* `keep_template_vifs` (boolean) - Whether you want to delete VIFs on the VM prior
+  exporting the XVA template. Removing them may make the template more generic and
+  reusable.
 
 * `keep_vm` (string) - Determine when to keep the VM and when to clean it up. This
   can be "always", "never" or "on_success". By default this is "never", and Packer

@@ -16,7 +16,7 @@ rm -rf $GOPATH/pkg/*
 mkdir -p bin/
 
 # Fix for build failing due to missing go-vnc
-(cd $GOPATH/src/github.com/mitchellh && if cd go-vnc; then git pull; else git clone https://github.com/mitchellh/go-vnc.git; fi)
+go get github.com/mitchellh/go-vnc
 
 gox \
     -os="${XC_OS}" \

@@ -108,10 +108,18 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 			return multistep.ActionHalt
 		}
 		if !config.KeepTemplateVIFs {
-			vifs, _ := instance.GetVIFs()
+			ui.Say("Destroying VM network interfaces for template export")
+			vifs, err := instance.GetVIFs()
+			if err != nil {
+				ui.Error(fmt.Sprintf("Error getting VIFs: %s", err.Error()))
+				return multistep.ActionHalt
+			}
 			for _, vif := range vifs {
-				ui.Say("Destroying VM network interfaces for template export")
-				vif.Destroy()
+				err = vif.Destroy()
+				if err != nil {
+					ui.Error(fmt.Sprintf("Error destroying VIF: %s", err.Error()))
+					return multistep.ActionHalt
+				}
 			}
 		}
 		fallthrough

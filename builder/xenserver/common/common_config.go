@@ -52,6 +52,7 @@ type CommonConfig struct {
 
 	OutputDir        string `mapstructure:"output_directory"`
 	Format           string `mapstructure:"format"`
+	KeepDiskDrive    bool   `mapstructure:"keep_disk_drive"`
 	KeepTemplateVIFs bool   `mapstructure:"keep_template_vifs"`
 	KeepVM           string `mapstructure:"keep_vm"`
 	IPGetter         string `mapstructure:"ip_getter"`

@@ -95,11 +95,18 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 
 	ui.Say("Step: export artifact")
 
+	compress_option_xe := "compress=false"
+	compress_option_url := ""
+
 	switch config.Format {
 	case "none":
 		ui.Say("Skipping export")
 		return multistep.ActionContinue
 
+	case "xva_compressed":
+		compress_option_xe = "compress=true"
+		compress_option_url = "use_compression=true&"
+		fallthrough
 	case "xva":
 		// export the VM
 
@@ -115,7 +122,7 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 				"-pw", client.Password,
 				"vm-export",
 				"vm="+instance_uuid,
-				"compress=true",
+				compress_option_xe,
 				"filename="+export_filename,
 			)
 
@@ -123,8 +130,9 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 
 			err = cmd.Run()
 		} else {
-			export_url := fmt.Sprintf("https://%s/export?uuid=%s&session_id=%s",
+			export_url := fmt.Sprintf("https://%s/export?%suuid=%s&session_id=%s",
 				client.Host,
+				compress_option_url,
 				instance_uuid,
 				client.Session.(string),
 			)

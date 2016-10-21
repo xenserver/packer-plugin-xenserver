@@ -122,7 +122,6 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 				}
 			}
 		}
-		fallthrough
 	case "xva":
 		// export the VM
 
@@ -147,7 +146,7 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 
 			err = cmd.Run()
 		} else {
-			export_url := fmt.Sprintf("https://%s/export?uuid=%s&session_id=%s",
+			export_url := fmt.Sprintf("https://%s/export?use_compression=true&uuid=%s&session_id=%s",
 				client.Host,
 				instance_uuid,
 				client.Session.(string),

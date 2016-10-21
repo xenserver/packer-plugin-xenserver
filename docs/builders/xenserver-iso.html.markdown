@@ -100,6 +100,9 @@ each category, the available options are alphabetized and described.
   run `xe template-list`. Setting the correct value hints to XenServer how to
   optimize the virtual hardware to work best with that operating system.
 
+* `disk_drives` (integer) - How many DVD drives to keep on the VM when exporting.
+  Default is 0.
+
 * `disk_size` (integer) - The size, in megabytes, of the hard disk to create
   for the VM. By default, this is 40000 (about 40 GB).
 
@@ -143,9 +146,6 @@ each category, the available options are alphabetized and described.
   or while downloading a single URL, it will move on to the next. All URLs
   must point to the same file (same checksum). By default this is empty
   and `iso_url` is used. Only one of `iso_url` or `iso_urls` can be specified.
-
-* `keep_disk_drive` (boolean) - Whether you want to keep the DVD Drive on the VM prior
-  to exporting. Default is "false".
 
 * `keep_template_vifs` (boolean) - Whether you want to keep VIFs on the VM prior to
   exporting the XVA template. Removing them may make the template more generic and

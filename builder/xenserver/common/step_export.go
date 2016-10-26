@@ -111,6 +111,7 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 		// export the VM
 
 		export_filename := fmt.Sprintf("%s/%s.xva", config.OutputDir, config.VMName)
+		ui.Say("Exporting to: " + export_filename)
 
 		use_xe := os.Getenv("USE_XE") == "1"
 		if xe, e := exec.LookPath("xe"); e == nil && use_xe {
@@ -210,6 +211,7 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 			}
 
 			disk_export_filename := fmt.Sprintf("%s/%s%s", config.OutputDir, disk_uuid, suffix)
+			ui.Say("Exporting to: " + disk_export_filename)
 
 			ui.Say("Getting VDI " + disk_export_url)
 			err = downloadFile(disk_export_url, disk_export_filename, ui)

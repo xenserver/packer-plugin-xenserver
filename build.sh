@@ -15,6 +15,9 @@ rm -rf pkg/*
 rm -rf $GOPATH/pkg/*
 mkdir -p bin/
 
+# Fix for build failing due to missing go-vnc
+go get github.com/mitchellh/go-vnc
+
 gox \
     -os="${XC_OS}" \
     -arch="${XC_ARCH}" \

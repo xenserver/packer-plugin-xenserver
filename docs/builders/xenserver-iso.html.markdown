@@ -100,6 +100,9 @@ each category, the available options are alphabetized and described.
   run `xe template-list`. Setting the correct value hints to XenServer how to
   optimize the virtual hardware to work best with that operating system.
 
+* `disk_drives` (integer) - How many DVD drives to keep on the exported VM.
+  Default is 0.
+
 * `disk_size` (integer) - The size, in megabytes, of the hard disk to create
   for the VM. By default, this is 40000 (about 40 GB).
 

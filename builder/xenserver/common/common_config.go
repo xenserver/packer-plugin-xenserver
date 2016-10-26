@@ -50,10 +50,11 @@ type CommonConfig struct {
 	RawSSHWaitTimeout string `mapstructure:"ssh_wait_timeout"`
 	SSHWaitTimeout    time.Duration
 
-	OutputDir string `mapstructure:"output_directory"`
-	Format    string `mapstructure:"format"`
-	KeepVM    string `mapstructure:"keep_vm"`
-	IPGetter  string `mapstructure:"ip_getter"`
+	OutputDir  string `mapstructure:"output_directory"`
+	Format     string `mapstructure:"format"`
+	DiskDrives uint   `mapstructure:"disk_drives"`
+	KeepVM     string `mapstructure:"keep_vm"`
+	IPGetter   string `mapstructure:"ip_getter"`
 }
 
 func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig) []error {

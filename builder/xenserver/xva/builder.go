@@ -108,13 +108,6 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 
 	httpReqChan := make(chan string, 1)
 
-	var stepImportOrInstantiate multistep.Step
-	if self.config.SourceTemplate != "" {
-		stepImportOrInstantiate = new(stepInstantiateTemplate)
-	} else {
-		stepImportOrInstantiate = new(stepImportInstance)
-	}
-
 	//Build the steps
 	steps := []multistep.Step{
 		&xscommon.StepPrepareOutputDir{
@@ -141,7 +134,8 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiName:    self.config.ToolsIsoName,
 			VdiUuidKey: "tools_vdi_uuid",
 		},
-		stepImportOrInstantiate,
+		new(stepInstantiateTemplate),
+		new(stepImportInstance),
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 			VdiType:    xsclient.Floppy,

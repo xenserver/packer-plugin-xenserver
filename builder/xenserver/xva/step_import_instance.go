@@ -16,12 +16,21 @@ type stepImportInstance struct {
 }
 
 func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepAction {
-
-	client := state.Get("client").(xsclient.XenAPIClient)
 	config := state.Get("config").(config)
+
+	if state.Get("instance_uuid") != nil {
+		return multistep.ActionContinue
+	}
+
 	ui := state.Get("ui").(packer.Ui)
+	client := state.Get("client").(xsclient.XenAPIClient)
 
 	ui.Say("Step: Import Instance")
+
+	if config.SourcePath == "" {
+		ui.Error(fmt.Sprintf("Failed to instantiate \"source_template\": \"%s\" and \"source_path\" is empty. Aborting.", config.SourceTemplate))
+		return multistep.ActionHalt
+	}
 
 	// find the SR
 	sr, err := config.GetSR(client)

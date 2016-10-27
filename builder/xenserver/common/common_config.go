@@ -186,7 +186,7 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	switch c.Format {
 	case "xva", "xva_compressed", "vdi_raw", "vdi_vhd", "none":
 	default:
-		errs = append(errs, errors.New("format must be one of 'xva', 'vdi_raw', 'vdi_vhd', 'none'"))
+		errs = append(errs, errors.New("format must be one of 'xva', 'xva_compressed', 'vdi_raw', 'vdi_vhd', 'none'"))
 	}
 
 	switch c.KeepVM {

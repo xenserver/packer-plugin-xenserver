@@ -100,6 +100,10 @@ each category, the available options are alphabetized and described.
   run `xe template-list`. Setting the correct value hints to XenServer how to
   optimize the virtual hardware to work best with that operating system.
 
+* `destroy_vifs` (boolean) - Whether to destroy VIFs on the VM prior to
+  exporting. Removing them may make the image more generic and reusable.
+  Default is `false`.
+
 * `disk_size` (integer) - The size, in megabytes, of the hard disk to create
   for the VM. By default, this is 40000 (about 40 GB).
 

@@ -33,24 +33,6 @@ func (self *StepConvertToTemplate) Run(state multistep.StateBag) multistep.StepA
 		return multistep.ActionHalt
 	}
 
-	if !config.KeepTemplateVIFs {
-		ui.Say("Destroying template network interfaces")
-
-		vifs, err := instance.GetVIFs()
-		if err != nil {
-			ui.Error(fmt.Sprintf("Error getting VIFs: %s", err.Error()))
-			return multistep.ActionHalt
-		}
-
-		for _, vif := range vifs {
-			err = vif.Destroy()
-			if err != nil {
-				ui.Error(fmt.Sprintf("Error destroying VIF: %s", err.Error()))
-				return multistep.ActionHalt
-			}
-		}
-	}
-
 	return multistep.ActionContinue
 }
 

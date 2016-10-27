@@ -147,10 +147,6 @@ each category, the available options are alphabetized and described.
   must point to the same file (same checksum). By default this is empty
   and `iso_url` is used. Only one of `iso_url` or `iso_urls` can be specified.
 
-* `keep_template_vifs` (boolean) - Whether to keep VIFs on the template after
-  converting the VM to a template. Removing them may make the template more generic
-  and reusable. Only applies if `convert_to_template` is `true`. Default is `false`.
-
 * `keep_vm` (string) - Determine when to keep the VM and when to clean it up. This
   can be "always", "never" or "on_success". By default this is "never", and Packer
   always deletes the VM regardless of whether the process succeeded and an artifact

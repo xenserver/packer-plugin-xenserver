@@ -51,7 +51,6 @@ type CommonConfig struct {
 	SSHWaitTimeout    time.Duration
 
 	ConvertToTemplate bool `mapstructure:"convert_to_template"`
-	KeepTemplateVIFs  bool `mapstructure:"keep_template_vifs"`
 
 	OutputDir string `mapstructure:"output_directory"`
 	Format    string `mapstructure:"format"`

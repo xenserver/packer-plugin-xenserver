@@ -54,21 +54,28 @@ each category, the available options are alphabetized and described.
 
 ### Required:
 
-* `iso_checksum` (string) - The checksum for the OS ISO file. Because ISO
-  files are so large, this is required and Packer will verify it prior
-  to booting a virtual machine with the ISO attached. The type of the
-  checksum is specified with `iso_checksum_type`, documented below.
+* Either:
 
-* `iso_checksum_type` (string) - The type of the checksum specified in
-  `iso_checksum`. Valid values are "none", "md5", "sha1", "sha256", or
-  "sha512" currently. While "none" will skip checksumming, this is not
-  recommended since ISO files are generally large and corruption does happen
-  from time to time.
+  * `iso_name` (string) - Unique name of an ISO available in XenCenter's storage repositories.
+    Or it can be the UUID of the ISO's VDI prefixed by "uuid://". For example: "uuid://aa2f2c86-b79a-4345-a35f-ce244f43c97a"
 
-* `iso_url` (string) - A URL to the ISO containing the installation image.
-  This URL can be either an HTTP URL or a file URL (or path to a file).
-  If this is an HTTP URL, Packer will download it and cache it between
-  runs.
+* OR:
+
+  * `iso_checksum` (string) - The checksum for the OS ISO file. Because ISO
+    files are so large, this is required and Packer will verify it prior
+    to booting a virtual machine with the ISO attached. The type of the
+    checksum is specified with `iso_checksum_type`, documented below.
+
+  * `iso_checksum_type` (string) - The type of the checksum specified in
+    `iso_checksum`. Valid values are "none", "md5", "sha1", "sha256", or
+    "sha512" currently. While "none" will skip checksumming, this is not
+    recommended since ISO files are generally large and corruption does happen
+    from time to time.
+
+  * `iso_url` (string) - A URL to the ISO containing the installation image.
+    This URL can be either an HTTP URL or a file URL (or path to a file).
+    If this is an HTTP URL, Packer will download it and cache it between
+    runs.
 
 * `remote_host` (string) - The host of the remote machine.
 

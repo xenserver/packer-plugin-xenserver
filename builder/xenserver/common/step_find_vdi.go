@@ -21,7 +21,7 @@ func (self *StepFindVdi) Run(state multistep.StateBag) multistep.StepAction {
 	if self.VdiName == "" {
 		return multistep.ActionContinue
 	} else if len(self.VdiName) >= 7 && self.VdiName[:7] == "uuid://" {
-		vdiUuid:= self.VdiName[7:]
+		vdiUuid := self.VdiName[7:]
 		_, err := client.GetVdiByUuid(vdiUuid)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Unable to get VDI from UUID '%s': %s", vdiUuid, err.Error()))

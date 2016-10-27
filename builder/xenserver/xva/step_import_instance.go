@@ -60,6 +60,12 @@ func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepActi
 	}
 	state.Put("instance_uuid", instanceId)
 
+	err = instance.SetIsATemplate(false)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error converting template to a VM: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
 	instance.SetDescription(config.VMDescription)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM description: %s", err.Error()))

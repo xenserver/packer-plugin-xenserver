@@ -50,9 +50,9 @@ type CommonConfig struct {
 	RawSSHWaitTimeout string `mapstructure:"ssh_wait_timeout"`
 	SSHWaitTimeout    time.Duration
 
+	DiscDrives int    `mapstructure:"disc_drives"`
 	OutputDir  string `mapstructure:"output_directory"`
 	Format     string `mapstructure:"format"`
-	DiskDrives uint   `mapstructure:"disk_drives"`
 	KeepVM     string `mapstructure:"keep_vm"`
 	IPGetter   string `mapstructure:"ip_getter"`
 }
@@ -182,6 +182,10 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	c.SSHWaitTimeout, err = time.ParseDuration(c.RawSSHWaitTimeout)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("Failed to parse ssh_wait_timeout: %s", err))
+	}
+
+	if c.DiscDrives < 0 {
+		errs = append(errs, errors.New("disc_drives greater than or equal to 0."))
 	}
 
 	switch c.Format {

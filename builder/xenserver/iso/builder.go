@@ -220,7 +220,10 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		},
 	}
 
-	step_find_vdi_iso_name.GetUuid(ui, client, state)
+	step_find_vdi_iso_name_runner := &multistep.BasicRunner{Steps: []multistep.Step{
+		step_find_vdi_iso_name,
+	}}
+	step_find_vdi_iso_name_runner.Run(state)
 
 	if step_find_vdi_iso_name.PreviousResult == "FAILURE" && self.config.ISOUrl == "" {
 		return nil, errors.New(fmt.Sprintf("Failed to find \"iso_name\": \"%s\" and \"iso_url\" is empty. Aborting.", self.config.ISOName))

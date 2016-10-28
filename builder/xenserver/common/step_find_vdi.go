@@ -21,7 +21,10 @@ func (self *StepFindVdi) ErrorHandler(msg string) multistep.StepAction {
 	return self.PreviousStepAction
 }
 
-func (self *StepFindVdi) GetUuid(ui packer.Ui, client xsclient.XenAPIClient, state multistep.StateBag) multistep.StepAction {
+func (self *StepFindVdi) Run(state multistep.StateBag) multistep.StepAction {
+	ui := state.Get("ui").(packer.Ui)
+	client := state.Get("client").(xsclient.XenAPIClient)
+
 	// Ignore if VdiName is not specified
 	if self.VdiName == "" {
 		return multistep.ActionContinue
@@ -68,12 +71,6 @@ func (self *StepFindVdi) GetUuid(ui packer.Ui, client xsclient.XenAPIClient, sta
 	}
 	state.Put(self.VdiUuidKey, vdiUuid)
 	return self.PreviousStepAction
-}
-
-func (self *StepFindVdi) Run(state multistep.StateBag) multistep.StepAction {
-	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(xsclient.XenAPIClient)
-	return self.GetUuid(ui, client, state)
 }
 
 func (self *StepFindVdi) Cleanup(state multistep.StateBag) {}

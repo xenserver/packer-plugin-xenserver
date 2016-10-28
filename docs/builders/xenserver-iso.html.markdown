@@ -57,7 +57,8 @@ each category, the available options are alphabetized and described.
 * Either:
 
   * `iso_name` (string) - Unique name of an ISO available in XenCenter's storage repositories.
-    Or it can be the UUID of the ISO's VDI prefixed by "uuid://". For example: "uuid://aa2f2c86-b79a-4345-a35f-ce244f43c97a"
+    Or it can be the UUID of the ISO's VDI prefixed by "uuid://". For example: "uuid://aa2f2c86-b79a-4345-a35f-ce244f43c97a".
+    If this fails and `iso_url` is given, `iso_url` will be tried.
 
 * OR:
 

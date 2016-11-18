@@ -15,6 +15,9 @@ rm -rf pkg/*
 rm -rf $GOPATH/pkg/*
 mkdir -p bin/
 
+# Fix for ./build.sh: gox: command not found
+go get github.com/mitchellh/gox
+
 gox \
     -os="${XC_OS}" \
     -arch="${XC_ARCH}" \

@@ -142,6 +142,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiUuidKey: "tools_vdi_uuid",
 			VdiType:    xsclient.CD,
 		},
+		new(xscommon.StepPrebootHostScripts),
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepGetVNCPort),
 		&xscommon.StepForwardPortOverSSH{

@@ -8,23 +8,22 @@ import (
 	"path/filepath"
 )
 
-type StepPrebootHostScripts struct {
-	ScriptFolderPath string
+type StepExecuteHostScripts struct {
+	ScriptType           string
+	LocalScripts         []string
+	HostScriptFolderPath string
 }
 
-func (self *StepPrebootHostScripts) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepExecuteHostScripts) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	config := state.Get("commonconfig").(CommonConfig)
 
-	ui.Say("Step: Preboot XenServer host scripts")
+	ui.Say(fmt.Sprintf("Step: Execute %s XenServer host scripts", self.ScriptType))
 
-	if len(config.PrebootHostScripts) == 0 {
+	if len(self.LocalScripts) == 0 {
 		ui.Say("No scripts to execute")
 		return multistep.ActionContinue
 	}
-
-	uuid := state.Get("instance_uuid").(string)
-	self.ScriptFolderPath = fmt.Sprintf("/tmp/packer-preboot-scripts-%s", uuid)
 
 	ssh := &easyssh.MakeConfig{
 		Server:        config.HostIp,
@@ -34,9 +33,12 @@ func (self *StepPrebootHostScripts) Run(state multistep.StateBag) multistep.Step
 		OutputHandler: func(s string) { ui.Say(s) },
 	}
 
-	ui.Say(fmt.Sprintf("Creating script folder on XenServer host: %s", self.ScriptFolderPath))
+	uuid := state.Get("instance_uuid").(string)
+	self.HostScriptFolderPath = fmt.Sprintf("/tmp/packer_scripts_%s_%s", uuid, self.ScriptType)
 
-	cmd := fmt.Sprintf("mkdir -p '%s'", self.ScriptFolderPath)
+	ui.Say(fmt.Sprintf("Creating script folder on XenServer host: %s", self.HostScriptFolderPath))
+
+	cmd := fmt.Sprintf("mkdir -p '%s'", self.HostScriptFolderPath)
 	_, sessionErr, err := ssh.Exec(cmd)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error executing SSH command: %s", err.Error()))
@@ -46,9 +48,9 @@ func (self *StepPrebootHostScripts) Run(state multistep.StateBag) multistep.Step
 		return multistep.ActionHalt
 	}
 
-	for _, script := range config.PrebootHostScripts {
+	for _, script := range self.LocalScripts {
 		scriptBasename := filepath.Base(script)
-		scriptPath := fmt.Sprintf("%s/%s", self.ScriptFolderPath, scriptBasename)
+		scriptPath := fmt.Sprintf("%s/%s", self.HostScriptFolderPath, scriptBasename)
 
 		err = ssh.Upload(script, scriptPath)
 		if err != nil {
@@ -71,10 +73,10 @@ func (self *StepPrebootHostScripts) Run(state multistep.StateBag) multistep.Step
 	return multistep.ActionContinue
 }
 
-func (self *StepPrebootHostScripts) Cleanup(state multistep.StateBag) {
+func (self *StepExecuteHostScripts) Cleanup(state multistep.StateBag) {
 	ui := state.Get("ui").(packer.Ui)
-	ui.Say("Cleaning up preboot host scripts")
-	if self.ScriptFolderPath == "" {
+	ui.Say(fmt.Sprintf("Cleaning up %s host scripts", self.ScriptType))
+	if self.HostScriptFolderPath == "" {
 		ui.Say("No scripts to cleanup")
 		return
 	}
@@ -85,8 +87,8 @@ func (self *StepPrebootHostScripts) Cleanup(state multistep.StateBag) {
 		User:     config.Username,
 		Password: config.Password,
 	}
-	ui.Say(fmt.Sprintf("Deleting script folder: %s", self.ScriptFolderPath))
-	cmd := fmt.Sprintf("rm -rf '%s'", self.ScriptFolderPath)
+	ui.Say(fmt.Sprintf("Deleting script folder: %s", self.HostScriptFolderPath))
+	cmd := fmt.Sprintf("rm -rf '%s'", self.HostScriptFolderPath)
 	_, sessionErr, err := ssh.Exec(cmd)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error executing SSH command: %s", err.Error()))

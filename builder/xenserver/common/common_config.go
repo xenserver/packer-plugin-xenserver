@@ -28,9 +28,10 @@ type CommonConfig struct {
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`
 
-	PrebootHostScripts []string `mapstructure:"preboot_host_scripts"`
-	BootCommand        []string `mapstructure:"boot_command"`
-	ShutdownCommand    string   `mapstructure:"shutdown_command"`
+	PreBootHostScripts   []string `mapstructure:"pre_boot_host_scripts"`
+	PreExportHostScripts []string `mapstructure:"pre_export_host_scripts"`
+	BootCommand          []string `mapstructure:"boot_command"`
+	ShutdownCommand      string   `mapstructure:"shutdown_command"`
 
 	RawBootWait string `mapstructure:"boot_wait"`
 	BootWait    time.Duration

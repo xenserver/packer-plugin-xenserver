@@ -171,8 +171,13 @@ each category, the available options are alphabetized and described.
 }
 ```
 
-* `preboot_host_scripts` (array of strings) - List of scripts to execute on the
+* `pre_boot_host_scripts` (array of strings) - List of scripts to execute on the
   XenServer host prior to booting the VM. The VM's UUID will be passed into each
+  script as the first parameter. The script can be of any type: bash, python, ruby, etc.
+  Each script must start with a shebang, ie. #!/usr/bin/env bash.
+
+* `pre_execute_host_scripts` (array of strings) - List of scripts to execute on the
+  XenServer host prior to exporting the VM. The VM's UUID will be passed into each
   script as the first parameter. The script can be of any type: bash, python, ruby, etc.
   Each script must start with a shebang, ie. #!/usr/bin/env bash.
 

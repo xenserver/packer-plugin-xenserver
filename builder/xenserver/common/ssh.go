@@ -87,6 +87,7 @@ func doExecuteSSHCmd(cmd, target string, config *gossh.ClientConfig) (stdout str
 
 func ExecuteHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err error) {
 	config := state.Get("commonconfig").(CommonConfig)
+	sshAddress, _ := SSHAddress(state)
 	// Setup connection config
 	sshConfig := &gossh.ClientConfig{
 		User: config.Username,
@@ -94,7 +95,7 @@ func ExecuteHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err
 			gossh.Password(config.Password),
 		},
 	}
-	return doExecuteSSHCmd(cmd, config.HostIp+":22", sshConfig)
+	return doExecuteSSHCmd(cmd, sshAddress, sshConfig)
 }
 
 func ExecuteGuestSSHCmd(state multistep.StateBag, cmd string) (stdout string, err error) {

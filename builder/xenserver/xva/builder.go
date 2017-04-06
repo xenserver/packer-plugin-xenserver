@@ -143,6 +143,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiType:    xsclient.CD,
 		},
 		new(xscommon.StepStartVmPaused),
+		new(xscommon.StepSetVmHostSshAddress),
 		new(xscommon.StepGetVNCPort),
 		&xscommon.StepForwardPortOverSSH{
 			RemotePort:  xscommon.InstanceVNCPort,

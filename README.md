@@ -10,8 +10,7 @@ You can check out packer [here](https://packer.io).
 ## Dependencies
 * Packer >= 0.7.2 (https://packer.io)
 * XenServer > 6.2 (http://xenserver.org)
-* Golang (tested with 1.2.1) 
-
+* Golang >= 1.6; < 2.0
 
 ## Install Go
 
@@ -20,13 +19,7 @@ Follow these instructions and install golang on your system:
 
 ## Install Packer
 
-Clone the Packer repository:
-
-```shell
-git clone https://github.com/mitchellh/packer.git
-```
-
-Then follow the [instructions to build and install a development version of Packer](https://github.com/mitchellh/packer#developing-packer).
+Follow the [instructions to build and install a development version of Packer](https://github.com/mitchellh/packer/blob/master/CONTRIBUTING.md#setting-up-go-to-work-on-packer).
 
 ## Compile the plugin
 
@@ -34,7 +27,7 @@ Once you have installed Packer, you must compile this plugin and install the
 resulting binary.
 
 ```shell
-cd $GOROOT
+cd $GOPATH
 mkdir -p src/github.com/xenserver/
 cd src/github.com/xenserver
 git clone https://github.com/xenserver/packer-builder-xenserver.git
@@ -102,4 +95,4 @@ packer build centos-6.6.json
 # Documentation
 
 For complete documentation on configuration commands, see either [the
-xenserver-iso docs](https://github.com/rdobson/packer-builder-xenserver/blob/master/docs/builders/xenserver-iso.html.markdown) or [the xenserver-xva docs](https://github.com/rdobson/packer-builder-xenserver/blob/master/docs/builders/xenserver-xva.html.markdown).
+xenserver-iso docs](https://github.com/xenserver/packer-builder-xenserver/blob/master/docs/builders/xenserver-iso.html.markdown) or [the xenserver-xva docs](https://github.com/xenserver/packer-builder-xenserver/blob/master/docs/builders/xenserver-xva.html.markdown).

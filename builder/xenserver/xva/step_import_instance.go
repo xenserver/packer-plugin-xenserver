@@ -60,7 +60,13 @@ func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepActi
 	}
 	state.Put("instance_uuid", instanceId)
 
-	instance.SetDescription(config.VMDescription)
+	err = instance.SetNameLabel(config.VMName)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting VM name: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
+	err = instance.SetDescription(config.VMDescription)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM description: %s", err.Error()))
 		return multistep.ActionHalt

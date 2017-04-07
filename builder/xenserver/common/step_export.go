@@ -136,22 +136,38 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 
 	ui.Say("Step: export artifact")
 
-	compress_option_xe := "compress=false"
-	compress_option_url := ""
-
 	switch config.Format {
 	case "none":
 		ui.Say("Skipping export")
 		return multistep.ActionContinue
 
-	case "xva_compressed":
-		compress_option_xe = "compress=true"
-		compress_option_url = "use_compression=true&"
-		fallthrough
+	case "xva_template":
+		ui.Say("Converting VM to template before export")
+		err = instance.SetIsATemplate(true)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Error converting VM to a template prior to export: %s", err.Error()))
+			return multistep.ActionHalt
+		}
+		if !config.KeepTemplateVIFs {
+			ui.Say("Destroying VM network interfaces for template export")
+			vifs, err := instance.GetVIFs()
+			if err != nil {
+				ui.Error(fmt.Sprintf("Error getting VIFs: %s", err.Error()))
+				return multistep.ActionHalt
+			}
+			for _, vif := range vifs {
+				err = vif.Destroy()
+				if err != nil {
+					ui.Error(fmt.Sprintf("Error destroying VIF: %s", err.Error()))
+					return multistep.ActionHalt
+				}
+			}
+		}
 	case "xva":
 		// export the VM
 
 		export_filename := fmt.Sprintf("%s/%s.xva", config.OutputDir, config.VMName)
+		ui.Say("Exporting to: " + export_filename)
 
 		use_xe := os.Getenv("USE_XE") == "1"
 		if xe, e := exec.LookPath("xe"); e == nil && use_xe {
@@ -163,7 +179,7 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 				"-pw", client.Password,
 				"vm-export",
 				"vm="+instance_uuid,
-				compress_option_xe,
+				"compress=true",
 				"filename="+export_filename,
 			)
 
@@ -171,9 +187,8 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 
 			err = cmd.Run()
 		} else {
-			export_url := fmt.Sprintf("https://%s/export?%suuid=%s&session_id=%s",
+			export_url := fmt.Sprintf("https://%s/export?use_compression=true&uuid=%s&session_id=%s",
 				client.Host,
-				compress_option_url,
 				instance_uuid,
 				client.Session.(string),
 			)
@@ -251,6 +266,7 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 			}
 
 			disk_export_filename := fmt.Sprintf("%s/%s%s", config.OutputDir, disk_uuid, suffix)
+			ui.Say("Exporting to: " + disk_export_filename)
 
 			ui.Say("Getting VDI " + disk_export_url)
 			err = downloadFile(disk_export_url, disk_export_filename, ui)

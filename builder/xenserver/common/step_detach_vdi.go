@@ -14,6 +14,7 @@ type StepDetachVdi struct {
 
 func (self *StepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
+
 	client := state.Get("client").(xsclient.XenAPIClient)
 
 	var vdiUuid string

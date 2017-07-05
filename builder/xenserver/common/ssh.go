@@ -39,7 +39,7 @@ func SSHPort(state multistep.StateBag) (int, error) {
 	sshHostPort := state.Get("local_ssh_port").(uint)
 	if sshHostPort == 0 {
 		sshHostPort = state.Get("commonconfig").(CommonConfig).SSHPort
-  }
+	}
 	return int(sshHostPort), nil
 }
 
@@ -121,21 +121,21 @@ func ExecuteHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err
 }
 
 func ExecuteGuestSSHCmd(state multistep.StateBag, cmd string) (stdout string, err error) {
-  config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(CommonConfig)
 	var address string
 	var address_err error
 	if config.SSHNoProxy {
 		address, address_err = SSHInstanceAddress(state)
 	} else {
 		address, err = SSHLocalAddress(state)
-  	}
+	}
 	if address_err != nil {
 		return "", address_err
 	}
 	sshConfig, ssh_err := SSHConfigFunc(config.SSHConfig)(state)
 	if ssh_err != nil {
-  	return
-  }
+		return
+	}
 
 	log.Printf("[DEBUG] doExecuteSSHCmd: %s, %s", cmd, address)
 	return doExecuteSSHCmd(cmd, address, sshConfig)

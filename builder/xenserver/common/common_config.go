@@ -10,6 +10,8 @@ import (
 	"github.com/mitchellh/packer/common"
 	commonssh "github.com/mitchellh/packer/common/ssh"
 	"github.com/mitchellh/packer/template/interpolate"
+
+	xmlrpc "github.com/nilshell/xmlrpc"
 	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
@@ -17,6 +19,7 @@ type CommonConfig struct {
 	Username string `mapstructure:"remote_username"`
 	Password string `mapstructure:"remote_password"`
 	HostIp   string `mapstructure:"remote_host"`
+	ApiUrl   string `mapstructure:"remote_url"`
 
 	VMName             string   `mapstructure:"vm_name"`
 	VMDescription      string   `mapstructure:"vm_description"`
@@ -147,6 +150,10 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 		errs = append(errs, errors.New("remote_host must be specified."))
 	}
 
+	if c.ApiUrl == "" {
+		c.ApiUrl = "http://" + c.HostIp
+	}
+
 	if c.HostPortMin > c.HostPortMax {
 		errs = append(errs, errors.New("the host min port must be less than the max"))
 	}
@@ -244,4 +251,22 @@ func (config CommonConfig) GetSR(client xsclient.XenAPIClient) (*xsclient.SR, er
 
 		return srs[0], nil
 	}
+}
+
+func (config CommonConfig) GetXenAPIClient() (*xsclient.XenAPIClient, error) {
+	rpc, err := xmlrpc.NewClient(config.ApiUrl, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	client := xsclient.XenAPIClient{
+		Username: config.Username,
+		Password: config.Password,
+		Host:     config.HostIp,
+		Url:      config.ApiUrl,
+		RPC:      rpc,
+	}
+
+	return &client, nil
 }

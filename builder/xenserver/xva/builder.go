@@ -86,9 +86,13 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 
 func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packer.Artifact, error) {
 	//Setup XAPI client
-	client := xsclient.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
+	_client, err := self.config.CommonConfig.GetXenAPIClient()
+	if err != nil {
+		return nil, err.(error)
+	}
+	client := *_client
 
-	err := client.Login()
+	err = client.Login()
 	if err != nil {
 		return nil, err.(error)
 	}

@@ -1,8 +1,10 @@
 package common
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -16,10 +18,11 @@ import (
 )
 
 type CommonConfig struct {
-	Username string `mapstructure:"remote_username"`
-	Password string `mapstructure:"remote_password"`
-	HostIp   string `mapstructure:"remote_host"`
-	ApiUrl   string `mapstructure:"remote_url"`
+	Username         string `mapstructure:"remote_username"`
+	Password         string `mapstructure:"remote_password"`
+	HostIp           string `mapstructure:"remote_host"`
+	ApiUrl           string `mapstructure:"remote_url"`
+	ApiTlsSkipVerify bool   `mapstructure:"remote_url_tls_skip_verify"`
 
 	VMName             string   `mapstructure:"vm_name"`
 	VMDescription      string   `mapstructure:"vm_description"`
@@ -254,7 +257,14 @@ func (config CommonConfig) GetSR(client xsclient.XenAPIClient) (*xsclient.SR, er
 }
 
 func (config CommonConfig) GetXenAPIClient() (*xsclient.XenAPIClient, error) {
-	rpc, err := xmlrpc.NewClient(config.ApiUrl, nil)
+	tlsConfig := tls.Config{}
+	if config.ApiTlsSkipVerify {
+		tlsConfig.InsecureSkipVerify = true
+	}
+	http_transport := http.Transport{
+		TLSClientConfig: &tlsConfig,
+	}
+	rpc, err := xmlrpc.NewClient(config.ApiUrl, &http_transport)
 
 	if err != nil {
 		return nil, err

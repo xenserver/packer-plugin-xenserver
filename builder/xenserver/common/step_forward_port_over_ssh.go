@@ -7,6 +7,8 @@ import (
 )
 
 type StepForwardPortOverSSH struct {
+	// If NoProxy, don't do proxying (forwarding)
+	NoProxy    bool
 	RemotePort func(state multistep.StateBag) (uint, error)
 	RemoteDest func(state multistep.StateBag) (string, error)
 
@@ -20,6 +22,11 @@ func (self *StepForwardPortOverSSH) Run(state multistep.StateBag) multistep.Step
 
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
+	if self.NoProxy {
+		ui.Say(fmt.Sprintf("Not using SSH port forwarding"))
+		state.Put(self.ResultKey, uint(0))
+		return multistep.ActionContinue
+	}
 
 	// Find a free local port:
 

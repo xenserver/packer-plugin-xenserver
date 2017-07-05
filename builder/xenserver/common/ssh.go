@@ -2,6 +2,7 @@ package common
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/mitchellh/multistep"
 	commonssh "github.com/mitchellh/packer/common/ssh"
@@ -19,6 +20,12 @@ func SSHAddress(state multistep.StateBag) (string, error) {
 	return fmt.Sprintf("%s:%d", sshIP, sshHostPort), nil
 }
 
+func SSHInstanceAddress(state multistep.StateBag) (string, error) {
+	sshIP := state.Get("instance_ssh_address").(string)
+	sshPort := 22
+	return fmt.Sprintf("%s:%d", sshIP, sshPort), nil
+}
+
 func SSHLocalAddress(state multistep.StateBag) (string, error) {
 	sshLocalPort, ok := state.Get("local_ssh_port").(uint)
 	if !ok {
@@ -30,11 +37,26 @@ func SSHLocalAddress(state multistep.StateBag) (string, error) {
 
 func SSHPort(state multistep.StateBag) (int, error) {
 	sshHostPort := state.Get("local_ssh_port").(uint)
+	if sshHostPort == 0 {
+		sshHostPort = state.Get("commonconfig").(CommonConfig).SSHPort
+  }
 	return int(sshHostPort), nil
 }
 
 func CommHost(state multistep.StateBag) (string, error) {
-	return "127.0.0.1", nil
+	var sshIP string
+	config := state.Get("commonconfig").(CommonConfig)
+	if config.SSHNoProxy {
+		sshIP = state.Get("instance_ssh_address").(string)
+	} else {
+		if state.Get("local_ssh_port").(uint) > 0 {
+			sshIP = "127.0.0.1"
+		} else {
+			return "", errors.New("CommHost: local_ssh_port not set")
+		}
+	}
+	log.Printf("[DEBUG] CommHost: sshIP: %s", sshIP)
+	return sshIP, nil
 }
 
 func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConfig, error) {
@@ -99,17 +121,24 @@ func ExecuteHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err
 }
 
 func ExecuteGuestSSHCmd(state multistep.StateBag, cmd string) (stdout string, err error) {
-	config := state.Get("commonconfig").(CommonConfig)
-	localAddress, err := SSHLocalAddress(state)
-	if err != nil {
-		return
+  config := state.Get("commonconfig").(CommonConfig)
+	var address string
+	var address_err error
+	if config.SSHNoProxy {
+		address, address_err = SSHInstanceAddress(state)
+	} else {
+		address, err = SSHLocalAddress(state)
+  	}
+	if address_err != nil {
+		return "", address_err
 	}
-	sshConfig, err := SSHConfigFunc(config.SSHConfig)(state)
-	if err != nil {
-		return
-	}
+	sshConfig, ssh_err := SSHConfigFunc(config.SSHConfig)(state)
+	if ssh_err != nil {
+  	return
+  }
 
-	return doExecuteSSHCmd(cmd, localAddress, sshConfig)
+	log.Printf("[DEBUG] doExecuteSSHCmd: %s, %s", cmd, address)
+	return doExecuteSSHCmd(cmd, address, sshConfig)
 }
 
 func forward(local_conn net.Conn, config *gossh.ClientConfig, server, remote_dest string, remote_port uint) error {

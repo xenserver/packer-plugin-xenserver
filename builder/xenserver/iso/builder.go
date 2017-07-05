@@ -277,6 +277,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		new(xscommon.StepSetVmHostSshAddress),
 		new(xscommon.StepGetVNCPort),
 		&xscommon.StepForwardPortOverSSH{
+			NoProxy:     false,
 			RemotePort:  xscommon.InstanceVNCPort,
 			RemoteDest:  xscommon.InstanceVNCIP,
 			HostPortMin: self.config.HostPortMin,
@@ -292,6 +293,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			Timeout: self.config.InstallTimeout, // @todo change this
 		},
 		&xscommon.StepForwardPortOverSSH{
+			NoProxy:     self.config.SSHNoProxy,
 			RemotePort:  xscommon.InstanceSSHPort,
 			RemoteDest:  xscommon.InstanceSSHIP,
 			HostPortMin: self.config.HostPortMin,

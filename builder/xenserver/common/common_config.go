@@ -42,6 +42,7 @@ type CommonConfig struct {
 
 	//	SSHHostPortMin    uint   `mapstructure:"ssh_host_port_min"`
 	//	SSHHostPortMax    uint   `mapstructure:"ssh_host_port_max"`
+	SSHNoProxy  bool   `mapstructure:"ssh_no_proxy"`
 	SSHKeyPath  string `mapstructure:"ssh_key_path"`
 	SSHPassword string `mapstructure:"ssh_password"`
 	SSHPort     uint   `mapstructure:"ssh_port"`

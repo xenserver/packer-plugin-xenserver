@@ -77,6 +77,8 @@ A brief explanation of what the config parameters mean:
  * `remote_password` - the password for the XenServer host being used.
  * `remote_host` - the IP for the XenServer host being used.
  * `vm_name` - the name that should be given to the created VM.
+ * `vcpus_max` - the maximum number of VCPUs for the VM.
+ * `vcpus_atstartup` - the number of startup VCPUs for the VM.
  * `vm_memory` - the static memory configuration for the VM, in MB.
  * `disk_size` - the size of the disk the VM should be created with, in MB.
  * `iso_name` - the name of the ISO visible on a ISO SR connected to the XenServer host.

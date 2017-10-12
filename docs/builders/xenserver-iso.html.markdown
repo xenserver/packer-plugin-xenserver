@@ -167,7 +167,8 @@ each category, the available options are alphabetized and described.
     "pae": "true",
     "apic": "true",
     "timeoffset": "0",
-    "acpi": "1"
+    "acpi": "1",
+    "cores-per-socket": "1"
 }
 ```
 
@@ -210,6 +211,12 @@ each category, the available options are alphabetized and described.
 * `vm_name` (string) - This is the name of the new virtual
   machine, without the file extension. By default this is
   "packer-BUILDNAME-TIMESTAMP", where "BUILDNAME" is the name of the build.
+
+* `vcpus_max` (integer) - The maximum number of VCPUs for the VM.
+  By default this is 1.
+
+* `vcpus_atstartup` (integer) - The number of startup VCPUs for the VM.
+  By default this is 1.
 
 * `vm_memory` (integer) - The size, in megabytes, of the amount of memory to
   allocate for the VM. By default, this is 1024 (1 GB).

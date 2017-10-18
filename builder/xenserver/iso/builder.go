@@ -107,7 +107,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		pargs["apic"] = "true"
 		pargs["timeoffset"] = "0"
 		pargs["acpi"] = "1"
-		pargs["cores-per-socket"] = "1"
 		self.config.PlatformArgs = pargs
 	}
 

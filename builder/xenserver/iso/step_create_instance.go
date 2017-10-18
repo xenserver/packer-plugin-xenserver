@@ -50,6 +50,18 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		return multistep.ActionHalt
 	}
 
+	err = instance.SetVCPUsMax(config.VCPUsMax)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting VM VCPUs Max=%d: %s", config.VCPUsMax, err.Error()))
+		return multistep.ActionHalt
+	}
+
+	err = instance.SetVCPUsAtStartup(config.VCPUsAtStartup)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting VM VCPUs At Startup=%d: %s", config.VCPUsAtStartup, err.Error()))
+		return multistep.ActionHalt
+	}
+
 	err = instance.SetStaticMemoryRange(uint64(config.VMMemory*1024*1024), uint64(config.VMMemory*1024*1024))
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM memory=%d: %s", config.VMMemory*1024*1024, err.Error()))

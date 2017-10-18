@@ -20,8 +20,9 @@ type config struct {
 	common.PackerConfig   `mapstructure:",squash"`
 	xscommon.CommonConfig `mapstructure:",squash"`
 
-	SourcePath string `mapstructure:"source_path"`
-	VMMemory   uint   `mapstructure:"vm_memory"`
+	SourcePath     string `mapstructure:"source_path"`
+	SourceTemplate string `mapstructure:"source_template"`
+	VMMemory       uint   `mapstructure:"vm_memory"`
 
 	PlatformArgs map[string]string `mapstructure:"platform_args"`
 
@@ -72,8 +73,8 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 
 	// Validation
 
-	if self.config.SourcePath == "" {
-		errs = packer.MultiErrorAppend(errs, fmt.Errorf("A source_path must be specified"))
+	if self.config.SourcePath == "" && self.config.SourceTemplate == "" {
+		errs = packer.MultiErrorAppend(errs, fmt.Errorf("Either source_path or source_template must be specified"))
 	}
 
 	if len(errs.Errors) > 0 {
@@ -133,6 +134,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiName:    self.config.ToolsIsoName,
 			VdiUuidKey: "tools_vdi_uuid",
 		},
+		new(stepInstantiateTemplate),
 		new(stepImportInstance),
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",

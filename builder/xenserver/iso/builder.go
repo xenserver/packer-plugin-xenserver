@@ -52,6 +52,9 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 
 	var errs *packer.MultiError
 
+	context, _ := hconfig.DetectContext(raws...)
+	self.config.ctx = *context
+
 	err := hconfig.Decode(&self.config, &hconfig.DecodeOpts{
 		Interpolate: true,
 		InterpolateFilter: &interpolate.RenderFilter{

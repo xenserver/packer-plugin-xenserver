@@ -18,7 +18,7 @@ func (self *StepGetVNCPort) Run(state multistep.StateBag) multistep.StepAction {
 	domid := state.Get("domid").(string)
 	// cmd := fmt.Sprintf("xenstore-read /local/domain/%s/console/vnc-port", domid)
 
-	expectedport := fmt.Sprintf("590%s", domid)
+	expectedport := fmt.Sprintf("59%s", domid)
 	cmd1 := fmt.Sprintf("nohup socat -d -d -lf /tmp/socat-%s TCP4-LISTEN:%s,reuseaddr,fork,tcpwrap=socat,allow-table=all UNIX-CONNECT:/var/run/xen/vnc-%s &>/dev/null &", expectedport, expectedport, domid)
 	ui.Say(fmt.Sprintf("nohup socat -d -d -lf /tmp/socat-%s TCP4-LISTEN:%s,reuseaddr,fork,tcpwrap=socat,allow-table=all UNIX-CONNECT:/var/run/xen/vnc-%s &>/dev/null &", expectedport, expectedport, domid))
 	remote_vncport, err := ExecuteHostSSHCmd(state, cmd1)

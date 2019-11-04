@@ -184,11 +184,6 @@
 			"Rev": "d41af8bb6a7704f00bc3b7cba9355ae6a5a80048"
 		},
 		{
-			"ImportPath": "github.com/svanharmelen/gocs",
-			"Comment": "v1.0.0-4-ga53656b",
-			"Rev": "a53656b67c7b6db48362e3b4edb5e335a7162bf0"
-		},
-		{
 			"ImportPath": "github.com/ugorji/go/codec",
 			"Rev": "646ae4a518c1c3be0739df898118d9bccf993858"
 		},

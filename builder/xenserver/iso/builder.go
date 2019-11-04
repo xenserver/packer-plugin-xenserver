@@ -54,6 +54,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 
 	err := hconfig.Decode(&self.config, &hconfig.DecodeOpts{
 		Interpolate: true,
+    		InterpolateContext: &self.config.ctx,
 		InterpolateFilter: &interpolate.RenderFilter{
 			Exclude: []string{
 				"boot_command",
@@ -132,7 +133,11 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 			errs, fmt.Errorf("Failed to parse install_timeout: %s", err))
 	}
 
-	if self.config.ISOName == "" {
+	if self.config.ISOUrl == "" && self.config.ISOName == "" {
+		errs = packer.MultiErrorAppend(errs, fmt.Errorf("Either iso_url or iso_name must be specified"))
+	}
+
+	if self.config.ISOUrl != "" {
 
 		// If ISO name is not specified, assume a URL and checksum has been provided.
 
@@ -176,10 +181,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 					errs, fmt.Errorf("Failed to parse iso_urls[%d]: %s", i, err))
 			}
 		}
-	} else {
-
-		// An ISO name has been provided. It should be attached from an available SR.
-
 	}
 
 	if len(errs.Errors) > 0 {
@@ -224,6 +225,25 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		},
 	}
 
+	step_find_vdi_iso_name := &xscommon.StepFindVdi{
+		VdiName:    self.config.ISOName,
+		VdiUuidKey: "isoname_vdi_uuid",
+		ErrorFunc: func(errString string) multistep.StepAction {
+			ui.Error(errString)
+			ui.Error("Defaulting to use \"iso_url\".")
+			return multistep.ActionContinue
+		},
+	}
+
+	step_find_vdi_iso_name_runner := &multistep.BasicRunner{Steps: []multistep.Step{
+		step_find_vdi_iso_name,
+	}}
+	step_find_vdi_iso_name_runner.Run(state)
+
+	if step_find_vdi_iso_name.PreviousResult == "FAILURE" && self.config.ISOUrl == "" {
+		return nil, errors.New(fmt.Sprintf("Failed to find \"iso_name\": \"%s\" and \"iso_url\" is empty. Aborting.", self.config.ISOName))
+	}
+
 	steps := []multistep.Step{
 		&xscommon.StepPrepareOutputDir{
 			Force: self.config.PackerForce,
@@ -266,11 +286,9 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiName:    self.config.ToolsIsoName,
 			VdiUuidKey: "tools_vdi_uuid",
 		},
-		&xscommon.StepFindVdi{
-			VdiName:    self.config.ISOName,
-			VdiUuidKey: "isoname_vdi_uuid",
-		},
+		step_find_vdi_iso_name,
 		new(stepCreateInstance),
+		new(xscommon.StepConfigureNetworking),
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 			VdiType:    xsclient.Floppy,
@@ -286,6 +304,10 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
 			VdiType:    xsclient.CD,
+		},
+		&xscommon.StepExecuteHostScripts{
+			ScriptType:   "pre-boot",
+			LocalScripts: self.config.PreBootHostScripts,
 		},
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepSetVmHostSshAddress),
@@ -332,10 +354,17 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
+		new(xscommon.StepConfigureDiscDrives),
+		new(xscommon.StepConvertToTemplate),
+		new(xscommon.StepDestroyVIFs),
+		&xscommon.StepExecuteHostScripts{
+			ScriptType:   "pre-export",
+			LocalScripts: self.config.PreExportHostScripts,
+		},
 		new(xscommon.StepExport),
 	}
 
-	if self.config.ISOName == "" {
+	if self.config.ISOName == "" || (self.config.ISOUrl != "" && step_find_vdi_iso_name.PreviousResult == "FAILURE") {
 		steps = append(download_steps, steps...)
 	}
 

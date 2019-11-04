@@ -91,19 +91,22 @@ func (s *StepConnectWinRM) waitForWinRM(state multistep.StateBag, cancel <-chan 
 		case <-time.After(5 * time.Second):
 		}
 
-		host, err := s.Host(state)
-		if err != nil {
-			log.Printf("[DEBUG] Error getting WinRM host: %s", err)
-			continue
+		var host string
+		if hostRaw, ok := state.GetOk("instance_ssh_address"); ok {
+			host = hostRaw.(string)
+		} else {
+			log.Println("[INFO] Error getting WinRM host. Exiting loop.")
+			return nil, errors.New("Error getting WinRM host")
 		}
+
 		port := s.Config.WinRMPort
-		if s.WinRMPort != nil {
-			port, err = s.WinRMPort(state)
-			if err != nil {
-				log.Printf("[DEBUG] Error getting WinRM port: %s", err)
-				continue
-			}
-		}
+		// if s.WinRMPort != nil {
+		// 	port, err = s.WinRMPort(state)
+		// 	if err != nil {
+		// 		log.Printf("[DEBUG] Error getting WinRM port: %s", err)
+		// 		continue
+		// 	}
+		// }
 
 		user := s.Config.WinRMUser
 		password := s.Config.WinRMPassword
@@ -122,6 +125,7 @@ func (s *StepConnectWinRM) waitForWinRM(state multistep.StateBag, cancel <-chan 
 			}
 		}
 
+		var err error
 		log.Println("[INFO] Attempting WinRM connection...")
 		comm, err = winrm.New(&winrm.Config{
 			Host:               host,

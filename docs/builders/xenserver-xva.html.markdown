@@ -1,50 +1,47 @@
 ---
 layout: "docs"
-page_title: "XenServer Builder (from an ISO)"
+page_title: "XenServer Builder (from an XVA)"
 description: |-
-  The XenServer Packer builder is able to create XenServer virtual machines and export them either as an XVA or a VDI, starting from an ISO image.
+  The XenServer Packer builder is able to create XenServer virtual machines and export them either as an XVA or a VDI, starting from an XVA or XVA template.
 ---
 
-# XenServer Builder (from an ISO)
+# XenServer Builder (from an XVA or XVA template)
 
-Type: `xenserver-iso`
+Type: `xenserver-xva`
 
 The XenServer Packer builder is able to create [XenServer](https://www.xenserver.org/)
 virtual machines and export them either as an XVA or a VDI, starting from an
-ISO image.
+XVA or XVA template.
 
-The builder builds a virtual machine by creating a new virtual machine
-from scratch, booting it, installing an OS, provisioning software within
+The builder builds a virtual machine by launching an XVA or XVA template, provisioning software within
 the OS, then shutting it down. The result of the XenServer builder is a
 directory containing all the files necessary to run the virtual machine
 portably.
 
 ## Basic Example
 
-Here is a basic example. This example is not functional. Even when the
-`remote_*` fields have been completed, it will start the OS installer but then
-fail because we don't provide the preseed file for Ubuntu to self-install.
-Still, the example serves to show the basic configuration:
+Here is a basic example.
 
 ```javascript
 {
-  "type": "xenserver-iso",
+  "type": "xenserver-xva",
+  "vm_name": "some-vm",
+  "vm_description": "Build time: {{isotime}}",
   "remote_host": "your-server.example.com",
   "remote_username": "root",
   "remote_password": "password",
-  "iso_url": "http://releases.ubuntu.com/12.04/ubuntu-12.04.5-server-amd64.iso",
-  "iso_checksum": "769474248a3897f4865817446f9a4a53",
-  "iso_checksum_type": "md5",
-  "ssh_username": "packer",
-  "ssh_password": "packer",
-  "ssh_wait_timeout": "30s",
-  "shutdown_command": "echo 'packer' | sudo -S shutdown -P now"
+  "source_template": "windows-template",
+  "source_path": "xva/windows.xva",
+  "communicator": "winrm",
+  "winrm_username": "packer",
+  "winrm_password": "packer",
+  "winrm_timeout": "1800s",
+  "winrm_use_ssl": true,
+  "winrm_insecure": true,
+  "format": "xva_compressed",
+  "disc_drives": 1
 }
 ```
-
-It is important to add a `shutdown_command`. By default Packer forcibly halts the
-virtual machine and the file system may not be sync'd. Thus, changes made in a
-provisioner might not be saved.
 
 ## Configuration Reference
 
@@ -54,29 +51,12 @@ each category, the available options are alphabetized and described.
 
 ### Required:
 
-* Either:
+* One of:
+  * `source_template` (string) - Unique name of an XVA template available in XenCenter.
+    Or it can be the UUID of the template prefixed by "uuid://". For example: "uuid://aa2f2c86-b79a-4345-a35f-ce244f43c97a".
+    If this fails and `source_path` is given, `source_path` will be tried.
 
-  * `iso_name` (string) - Unique name of an ISO available in XenCenter's storage repositories.
-    Or it can be the UUID of the ISO's VDI prefixed by "uuid://". For example: "uuid://aa2f2c86-b79a-4345-a35f-ce244f43c97a".
-    If this fails and `iso_url` is given, `iso_url` will be tried.
-
-* OR:
-
-  * `iso_checksum` (string) - The checksum for the OS ISO file. Because ISO
-    files are so large, this is required and Packer will verify it prior
-    to booting a virtual machine with the ISO attached. The type of the
-    checksum is specified with `iso_checksum_type`, documented below.
-
-  * `iso_checksum_type` (string) - The type of the checksum specified in
-    `iso_checksum`. Valid values are "none", "md5", "sha1", "sha256", or
-    "sha512" currently. While "none" will skip checksumming, this is not
-    recommended since ISO files are generally large and corruption does happen
-    from time to time.
-
-  * `iso_url` (string) - A URL to the ISO containing the installation image.
-    This URL can be either an HTTP URL or a file URL (or path to a file).
-    If this is an HTTP URL, Packer will download it and cache it between
-    runs.
+  * `source_path` (string) - Path to a XVA or XVA template on your workstation
 
 * `remote_host` (string) - The host of the remote machine.
 
@@ -84,8 +64,7 @@ each category, the available options are alphabetized and described.
 
 * `remote_password` (string) - The XenServer password for access to the remote machine.
 
-* `ssh_username` or `winrm_username` (string) - The username to use to SSH/WinRM into the machine
-  once the OS is installed.
+* `ssh_username` or `winrm_username` (string) - The username to use to SSH/WinRM into the machine.
 
 ### Optional:
 
@@ -102,13 +81,6 @@ each category, the available options are alphabetized and described.
   five seconds and one minute 30 seconds, respectively. If this isn't specified,
   the default is 10 seconds.
 
-* `clone_template` (string) - The template to clone. Defaults to "Other install
-  media", this is "other", but you can get _dramatic_ performance improvements
-  by setting this to the proper value. To view all available values for this
-  run `xe template-list`. Setting the correct value hints to XenServer how to
-  optimize the virtual hardware to work best with that operating system. Setting
-  this to a template's UUID is also acceptable: "uuid://c6a9dee0-0069-24a5-d45d-4a4101a9d7f4".
-
 * `communicator` (string) - Communication protocol with the VM. Can "ssh"
   and "winrm" are officially supported. Default is "ssh".
 
@@ -121,9 +93,6 @@ each category, the available options are alphabetized and described.
 
 * `disc_drives` (integer) - How many DVD drives to keep on the exported VM.
   Default is 0.
-
-* `disk_size` (integer) - The size, in megabytes, of the hard disk to create
-  for the VM. By default, this is 40000 (about 40 GB).
 
 * `floppy_files` (array of strings) - A list of files to place onto a floppy
   disk that is attached when the VM is booted. This is most useful
@@ -155,17 +124,6 @@ each category, the available options are alphabetized and described.
   server to be on one port, make this minimum and maximum port the same.
   By default the values are 8000 and 9000, respectively.
 
-* `install_timeout` (string) - The amount of time to wait after booting the VM
-  for the installer to shut itself down.
-  If it doesn't shut down in this time, it is an error. By default, the timeout
-  is "200m", or over three hours.
-
-* `iso_urls` (array of strings) - Multiple URLs for the ISO to download.
-  Packer will try these in order. If anything goes wrong attempting to download
-  or while downloading a single URL, it will move on to the next. All URLs
-  must point to the same file (same checksum). By default this is empty
-  and `iso_url` is used. Only one of `iso_url` or `iso_urls` can be specified.
-
 * `keep_vm` (string) - Determine when to keep the VM and when to clean it up. This
   can be "always", "never" or "on_success". By default this is "never", and Packer
   always deletes the VM regardless of whether the process succeeded and an artifact
@@ -189,8 +147,7 @@ each category, the available options are alphabetized and described.
     "pae": "true",
     "apic": "true",
     "timeoffset": "0",
-    "acpi": "1",
-    "cores-per-socket": "1"
+    "acpi": "1"
 }
 ```
 
@@ -246,12 +203,6 @@ each category, the available options are alphabetized and described.
 * `vm_name` (string) - This is the name of the new virtual
   machine, without the file extension. By default this is
   "packer-BUILDNAME-TIMESTAMP", where "BUILDNAME" is the name of the build.
-
-* `vcpus_max` (integer) - The maximum number of VCPUs for the VM.
-  By default this is 1.
-
-* `vcpus_atstartup` (integer) - The number of startup VCPUs for the VM.
-  By default this is 1.
 
 * `vm_memory` (integer) - The size, in megabytes, of the amount of memory to
   allocate for the VM. By default, this is 1024 (1 GB).
@@ -326,20 +277,3 @@ The available variables are:
   that is started serving the directory specified by the `http_directory`
   configuration parameter. If `http_directory` isn't specified, these will be
   blank!
-
-Example boot command. This is actually a working boot command used to start
-an Ubuntu 12.04 installer:
-
-```javascript
-[
-  "&lt;esc&gt;&lt;esc&gt;&lt;enter&gt;&lt;wait&gt;",
-  "/install/vmlinuz noapic ",
-  "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
-  "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
-  "hostname={{ .Name }} ",
-  "fb=false debconf/frontend=noninteractive ",
-  "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
-  "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
-  "initrd=/install/initrd.gz -- &lt;enter&gt;"
-]
-```

@@ -24,7 +24,9 @@ func (self *StepGetVNCPort) Run(state multistep.StateBag) multistep.StepAction {
 	remote_vncport, err := ExecuteHostSSHCmd(state, cmd1)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VNC port (is the VM running?): %s", err.Error()))
-		return multistep.ActionHalt
+		ui.Error(fmt.Sprintf("XS7.5/7.6 no longer support xenstore-read: Try to use 5900.  See https://bugs.xenserver.org/browse/XSO-906"))
+		remote_vncport = "5900"
+		//return multistep.ActionHalt
 	}
 	remote_vncport = expectedport
 	remote_port, err := strconv.ParseUint(remote_vncport, 10, 16)

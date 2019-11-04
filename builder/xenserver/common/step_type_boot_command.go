@@ -4,7 +4,7 @@ package common
 
 import (
 	"fmt"
-	"github.com/GodofGurus/packer-builder-xenserver/vendor/github.com/mitchellh/go-vnc"
+	"github.com/mitchellh/go-vnc"
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
 	"github.com/mitchellh/packer/template/interpolate"

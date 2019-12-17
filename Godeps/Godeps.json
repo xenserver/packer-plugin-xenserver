@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/xenserver/packer-builder-xenserver",
 	"GoVersion": "go1.6",
-	"GodepVersion": "v74",
+	"GodepVersion": "v75",
 	"Packages": [
 		"./..."
 	],
@@ -10,6 +10,11 @@
 			"ImportPath": "github.com/Sirupsen/logrus",
 			"Comment": "v0.10.0-19-gf3cfb45",
 			"Rev": "f3cfb454f4c209e6668c95216c4744b8fddb2356"
+		},
+		{
+			"ImportPath": "github.com/dongyuzheng/easyssh",
+			"Comment": "0.1-47-g9302b2c",
+			"Rev": "9302b2c6dc62b655f41767906ec79638db75ba40"
 		},
 		{
 			"ImportPath": "github.com/dylanmei/iso8601",
@@ -63,6 +68,10 @@
 		{
 			"ImportPath": "github.com/mitchellh/go-fs/fat",
 			"Rev": "a34c1b9334e86165685a9449b782f20465eb8c69"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/go-vnc",
+			"Rev": "723ed9867aed0f3209a81151e52ddc61681f0b01"
 		},
 		{
 			"ImportPath": "github.com/mitchellh/iochan",
@@ -162,17 +171,17 @@
 			"Rev": "f1bcf36a69fa2945e65dd099eee11b560fbd3346"
 		},
 		{
+			"ImportPath": "github.com/pkg/errors",
+			"Comment": "v0.8.0-2-g248dadf",
+			"Rev": "248dadf4e9068a0b3e79f02ed0a610d935de5302"
+		},
+		{
 			"ImportPath": "github.com/pkg/sftp",
 			"Rev": "e84cc8c755ca39b7b64f510fe1fffc1b51f210a5"
 		},
 		{
 			"ImportPath": "github.com/satori/go.uuid",
 			"Rev": "d41af8bb6a7704f00bc3b7cba9355ae6a5a80048"
-		},
-		{
-			"ImportPath": "github.com/svanharmelen/gocs",
-			"Comment": "v1.0.0-4-ga53656b",
-			"Rev": "a53656b67c7b6db48362e3b4edb5e335a7162bf0"
 		},
 		{
 			"ImportPath": "github.com/ugorji/go/codec",

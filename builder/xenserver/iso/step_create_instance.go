@@ -22,24 +22,40 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	ui.Say("Step: Create Instance")
 
 	// Get the template to clone from
+	var template *xsclient.VM
+	var err error
 
-	vms, err := client.GetVMByNameLabel(config.CloneTemplate)
+	if len(config.CloneTemplate) >= 7 && config.CloneTemplate[:7] == "uuid://" {
+		templateUuid := config.CloneTemplate[7:]
 
-	switch {
-	case len(vms) == 0:
-		ui.Error(fmt.Sprintf("Couldn't find a template with the name-label '%s'. Aborting.", config.CloneTemplate))
-		return multistep.ActionHalt
-	case len(vms) > 1:
-		ui.Error(fmt.Sprintf("Found more than one template with the name '%s'. The name must be unique. Aborting.", config.CloneTemplate))
-		return multistep.ActionHalt
+		template, err = client.GetVMByUuid(templateUuid)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Could not get template with UUID '%s': %s", templateUuid, err.Error()))
+			return multistep.ActionHalt
+		}
+	} else {
+		templates, err := client.GetVMByNameLabel(config.CloneTemplate)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Error getting template: %s", err.Error()))
+			return multistep.ActionHalt
+		}
+
+		switch {
+		case len(templates) == 0:
+			ui.Error(fmt.Sprintf("Couldn't find a template with the name-label '%s'.", config.CloneTemplate))
+			return multistep.ActionHalt
+		case len(templates) > 1:
+			ui.Error(fmt.Sprintf("Found more than one template with the name '%s'. The name must be unique. Aborting.", config.CloneTemplate))
+			return multistep.ActionHalt
+		}
+
+		template = templates[0]
 	}
-
-	template := vms[0]
 
 	// Clone that VM template
 	instance, err := template.Clone(config.VMName)
 	if err != nil {
-		ui.Error(fmt.Sprintf("Error cloning VM: %s", err.Error()))
+		ui.Error(fmt.Sprintf("Error cloning template: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 	self.instance = instance
@@ -104,7 +120,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		return multistep.ActionHalt
 	}
 
-	vdi, err := sr.CreateVdi("Packer-disk", int64(config.DiskSize*1024*1024))
+	vdi, err := sr.CreateVdi(config.VMName+" 0", int64(config.DiskSize*1024*1024))
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to create packer disk VDI: %s", err.Error()))
 		return multistep.ActionHalt
@@ -115,77 +131,6 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
 		return multistep.ActionHalt
-	}
-
-	// Connect Network
-
-	var network *xsclient.Network
-
-	if len(config.NetworkNames) == 0 {
-		// No network has be specified. Use the management interface
-		network = new(xsclient.Network)
-		network.Ref = ""
-		network.Client = &client
-
-		pifs, err := client.GetPIFs()
-
-		if err != nil {
-			ui.Error(fmt.Sprintf("Error getting PIFs: %s", err.Error()))
-			return multistep.ActionHalt
-		}
-
-		for _, pif := range pifs {
-			pif_rec, err := pif.GetRecord()
-
-			if err != nil {
-				ui.Error(fmt.Sprintf("Error getting PIF record: %s", err.Error()))
-				return multistep.ActionHalt
-			}
-
-			if pif_rec["management"].(bool) {
-				network.Ref = pif_rec["network"].(string)
-			}
-
-		}
-
-		if network.Ref == "" {
-			ui.Error("Error: couldn't find management network. Aborting.")
-			return multistep.ActionHalt
-		}
-
-		_, err = instance.ConnectNetwork(network, "0")
-
-		if err != nil {
-			ui.Say(err.Error())
-		}
-
-	} else {
-		// Look up each network by it's name label
-		for i, networkNameLabel := range config.NetworkNames {
-			networks, err := client.GetNetworkByNameLabel(networkNameLabel)
-
-			if err != nil {
-				ui.Error(fmt.Sprintf("Error occured getting Network by name-label: %s", err.Error()))
-				return multistep.ActionHalt
-			}
-
-			switch {
-			case len(networks) == 0:
-				ui.Error(fmt.Sprintf("Couldn't find a network with the specified name-label '%s'. Aborting.", networkNameLabel))
-				return multistep.ActionHalt
-			case len(networks) > 1:
-				ui.Error(fmt.Sprintf("Found more than one network with the name '%s'. The name must be unique. Aborting.", networkNameLabel))
-				return multistep.ActionHalt
-			}
-
-			//we need the VIF index string
-			vifIndexString := fmt.Sprintf("%d", i)
-			_, err = instance.ConnectNetwork(networks[0], vifIndexString)
-
-			if err != nil {
-				ui.Say(err.Error())
-			}
-		}
 	}
 
 	instanceId, err := instance.GetUuid()

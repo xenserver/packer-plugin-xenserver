@@ -22,6 +22,7 @@ type bootCommandTemplateData struct {
 	Name     string
 	HTTPIP   string
 	HTTPPort uint
+	SSHPassword string 
 }
 
 type StepTypeBootCommand struct {
@@ -83,6 +84,7 @@ func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 		config.VMName,
 		localIp,
 		http_port,
+		config.SSHPassword,
 	}
 
 	ui.Say("Typing boot commands over VNC...")

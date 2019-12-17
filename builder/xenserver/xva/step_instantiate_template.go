@@ -2,87 +2,78 @@ package xva
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
 	xsclient "github.com/xenserver/go-xenserver-client"
-	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
 
-type stepImportInstance struct {
+type stepInstantiateTemplate struct {
 	instance *xsclient.VM
 }
 
-func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepAction {
+func (self *stepInstantiateTemplate) Run(state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(config)
 
-	if state.Get("instance_uuid") != nil {
+	if config.SourceTemplate == "" {
 		return multistep.ActionContinue
 	}
 
-	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(xsclient.XenAPIClient)
+	ui := state.Get("ui").(packer.Ui)
 
-	ui.Say("Step: Import Instance")
+	ui.Say("Step: Instantiate Template")
 
-	if config.SourcePath == "" {
-		ui.Error(fmt.Sprintf("Failed to instantiate \"source_template\": \"%s\" and \"source_path\" is empty. Aborting.", config.SourceTemplate))
-		return multistep.ActionHalt
+	var template *xsclient.VM
+	var err error
+
+	if len(config.SourceTemplate) >= 7 && config.SourceTemplate[:7] == "uuid://" {
+		templateUuid := config.SourceTemplate[7:]
+
+		template, err = client.GetVMByUuid(templateUuid)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Could not get template with UUID '%s': %s", templateUuid, err.Error()))
+			ui.Error("Defaulting to use \"source_path\".")
+			return multistep.ActionContinue
+		}
+	} else {
+		templates, err := client.GetVMByNameLabel(config.SourceTemplate)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Error getting template: %s", err.Error()))
+			ui.Error("Defaulting to use \"source_path\".")
+			return multistep.ActionContinue
+		}
+
+		switch {
+		case len(templates) == 0:
+			ui.Error(fmt.Sprintf("Couldn't find a template with the name-label '%s'.", config.SourceTemplate))
+			ui.Error("Defaulting to use \"source_path\".")
+			return multistep.ActionContinue
+		case len(templates) > 1:
+			ui.Error(fmt.Sprintf("Found more than one template with the name '%s'. The name must be unique.", config.SourceTemplate))
+			ui.Error("Defaulting to use \"source_path\".")
+			return multistep.ActionContinue
+		}
+
+		template = templates[0]
 	}
 
-	// find the SR
-	sr, err := config.GetSR(client)
+	self.instance, err = template.Clone(config.VMName)
 	if err != nil {
-		ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
+		ui.Error(fmt.Sprintf("Error cloning template: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 
-	// Open the file for reading (NB: httpUpload closes the file for us)
-	fh, err := os.Open(config.SourcePath)
-	if err != nil {
-		ui.Error(fmt.Sprintf("Unable to open XVA '%s': %s", config.SourcePath, err.Error()))
-		return multistep.ActionHalt
-	}
-
-	result, err := xscommon.HTTPUpload(fmt.Sprintf("https://%s/import?session_id=%s&sr_id=%s",
-		client.Host,
-		client.Session.(string),
-		sr.Ref,
-	), fh, state)
-	if err != nil {
-		ui.Error(fmt.Sprintf("Unable to upload VDI: %s", err.Error()))
-		return multistep.ActionHalt
-	}
-	if result == nil {
-		ui.Error("XAPI did not reply with an instance reference")
-		return multistep.ActionHalt
-	}
-
-	instance := xsclient.VM(*result)
-
-	instanceId, err := instance.GetUuid()
+	instanceId, err := self.instance.GetUuid()
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM UUID: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 	state.Put("instance_uuid", instanceId)
 
-	self.instance, err = client.GetVMByUuid(instanceId)
-	if err != nil {
-		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", instanceId, err.Error()))
-		return multistep.ActionHalt
-	}
-
 	err = self.instance.SetIsATemplate(false)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error converting template to a VM: %s", err.Error()))
-		return multistep.ActionHalt
-	}
-
-	err = self.instance.SetNameLabel(config.VMName)
-	if err != nil {
-		ui.Error(fmt.Sprintf("Error setting VM name: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 
@@ -92,12 +83,12 @@ func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepActi
 		return multistep.ActionHalt
 	}
 
-	ui.Say(fmt.Sprintf("Imported instance '%s'", instanceId))
+	ui.Say(fmt.Sprintf("Instantiated template '%s'", instanceId))
 
 	return multistep.ActionContinue
 }
 
-func (self *stepImportInstance) Cleanup(state multistep.StateBag) {
+func (self *stepInstantiateTemplate) Cleanup(state multistep.StateBag) {
 	config := state.Get("config").(config)
 	if config.ShouldKeepVM(state) {
 		return

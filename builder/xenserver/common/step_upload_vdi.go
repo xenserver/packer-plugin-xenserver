@@ -80,15 +80,10 @@ func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 }
 
 func (self *StepUploadVdi) Cleanup(state multistep.StateBag) {
-	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(xsclient.XenAPIClient)
 
 	vdiName := self.VdiNameFunc()
-
-	if config.ShouldKeepVM(state) {
-		return
-	}
 
 	vdiUuidRaw, ok := state.GetOk(self.VdiUuidKey)
 	if !ok {

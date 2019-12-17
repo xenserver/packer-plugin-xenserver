@@ -226,8 +226,16 @@ func (c *comm) Download(path string, output io.Writer) error {
 	return c.scpDownloadSession(path, output)
 }
 
-func (c *comm) newSession() (session *ssh.Session, err error) {
+func (c *comm) newSession(args ...int) (session *ssh.Session, err error) {
 	log.Println("opening new ssh session")
+
+	if len(args) == 0 {
+		log.Println("reconnecting to ssh")
+		if err := c.reconnect(); err != nil {
+			return nil, err
+		}
+	}
+
 	if c.client == nil {
 		err = errors.New("client not available")
 	} else {
@@ -356,7 +364,7 @@ func (c *comm) connectToAgent() {
 	agent.ForwardToAgent(c.client, forwardingAgent)
 
 	// Setup a session to request agent forwarding
-	session, err := c.newSession()
+	session, err := c.newSession(1)
 	if err != nil {
 		return
 	}

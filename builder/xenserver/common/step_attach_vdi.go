@@ -1,9 +1,10 @@
 package common
 
 import (
+	"context"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 	xsclient "github.com/xenserver/go-xenserver-client"
 	"log"
 )
@@ -15,7 +16,7 @@ type StepAttachVdi struct {
 	vdi *xsclient.VDI
 }
 
-func (self *StepAttachVdi) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepAttachVdi) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(xsclient.XenAPIClient)
 

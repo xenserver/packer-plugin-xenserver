@@ -1,15 +1,16 @@
 package common
 
 import (
+	"context"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
 type StepSetVmHostSshAddress struct{}
 
-func (self *StepSetVmHostSshAddress) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepSetVmHostSshAddress) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
 	client := state.Get("client").(xsclient.XenAPIClient)
 	ui := state.Get("ui").(packer.Ui)

@@ -3,11 +3,12 @@ package common
 /* Heavily borrowed from builder/quemu/step_type_boot_command.go */
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
+	"github.com/hashicorp/packer/template/interpolate"
 	"github.com/mitchellh/go-vnc"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	"github.com/mitchellh/packer/template/interpolate"
 	"log"
 	"net"
 	"strings"
@@ -28,7 +29,7 @@ type StepTypeBootCommand struct {
 	Ctx interpolate.Context
 }
 
-func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	vnc_port := state.Get("local_vnc_port").(uint)

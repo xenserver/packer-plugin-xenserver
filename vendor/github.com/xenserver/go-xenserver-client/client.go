@@ -189,6 +189,24 @@ func (client *XenAPIClient) GetVMByNameLabel(name_label string) (vms []*VM, err 
 	return vms, nil
 }
 
+func (client *XenAPIClient) GetVMAll() (vms []*VM, err error) {
+	vms = make([]*VM, 0)
+	result := APIResult{}
+	err = client.APICall(&result, "VM.get_all")
+	if err != nil {
+		return vms, err
+	}
+
+	for _, elem := range result.Value.([]interface{}) {
+		vm := new(VM)
+		vm.Ref = elem.(string)
+		vm.Client = client
+		vms = append(vms, vm)
+	}
+
+	return vms, nil
+}
+
 func (client *XenAPIClient) GetHostByNameLabel(name_label string) (hosts []*Host, err error) {
 	hosts = make([]*Host, 0)
 	result := APIResult{}

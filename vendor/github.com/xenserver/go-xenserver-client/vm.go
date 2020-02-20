@@ -34,6 +34,34 @@ func (self *VM) Copy(new_name string, targetSr *SR) (new_instance *VM, err error
 	return
 }
 
+func (self *VM) Revert(snapshot *VM) (err error) {
+
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VM.revert", snapshot.Ref)
+	if err != nil {
+		return err
+	}
+	return
+}
+
+func (self *VM) GetSnapshots() (vms []*VM, err error) {
+	vms = make([]*VM, 0)
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VM.get_snapshots", self.Ref)
+	if err != nil {
+		return vms, err
+	}
+
+	for _, elem := range result.Value.([]interface{}) {
+		vm := new(VM)
+		vm.Ref = elem.(string)
+		vm.Client = self.Client
+		vms = append(vms, vm)
+	}
+
+	return vms, nil
+}
+
 func (self *VM) Snapshot(label string) (snapshot *VM, err error) {
 	snapshot = new(VM)
 
@@ -215,6 +243,16 @@ func (self *VM) GetPowerState() (state string, err error) {
 	return state, nil
 }
 
+func (self *VM) GetNameLabel() (name string, err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VM.get_name_label", self.Ref)
+	if err != nil {
+		return "", err
+	}
+	name = result.Value.(string)
+	return name, nil
+}
+
 func (self *VM) GetUuid() (uuid string, err error) {
 	result := APIResult{}
 	err = self.Client.APICall(&result, "VM.get_uuid", self.Ref)
@@ -315,6 +353,19 @@ func (self *VM) GetDisks() (vdis []*VDI, err error) {
 		}
 	}
 	return vdis, nil
+}
+
+func (self *VM) GetVMGuestMetrics() (vm_guest_metrics *VM_Guest_Metrics, err error) {
+	result := APIResult{}
+	err = self.Client.APICall(&result, "VM.get_guest_metrics", self.Ref)
+	if err != nil {
+		return nil, nil
+	}
+
+	vm_guest_metrics = new(VM_Guest_Metrics)
+	vm_guest_metrics.Ref = result.Value.(string)
+	vm_guest_metrics.Client = self.Client
+	return vm_guest_metrics, err
 }
 
 func (self *VM) GetGuestMetricsRef() (ref string, err error) {

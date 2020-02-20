@@ -56,8 +56,9 @@ func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConf
 		}
 
 		return &gossh.ClientConfig{
-			User: config.SSHUser,
-			Auth: auth,
+			User:            config.SSHUser,
+			Auth:            auth,
+			HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 		}, nil
 	}
 }
@@ -94,6 +95,7 @@ func ExecuteHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err
 		Auth: []gossh.AuthMethod{
 			gossh.Password(config.Password),
 		},
+		HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 	}
 	return doExecuteSSHCmd(cmd, sshAddress, sshConfig)
 }
@@ -162,6 +164,7 @@ func ssh_port_forward(local_listener net.Listener, remote_port uint, remote_dest
 		Auth: []gossh.AuthMethod{
 			gossh.Password(password),
 		},
+		HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 	}
 
 	for {

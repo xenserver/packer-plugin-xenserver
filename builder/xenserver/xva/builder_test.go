@@ -120,6 +120,7 @@ func TestBuilderPrepare_HTTPPort(t *testing.T) {
 	}
 }
 
+// FIXME: Find a better way to check
 func TestBuilderPrepare_InvalidKey(t *testing.T) {
 	var b Builder
 	config := testConfig()

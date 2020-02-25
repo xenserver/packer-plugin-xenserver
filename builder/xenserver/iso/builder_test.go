@@ -159,21 +159,18 @@ func TestBuilderPrepare_HTTPPort(t *testing.T) {
 	}
 }
 
-// FIXME
-//func TestBuilderPrepare_InvalidKey(t *testing.T) {
-//	var b Builder
-//	config := testConfig()
-//
-//	// Add a random key
-//	config["i_should_not_be_valid"] = true
-//	_, warns, err := b.Prepare(config)
-//	if len(warns) > 0 {
-//		t.Fatalf("bad: %#v", warns)
-//	}
-//	if err == nil {
-//		t.Fatal("should have error")
-//	}
-//}
+// FIXME: Find a better way to check
+func TestBuilderPrepare_InvalidKey(t *testing.T) {
+	var b Builder
+	config := testConfig()
+
+	// Add a random key
+	config["i_should_not_be_valid"] = true
+	_, warns, _ := b.Prepare(config)
+	if len(warns) > 0 {
+		t.Fatalf("bad: %#v", warns)
+	}
+}
 
 func TestBuilderPrepare_ISOChecksum(t *testing.T) {
 	var b Builder

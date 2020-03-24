@@ -21,6 +21,8 @@ type config struct {
 	xscommon.CommonConfig `mapstructure:",squash"`
 
 	SourcePath string `mapstructure:"source_path"`
+	VCPUsMax   uint   `mapstructure:"vcpus_max"`
+	VCPUsAtStartup   uint   `mapstructure:"vcpus_atstartup"`
 	VMMemory   uint   `mapstructure:"vm_memory"`
 
 	PlatformArgs map[string]string `mapstructure:"platform_args"`
@@ -54,6 +56,17 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		errs, self.config.CommonConfig.Prepare(&self.config.ctx, &self.config.PackerConfig)...)
 
 	// Set default values
+	if self.config.VCPUsMax == 0 {
+		self.config.VCPUsMax = 1
+	}
+
+	if self.config.VCPUsAtStartup == 0 {
+		self.config.VCPUsAtStartup = 1
+	}
+
+	if self.config.VCPUsAtStartup > self.config.VCPUsMax {
+		self.config.VCPUsAtStartup = self.config.VCPUsMax
+	}
 
 	if self.config.VMMemory == 0 {
 		self.config.VMMemory = 1024

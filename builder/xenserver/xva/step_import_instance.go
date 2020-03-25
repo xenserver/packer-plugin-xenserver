@@ -60,6 +60,18 @@ func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepActi
 	}
 	state.Put("instance_uuid", instanceId)
 
+	err = instance.SetVCPUsMax(config.VCPUsMax)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting VM VCPUs Max=%d: %s", config.VCPUsMax, err.Error()))
+		return multistep.ActionHalt
+	}
+
+	err = instance.SetVCPUsAtStartup(config.VCPUsAtStartup)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting VM VCPUs At Startup=%d: %s", config.VCPUsAtStartup, err.Error()))
+		return multistep.ActionHalt
+	}
+
 	instance.SetDescription(config.VMDescription)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM description: %s", err.Error()))

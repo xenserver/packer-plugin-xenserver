@@ -8,9 +8,9 @@ You can check out packer [here](https://packer.io).
 
 
 ## Dependencies
-* Packer >= 0.7.2 (https://packer.io)
+* Packer >= 1.5.3 (https://packer.io)
 * XenServer > 6.2 (http://xenserver.org)
-* Golang (tested with 1.2.1) 
+* Golang (tested with 1.13.6)
 
 
 ## Install Go
@@ -23,10 +23,10 @@ Follow these instructions and install golang on your system:
 Clone the Packer repository:
 
 ```shell
-git clone https://github.com/mitchellh/packer.git
+git clone https://github.com/hashicorp/packer.git
 ```
 
-Then follow the [instructions to build and install a development version of Packer](https://github.com/mitchellh/packer#developing-packer).
+Then follow the [instructions to build and install a development version of Packer](https://github.com/hashicorp/packer/blob/master/.github/CONTRIBUTING.md#setting-up-go-to-work-on-packer).
 
 ## Compile the plugin
 

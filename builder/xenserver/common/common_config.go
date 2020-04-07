@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/hashicorp/packer/common"
+	helperssh "github.com/hashicorp/packer/helper/ssh"
+	"github.com/hashicorp/packer/template/interpolate"
 	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/common"
-	commonssh "github.com/mitchellh/packer/common/ssh"
-	"github.com/mitchellh/packer/template/interpolate"
 	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
@@ -163,7 +163,7 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	if c.SSHKeyPath != "" {
 		if _, err := os.Stat(c.SSHKeyPath); err != nil {
 			errs = append(errs, fmt.Errorf("ssh_key_path is invalid: %s", err))
-		} else if _, err := commonssh.FileSigner(c.SSHKeyPath); err != nil {
+		} else if _, err := helperssh.FileSigner(c.SSHKeyPath); err != nil {
 			errs = append(errs, fmt.Errorf("ssh_key_path is invalid: %s", err))
 		}
 	}

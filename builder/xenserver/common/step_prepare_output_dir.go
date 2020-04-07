@@ -3,8 +3,9 @@ package common
 /* Taken from https://raw.githubusercontent.com/mitchellh/packer/master/builder/qemu/step_prepare_output_dir.go */
 
 import (
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"context"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 	"log"
 	"os"
 	"time"
@@ -15,7 +16,7 @@ type StepPrepareOutputDir struct {
 	Path  string
 }
 
-func (self *StepPrepareOutputDir) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepPrepareOutputDir) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 
 	if _, err := os.Stat(self.Path); err == nil && self.Force {

@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"context"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 	"github.com/nilshell/xmlrpc"
 	xsclient "github.com/xenserver/go-xenserver-client"
 )
@@ -15,7 +16,7 @@ type StepWaitForIP struct {
 	Timeout time.Duration
 }
 
-func (self *StepWaitForIP) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	client := state.Get("client").(xsclient.XenAPIClient)
 	config := state.Get("commonconfig").(CommonConfig)

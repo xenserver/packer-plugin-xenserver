@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/mitchellh/packer/helper/communicator"
-	"github.com/mitchellh/packer/template/interpolate"
+	"github.com/hashicorp/packer/helper/communicator"
+	"github.com/hashicorp/packer/template/interpolate"
 )
 
 type SSHConfig struct {
@@ -17,7 +17,7 @@ type SSHConfig struct {
 
 	// These are deprecated, but we keep them around for BC
 	// TODO(@mitchellh): remove
-	SSHKeyPath     string        `mapstructure:"ssh_key_path"`
+	SSHKeyPath     []byte        `mapstructure:"ssh_key_path"`
 	SSHWaitTimeout time.Duration `mapstructure:"ssh_wait_timeout"`
 }
 
@@ -31,7 +31,7 @@ func (c *SSHConfig) Prepare(ctx *interpolate.Context) []error {
 	}
 
 	// TODO: backwards compatibility, write fixer instead
-	if c.SSHKeyPath != "" {
+	if len(c.SSHKeyPath) == 0 {
 		c.Comm.SSHPrivateKey = c.SSHKeyPath
 	}
 	if c.SSHWaitTimeout != 0 {

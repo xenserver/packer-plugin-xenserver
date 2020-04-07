@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"github.com/hashicorp/packer/packer"
 	xsclient "github.com/xenserver/go-xenserver-client"
 	"log"
 	"net/http"

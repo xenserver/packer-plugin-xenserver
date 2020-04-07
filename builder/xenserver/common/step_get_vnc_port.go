@@ -1,15 +1,16 @@
 package common
 
 import (
+	"context"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 	"strconv"
 )
 
 type StepGetVNCPort struct{}
 
-func (self *StepGetVNCPort) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepGetVNCPort) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: forward the instances VNC port over SSH")

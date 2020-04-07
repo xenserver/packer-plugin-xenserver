@@ -2,15 +2,19 @@ package sftp
 
 import (
 	"bytes"
+	"encoding"
 	"encoding/binary"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path"
+	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/kr/fs"
-	"github.com/pkg/errors"
+
 	"golang.org/x/crypto/ssh"
 )
 
@@ -18,7 +22,7 @@ import (
 func MaxPacket(size int) func(*Client) error {
 	return func(c *Client) error {
 		if size < 1<<15 {
-			return errors.Errorf("size must be greater or equal to 32k")
+			return fmt.Errorf("size must be greater or equal to 32k")
 		}
 		c.maxPacket = size
 		return nil
@@ -52,14 +56,11 @@ func NewClient(conn *ssh.Client, opts ...func(*Client) error) (*Client, error) {
 // the system's ssh client program (e.g. via exec.Command).
 func NewClientPipe(rd io.Reader, wr io.WriteCloser, opts ...func(*Client) error) (*Client, error) {
 	sftp := &Client{
-		clientConn: clientConn{
-			conn: conn{
-				Reader:      rd,
-				WriteCloser: wr,
-			},
-			inflight: make(map[uint32]chan<- result),
-		},
-		maxPacket: 1 << 15,
+		w:          wr,
+		r:          rd,
+		maxPacket:  1 << 15,
+		inflight:   make(map[uint32]chan<- result),
+		recvClosed: make(chan struct{}),
 	}
 	if err := sftp.applyOptions(opts...); err != nil {
 		wr.Close()
@@ -73,8 +74,7 @@ func NewClientPipe(rd io.Reader, wr io.WriteCloser, opts ...func(*Client) error)
 		wr.Close()
 		return nil, err
 	}
-	sftp.clientConn.wg.Add(1)
-	go sftp.loop()
+	go sftp.recv()
 	return sftp, nil
 }
 
@@ -84,10 +84,22 @@ func NewClientPipe(rd io.Reader, wr io.WriteCloser, opts ...func(*Client) error)
 //
 // Client implements the github.com/kr/fs.FileSystem interface.
 type Client struct {
-	clientConn
+	w io.WriteCloser
+	r io.Reader
 
 	maxPacket int // max packet size read or written.
 	nextid    uint32
+
+	mu         sync.Mutex               // ensures only on request is in flight to the server at once
+	inflight   map[uint32]chan<- result // outstanding requests
+	recvClosed chan struct{}            // remote end has closed the connection
+}
+
+// Close closes the SFTP session.
+func (c *Client) Close() error {
+	err := c.w.Close()
+	<-c.recvClosed
+	return err
 }
 
 // Create creates the named file mode 0666 (before umask), truncating it if
@@ -100,7 +112,7 @@ func (c *Client) Create(path string) (*File, error) {
 const sftpProtocolVersion = 3 // http://tools.ietf.org/html/draft-ietf-secsh-filexfer-02
 
 func (c *Client) sendInit() error {
-	return c.clientConn.conn.sendPacket(sshFxInitPacket{
+	return sendPacket(c.w, sshFxInitPacket{
 		Version: sftpProtocolVersion, // http://tools.ietf.org/html/draft-ietf-secsh-filexfer-02
 	})
 }
@@ -111,7 +123,7 @@ func (c *Client) nextID() uint32 {
 }
 
 func (c *Client) recvVersion() error {
-	typ, data, err := c.recvPacket()
+	typ, data, err := recvPacket(c.r)
 	if err != nil {
 		return err
 	}
@@ -125,6 +137,46 @@ func (c *Client) recvVersion() error {
 	}
 
 	return nil
+}
+
+// broadcastErr sends an error to all goroutines waiting for a response.
+func (c *Client) broadcastErr(err error) {
+	c.mu.Lock()
+	listeners := make([]chan<- result, 0, len(c.inflight))
+	for _, ch := range c.inflight {
+		listeners = append(listeners, ch)
+	}
+	c.mu.Unlock()
+	for _, ch := range listeners {
+		ch <- result{err: err}
+	}
+}
+
+// recv continuously reads from the server and forwards responses to the
+// appropriate channel.
+func (c *Client) recv() {
+	defer close(c.recvClosed)
+	for {
+		typ, data, err := recvPacket(c.r)
+		if err != nil {
+			// Return the error to all listeners.
+			c.broadcastErr(err)
+			return
+		}
+		sid, _ := unmarshalUint32(data)
+		c.mu.Lock()
+		ch, ok := c.inflight[sid]
+		delete(c.inflight, sid)
+		c.mu.Unlock()
+		if !ok {
+			// This is an unexpected occurrence. Send the error
+			// back to all listeners so that they terminate
+			// gracefully.
+			c.broadcastErr(fmt.Errorf("sid: %v not fond", sid))
+			return
+		}
+		ch <- result{typ: typ, data: data}
+	}
 }
 
 // Walk returns a new Walker rooted at root.
@@ -144,7 +196,7 @@ func (c *Client) ReadDir(p string) ([]os.FileInfo, error) {
 	var done = false
 	for !done {
 		id := c.nextID()
-		typ, data, err1 := c.sendPacket(sshFxpReaddirPacket{
+		typ, data, err1 := c.sendRequest(sshFxpReaddirPacket{
 			ID:     id,
 			Handle: handle,
 		})
@@ -187,7 +239,7 @@ func (c *Client) ReadDir(p string) ([]os.FileInfo, error) {
 
 func (c *Client) opendir(path string) (string, error) {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpOpendirPacket{
+	typ, data, err := c.sendRequest(sshFxpOpendirPacket{
 		ID:   id,
 		Path: path,
 	})
@@ -213,7 +265,7 @@ func (c *Client) opendir(path string) (string, error) {
 // If 'p' is a symbolic link, the returned FileInfo structure describes the referent file.
 func (c *Client) Stat(p string) (os.FileInfo, error) {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpStatPacket{
+	typ, data, err := c.sendRequest(sshFxpStatPacket{
 		ID:   id,
 		Path: p,
 	})
@@ -239,7 +291,7 @@ func (c *Client) Stat(p string) (os.FileInfo, error) {
 // If 'p' is a symbolic link, the returned FileInfo structure describes the symbolic link.
 func (c *Client) Lstat(p string) (os.FileInfo, error) {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpLstatPacket{
+	typ, data, err := c.sendRequest(sshFxpLstatPacket{
 		ID:   id,
 		Path: p,
 	})
@@ -264,7 +316,7 @@ func (c *Client) Lstat(p string) (os.FileInfo, error) {
 // ReadLink reads the target of a symbolic link.
 func (c *Client) ReadLink(p string) (string, error) {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpReadlinkPacket{
+	typ, data, err := c.sendRequest(sshFxpReadlinkPacket{
 		ID:   id,
 		Path: p,
 	})
@@ -293,7 +345,7 @@ func (c *Client) ReadLink(p string) (string, error) {
 // Symlink creates a symbolic link at 'newname', pointing at target 'oldname'
 func (c *Client) Symlink(oldname, newname string) error {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpSymlinkPacket{
+	typ, data, err := c.sendRequest(sshFxpSymlinkPacket{
 		ID:         id,
 		Linkpath:   newname,
 		Targetpath: oldname,
@@ -312,7 +364,7 @@ func (c *Client) Symlink(oldname, newname string) error {
 // setstat is a convience wrapper to allow for changing of various parts of the file descriptor.
 func (c *Client) setstat(path string, flags uint32, attrs interface{}) error {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpSetstatPacket{
+	typ, data, err := c.sendRequest(sshFxpSetstatPacket{
 		ID:    id,
 		Path:  path,
 		Flags: flags,
@@ -378,7 +430,7 @@ func (c *Client) OpenFile(path string, f int) (*File, error) {
 
 func (c *Client) open(path string, pflags uint32) (*File, error) {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpOpenPacket{
+	typ, data, err := c.sendRequest(sshFxpOpenPacket{
 		ID:     id,
 		Path:   path,
 		Pflags: pflags,
@@ -406,7 +458,7 @@ func (c *Client) open(path string, pflags uint32) (*File, error) {
 // immediately after this request has been sent.
 func (c *Client) close(handle string) error {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpClosePacket{
+	typ, data, err := c.sendRequest(sshFxpClosePacket{
 		ID:     id,
 		Handle: handle,
 	})
@@ -423,7 +475,7 @@ func (c *Client) close(handle string) error {
 
 func (c *Client) fstat(handle string) (*FileStat, error) {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpFstatPacket{
+	typ, data, err := c.sendRequest(sshFxpFstatPacket{
 		ID:     id,
 		Handle: handle,
 	})
@@ -452,7 +504,7 @@ func (c *Client) fstat(handle string) (*FileStat, error) {
 func (c *Client) StatVFS(path string) (*StatVFS, error) {
 	// send the StatVFS packet to the server
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpStatvfsPacket{
+	typ, data, err := c.sendRequest(sshFxpStatvfsPacket{
 		ID:   id,
 		Path: path,
 	})
@@ -508,7 +560,7 @@ func (c *Client) Remove(path string) error {
 
 func (c *Client) removeFile(path string) error {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpRemovePacket{
+	typ, data, err := c.sendRequest(sshFxpRemovePacket{
 		ID:       id,
 		Filename: path,
 	})
@@ -525,7 +577,7 @@ func (c *Client) removeFile(path string) error {
 
 func (c *Client) removeDirectory(path string) error {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpRmdirPacket{
+	typ, data, err := c.sendRequest(sshFxpRmdirPacket{
 		ID:   id,
 		Path: path,
 	})
@@ -543,7 +595,7 @@ func (c *Client) removeDirectory(path string) error {
 // Rename renames a file.
 func (c *Client) Rename(oldname, newname string) error {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpRenamePacket{
+	typ, data, err := c.sendRequest(sshFxpRenamePacket{
 		ID:      id,
 		Oldpath: oldname,
 		Newpath: newname,
@@ -561,7 +613,7 @@ func (c *Client) Rename(oldname, newname string) error {
 
 func (c *Client) realpath(path string) (string, error) {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpRealpathPacket{
+	typ, data, err := c.sendRequest(sshFxpRealpathPacket{
 		ID:   id,
 		Path: path,
 	})
@@ -593,12 +645,41 @@ func (c *Client) Getwd() (string, error) {
 	return c.realpath(".")
 }
 
+// result captures the result of receiving the a packet from the server
+type result struct {
+	typ  byte
+	data []byte
+	err  error
+}
+
+type idmarshaler interface {
+	id() uint32
+	encoding.BinaryMarshaler
+}
+
+func (c *Client) sendRequest(p idmarshaler) (byte, []byte, error) {
+	ch := make(chan result, 1)
+	c.dispatchRequest(ch, p)
+	s := <-ch
+	return s.typ, s.data, s.err
+}
+
+func (c *Client) dispatchRequest(ch chan<- result, p idmarshaler) {
+	c.mu.Lock()
+	c.inflight[p.id()] = ch
+	if err := sendPacket(c.w, p); err != nil {
+		delete(c.inflight, p.id())
+		ch <- result{err: err}
+	}
+	c.mu.Unlock()
+}
+
 // Mkdir creates the specified directory. An error will be returned if a file or
 // directory with the specified path already exists, or if the directory's
 // parent folder does not exist (the method cannot create complete paths).
 func (c *Client) Mkdir(path string) error {
 	id := c.nextID()
-	typ, data, err := c.sendPacket(sshFxpMkdirPacket{
+	typ, data, err := c.sendRequest(sshFxpMkdirPacket{
 		ID:   id,
 		Path: path,
 	})
@@ -703,7 +784,7 @@ func (f *File) Read(b []byte) (int, error) {
 			reqID, data := unmarshalUint32(res.data)
 			req, ok := reqs[reqID]
 			if !ok {
-				firstErr = offsetErr{offset: 0, err: errors.Errorf("sid: %v not found", reqID)}
+				firstErr = offsetErr{offset: 0, err: fmt.Errorf("sid: %v not found", reqID)}
 				break
 			}
 			delete(reqs, reqID)
@@ -804,7 +885,7 @@ func (f *File) WriteTo(w io.Writer) (int64, error) {
 			reqID, data := unmarshalUint32(res.data)
 			req, ok := reqs[reqID]
 			if !ok {
-				firstErr = offsetErr{offset: 0, err: errors.Errorf("sid: %v not found", reqID)}
+				firstErr = offsetErr{offset: 0, err: fmt.Errorf("sid: %v not found", reqID)}
 				break
 			}
 			delete(reqs, reqID)
@@ -1085,10 +1166,7 @@ func unmarshalStatus(id uint32, data []byte) error {
 		return &unexpectedIDErr{id, sid}
 	}
 	code, data := unmarshalUint32(data)
-	msg, data, err := unmarshalStringSafe(data)
-	if err != nil {
-		return err
-	}
+	msg, data := unmarshalString(data)
 	lang, _, _ := unmarshalStringSafe(data)
 	return &StatusError{
 		Code: code,

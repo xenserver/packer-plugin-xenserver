@@ -1,10 +1,10 @@
 package iso
 
 import (
+	"context"
 	"fmt"
-
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
@@ -13,10 +13,10 @@ type stepCreateInstance struct {
 	vdi      *xsclient.VDI
 }
 
-func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepAction {
+func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
 	client := state.Get("client").(xsclient.XenAPIClient)
-	config := state.Get("config").(config)
+	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Create Instance")
@@ -201,7 +201,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 }
 
 func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
-	config := state.Get("config").(config)
+	config := state.Get("config").(Config)
 	if config.ShouldKeepVM(state) {
 		return
 	}

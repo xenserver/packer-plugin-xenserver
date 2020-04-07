@@ -3,9 +3,9 @@ package common
 import (
 	"bytes"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	commonssh "github.com/mitchellh/packer/common/ssh"
-	"github.com/mitchellh/packer/communicator/ssh"
+	"github.com/hashicorp/packer/communicator/ssh"
+	"github.com/hashicorp/packer/helper/multistep"
+	helperssh "github.com/hashicorp/packer/helper/ssh"
 	gossh "golang.org/x/crypto/ssh"
 	"io"
 	"log"
@@ -47,7 +47,7 @@ func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConf
 		}
 
 		if config.SSHKeyPath != "" {
-			signer, err := commonssh.FileSigner(config.SSHKeyPath)
+			signer, err := helperssh.FileSigner(config.SSHKeyPath)
 			if err != nil {
 				return nil, err
 			}
@@ -56,8 +56,9 @@ func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConf
 		}
 
 		return &gossh.ClientConfig{
-			User: config.SSHUser,
-			Auth: auth,
+			User:            config.SSHUser,
+			Auth:            auth,
+			HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 		}, nil
 	}
 }
@@ -94,6 +95,7 @@ func ExecuteHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err
 		Auth: []gossh.AuthMethod{
 			gossh.Password(config.Password),
 		},
+		HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 	}
 	return doExecuteSSHCmd(cmd, sshAddress, sshConfig)
 }
@@ -162,6 +164,7 @@ func ssh_port_forward(local_listener net.Listener, remote_port uint, remote_dest
 		Auth: []gossh.AuthMethod{
 			gossh.Password(password),
 		},
+		HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 	}
 
 	for {

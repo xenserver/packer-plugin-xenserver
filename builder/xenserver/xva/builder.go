@@ -45,6 +45,17 @@ func (self *Builder) Prepare(raws ...interface{}) ([]string, []string, error) {
 		errs, self.config.CommonConfig.Prepare(&self.config.ctx, &self.config.PackerConfig)...)
 
 	// Set default values
+	if self.config.VCPUsMax == 0 {
+		self.config.VCPUsMax = 1
+	}
+
+	if self.config.VCPUsAtStartup == 0 {
+		self.config.VCPUsAtStartup = 1
+	}
+
+	if self.config.VCPUsAtStartup > self.config.VCPUsMax {
+		self.config.VCPUsAtStartup = self.config.VCPUsMax
+	}
 
 	if self.config.VMMemory == 0 {
 		self.config.VMMemory = 1024

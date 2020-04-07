@@ -11,8 +11,10 @@ type Config struct {
 	common.PackerConfig   `mapstructure:",squash"`
 	xscommon.CommonConfig `mapstructure:",squash"`
 
-	SourcePath string `mapstructure:"source_path"`
-	VMMemory   uint   `mapstructure:"vm_memory"`
+	SourcePath     string `mapstructure:"source_path"`
+	VCPUsMax       uint   `mapstructure:"vcpus_max"`
+	VCPUsAtStartup uint   `mapstructure:"vcpus_atstartup"`
+	VMMemory       uint   `mapstructure:"vm_memory"`
 
 	PlatformArgs map[string]string `mapstructure:"platform_args"`
 

@@ -40,7 +40,8 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	var errs *packer.MultiError
 
 	err := hconfig.Decode(&self.config, &hconfig.DecodeOpts{
-		Interpolate: true,
+		Interpolate:        true,
+		InterpolateContext: &self.config.ctx,
 		InterpolateFilter: &interpolate.RenderFilter{
 			Exclude: []string{
 				"boot_command",

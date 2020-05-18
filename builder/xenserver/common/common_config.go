@@ -46,6 +46,7 @@ type CommonConfig struct {
 	SSHPassword string `mapstructure:"ssh_password"`
 	SSHPort     uint   `mapstructure:"ssh_port"`
 	SSHUser     string `mapstructure:"ssh_username"`
+	SSHHost     string `mapstructure:"ssh_host"`
 	SSHConfig   `mapstructure:",squash"`
 
 	RawSSHWaitTimeout string `mapstructure:"ssh_wait_timeout"`
@@ -55,6 +56,9 @@ type CommonConfig struct {
 	Format    string `mapstructure:"format"`
 	KeepVM    string `mapstructure:"keep_vm"`
 	IPGetter  string `mapstructure:"ip_getter"`
+
+	DiskBSize  uint   `mapstructure:"diskb_size"`
+	DiskCSize  uint   `mapstructure:"diskc_size"`
 }
 
 func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig) []error {
@@ -197,9 +201,9 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	}
 
 	switch c.IPGetter {
-	case "auto", "tools", "http":
+	case "auto", "tools", "http", "static":
 	default:
-		errs = append(errs, errors.New("ip_getter must be one of 'auto', 'tools', 'http'"))
+		errs = append(errs, errors.New("ip_getter must be one of 'auto', 'tools', 'http', 'static'"))
 	}
 
 	return errs

@@ -287,6 +287,8 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiUuidKey: "tools_vdi_uuid",
 			VdiType:    xsclient.CD,
 		},
+		//Add the extra disks here?
+		new(stepAddDisks),
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepSetVmHostSshAddress),
 		new(xscommon.StepGetVNCPort),

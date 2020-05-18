@@ -66,6 +66,12 @@ func (self *StepWaitForIP) Run(state multistep.StateBag) multistep.StepAction {
 
 			}
 
+            if config.IPGetter == "static" {
+                ip = config.SSHHost
+                ui.Message(fmt.Sprintf("Static IP is defined as '%s'", ip))
+                return true,nil
+            }
+
 			return false, nil
 		},
 	}.Wait(state)

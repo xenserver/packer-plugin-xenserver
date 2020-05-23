@@ -40,6 +40,8 @@ type CommonConfig struct {
 	HTTPPortMin uint   `mapstructure:"http_port_min"`
 	HTTPPortMax uint   `mapstructure:"http_port_max"`
 
+	Communicator string `mapstructure:"communicator"`
+
 	//	SSHHostPortMin    uint   `mapstructure:"ssh_host_port_min"`
 	//	SSHHostPortMax    uint   `mapstructure:"ssh_host_port_max"`
 	SSHKeyPath  string `mapstructure:"ssh_key_path"`
@@ -175,7 +177,7 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 		}
 	*/
 
-	if c.SSHUser == "" {
+	if c.SSHUser == "" && c.Communicator != "winrm" {
 		errs = append(errs, errors.New("An ssh_username must be specified."))
 	}
 

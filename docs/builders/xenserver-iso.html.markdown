@@ -113,10 +113,10 @@ each category, the available options are alphabetized and described.
   characters (\*, ?, and []) are allowed. Directory names are also allowed,
   which will add all the files found in the directory to the floppy.
 
-* `format` (string) - Either "xva", "vdi_raw" or "none", this specifies the
-  output format of the exported virtual machine. This defaults to "xva". Set to
-  "vdi_raw" to export just the raw disk image. Set to "none" to export nothing;
-  this is only useful with "keep_vm" set to "always" or "on_success".
+* `format` (string) - Either "xva", "xva_compressed", "vdi_raw", "vdi_vhd" or "none",
+  this specifies the output format of the exported virtual machine. This defaults
+  to "xva". Set to "vdi_raw" to export just the raw disk image. Set to "none" to export
+  nothing; this is only useful with "keep_vm" set to "always" or "on_success".
 
 * `http_directory` (string) - Path to a directory to serve using an HTTP
   server. The files in this directory will be available over HTTP that will

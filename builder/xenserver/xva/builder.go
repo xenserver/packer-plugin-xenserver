@@ -155,6 +155,10 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiUuidKey: "tools_vdi_uuid",
 			VdiType:    xsclient.CD,
 		},
+		&xscommon.StepExecuteHostScripts{
+			ScriptType:   "pre-boot",
+			LocalScripts: self.config.PreBootHostScripts,
+		},
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepSetVmHostSshAddress),
 		new(xscommon.StepGetVNCPort),
@@ -193,6 +197,10 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		},
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
+		},
+		&xscommon.StepExecuteHostScripts{
+			ScriptType:   "pre-export",
+			LocalScripts: self.config.PreExportHostScripts,
 		},
 		new(xscommon.StepExport),
 	}

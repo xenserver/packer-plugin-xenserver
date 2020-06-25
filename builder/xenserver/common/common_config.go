@@ -14,9 +14,10 @@ import (
 )
 
 type CommonConfig struct {
-	Username string `mapstructure:"remote_username"`
-	Password string `mapstructure:"remote_password"`
-	HostIp   string `mapstructure:"remote_host"`
+	Username   string `mapstructure:"remote_username"`
+	Password   string `mapstructure:"remote_password"`
+	HostIp     string `mapstructure:"remote_host"`
+	XenSSHPort uint   `mapstructure:"remote_ssh_port"`
 
 	VMName             string   `mapstructure:"vm_name"`
 	VMDescription      string   `mapstructure:"vm_description"`
@@ -28,8 +29,10 @@ type CommonConfig struct {
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`
 
-	BootCommand     []string `mapstructure:"boot_command"`
-	ShutdownCommand string   `mapstructure:"shutdown_command"`
+	PreBootHostScripts   []string `mapstructure:"pre_boot_host_scripts"`
+	PreExportHostScripts []string `mapstructure:"pre_export_host_scripts"`
+	BootCommand          []string `mapstructure:"boot_command"`
+	ShutdownCommand      string   `mapstructure:"shutdown_command"`
 
 	RawBootWait string `mapstructure:"boot_wait"`
 	BootWait    time.Duration
@@ -62,6 +65,10 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	var errs []error
 
 	// Set default values
+
+	if c.XenSSHPort == 0 {
+		c.XenSSHPort = 22
+	}
 
 	if c.HostPortMin == 0 {
 		c.HostPortMin = 5900

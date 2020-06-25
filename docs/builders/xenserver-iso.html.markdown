@@ -172,6 +172,19 @@ each category, the available options are alphabetized and described.
 }
 ```
 
+* `pre_boot_host_scripts` (array of strings) - List of scripts to execute on the
+  XenServer host prior to booting the VM. The VM's UUID will be passed into each
+  script as the first parameter. The script can be of any type: bash, python, ruby, etc.
+  Each script must start with a shebang, ie. #!/usr/bin/env bash.
+
+* `pre_export_host_scripts` (array of strings) - List of scripts to execute on the
+  XenServer host prior to exporting the VM. The VM's UUID will be passed into each
+  script as the first parameter. The script can be of any type: bash, python, ruby, etc.
+  Each script must start with a shebang, ie. #!/usr/bin/env bash.
+
+* `remote_ssh_port` (integer) - SSH port of XenServer host. Only useful when using
+  `pre_boot_host_scripts` or `pre_export_host_scripts`. Default is 22.
+
 * `shutdown_command` (string) - The command to use to gracefully shut down
   the machine once all the provisioning is done. By default this is an empty
   string, which tells Packer to just forcefully shut down the machine.

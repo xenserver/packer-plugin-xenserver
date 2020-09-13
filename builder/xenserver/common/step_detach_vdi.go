@@ -2,10 +2,10 @@ package common
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
-	"log"
 )
 
 type StepDetachVdi struct {
@@ -14,7 +14,7 @@ type StepDetachVdi struct {
 
 func (self *StepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(xsclient.XenAPIClient)
+	c := state.Get("client").(*Connection)
 
 	var vdiUuid string
 	if vdiUuidRaw, ok := state.GetOk(self.VdiUuidKey); ok {
@@ -24,20 +24,20 @@ func (self *StepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
 		return multistep.ActionContinue
 	}
 
-	vdi, err := client.GetVdiByUuid(vdiUuid)
+	vdi, err := c.client.VDI.GetByUUID(c.session, vdiUuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VDI from UUID '%s': %s", vdiUuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
 	uuid := state.Get("instance_uuid").(string)
-	instance, err := client.GetVMByUuid(uuid)
+	instance, err := c.client.VM.GetByUUID(c.session, uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
-	err = instance.DisconnectVdi(vdi)
+	err = DisconnectVdi(c, instance, vdi)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to detach VDI '%s': %s", vdiUuid, err.Error()))
 		//return multistep.ActionHalt

@@ -1,0 +1,107 @@
+# github.com/Sirupsen/logrus v0.10.1-0.20160601113210-f3cfb454f4c2
+## explicit
+# github.com/amfranz/go-xmlrpc-client v0.0.0-20190612172737-76858463955d
+github.com/amfranz/go-xmlrpc-client
+# github.com/dylanmei/iso8601 v0.1.0
+## explicit
+github.com/dylanmei/iso8601
+# github.com/dylanmei/winrmtest v0.0.0-20151226195028-025617847eb2
+## explicit
+github.com/dylanmei/winrmtest
+# github.com/hashicorp/errwrap v0.0.0-20141028054710-7554cd9344ce
+## explicit
+github.com/hashicorp/errwrap
+# github.com/hashicorp/go-multierror v0.0.0-20150916205742-d30f09973e19
+## explicit
+github.com/hashicorp/go-multierror
+# github.com/hashicorp/go-version v0.0.0-20160119211326-7e3c02b30806
+## explicit
+github.com/hashicorp/go-version
+# github.com/hashicorp/yamux v0.0.0-20151129044643-df949784da9e
+## explicit
+github.com/hashicorp/yamux
+# github.com/kolo/xmlrpc v0.0.0-20200310150728-e0350524596b
+## explicit
+github.com/kolo/xmlrpc
+# github.com/kr/fs v0.0.0-20131111012553-2788f0dbd169
+## explicit
+github.com/kr/fs
+# github.com/masterzen/simplexml v0.0.0-20140219194429-95ba30457eb1
+## explicit
+github.com/masterzen/simplexml/dom
+# github.com/masterzen/winrm v0.0.0-20151214220635-54ea5d01478c
+## explicit
+github.com/masterzen/winrm/soap
+github.com/masterzen/winrm/winrm
+# github.com/masterzen/xmlpath v0.0.0-20140218185901-13f4951698ad
+## explicit
+github.com/masterzen/xmlpath
+# github.com/mitchellh/go-fs v0.0.0-20150611040906-a34c1b9334e8
+## explicit
+github.com/mitchellh/go-fs
+github.com/mitchellh/go-fs/fat
+# github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
+## explicit
+github.com/mitchellh/go-vnc
+# github.com/mitchellh/iochan v0.0.0-20150529224432-87b45ffd0e95
+## explicit
+github.com/mitchellh/iochan
+# github.com/mitchellh/mapstructure v0.0.0-20150717051158-281073eb9eb0
+## explicit
+github.com/mitchellh/mapstructure
+# github.com/mitchellh/multistep v0.0.0-20140407010115-162146fc5711
+## explicit
+github.com/mitchellh/multistep
+# github.com/mitchellh/osext v0.0.0-20151018003038-5e2d6d41470f
+## explicit
+# github.com/mitchellh/packer v0.10.2-0.20160629004225-63edbd40edc5
+## explicit
+github.com/mitchellh/packer/common
+github.com/mitchellh/packer/common/ssh
+github.com/mitchellh/packer/common/uuid
+github.com/mitchellh/packer/communicator/none
+github.com/mitchellh/packer/communicator/ssh
+github.com/mitchellh/packer/communicator/winrm
+github.com/mitchellh/packer/helper/communicator
+github.com/mitchellh/packer/helper/config
+github.com/mitchellh/packer/packer
+github.com/mitchellh/packer/packer/plugin
+github.com/mitchellh/packer/packer/rpc
+github.com/mitchellh/packer/template
+github.com/mitchellh/packer/template/interpolate
+# github.com/mitchellh/reflectwalk v0.0.0-20150527153153-eecf4c70c626
+## explicit
+github.com/mitchellh/reflectwalk
+# github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e
+## explicit
+# github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
+## explicit
+github.com/nu7hatch/gouuid
+# github.com/packer-community/winrmcp v0.0.0-20160310040704-f1bcf36a69fa
+## explicit
+github.com/packer-community/winrmcp/winrmcp
+# github.com/pkg/sftp v0.0.0-20160118190721-e84cc8c755ca
+## explicit
+github.com/pkg/sftp
+# github.com/satori/go.uuid v0.0.0-20151028231719-d41af8bb6a77
+## explicit
+github.com/satori/go.uuid
+# github.com/stretchr/testify v1.6.1
+## explicit
+# github.com/terra-farm/go-xen-api-client v0.0.1
+## explicit
+github.com/terra-farm/go-xen-api-client
+# github.com/ugorji/go v0.0.0-20151218193438-646ae4a518c1
+## explicit
+github.com/ugorji/go/codec
+# golang.org/x/crypto v0.0.0-20160126184038-1f22c0103821
+## explicit
+golang.org/x/crypto/curve25519
+golang.org/x/crypto/ssh
+golang.org/x/crypto/ssh/agent
+# gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f
+## explicit
+# launchpad.net/gocheck v0.0.0-20140225173054-000000000087
+## explicit
+# launchpad.net/xmlpath v0.0.0-20130614043138-000000000004
+## explicit

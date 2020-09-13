@@ -12,10 +12,10 @@ GOPATH=${GOPATH:-$(go env GOPATH)}
 echo "==> Removing old directory..."
 rm -f bin/*
 rm -rf pkg/*
-rm -rf $GOPATH/pkg/*
+# rm -rf $GOPATH/pkg/*
 mkdir -p bin/
 
-gox \
+~/go/bin/gox \
     -os="${XC_OS}" \
     -arch="${XC_ARCH}" \
     -output "pkg/{{.OS}}_{{.Arch}}/packer-{{.Dir}}" \

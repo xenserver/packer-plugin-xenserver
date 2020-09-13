@@ -2,10 +2,11 @@ package common
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
-	"time"
+	xenapi "github.com/terra-farm/go-xen-api-client"
 )
 
 type StepShutdown struct{}
@@ -13,10 +14,10 @@ type StepShutdown struct{}
 func (StepShutdown) Run(state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(xsclient.XenAPIClient)
+	c := state.Get("client").(*Connection)
 	instance_uuid := state.Get("instance_uuid").(string)
 
-	instance, err := client.GetVMByUuid(instance_uuid)
+	instance, err := c.client.VM.GetByUUID(c.session, instance_uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Could not get VM with UUID '%s': %s", instance_uuid, err.Error()))
 		return multistep.ActionHalt
@@ -39,8 +40,8 @@ func (StepShutdown) Run(state multistep.StateBag) multistep.StepAction {
 
 			err = InterruptibleWait{
 				Predicate: func() (bool, error) {
-					power_state, err := instance.GetPowerState()
-					return power_state == "Halted", err
+					power_state, err := c.client.VM.GetPowerState(c.session, instance)
+					return power_state == xenapi.VMPowerStateHalted, err
 				},
 				PredicateInterval: 5 * time.Second,
 				Timeout:           300 * time.Second,
@@ -54,7 +55,7 @@ func (StepShutdown) Run(state multistep.StateBag) multistep.StepAction {
 		} else {
 			ui.Message("Attempting to cleanly shutdown the VM...")
 
-			err = instance.CleanShutdown()
+			err = c.client.VM.CleanShutdown(c.session, instance)
 			if err != nil {
 				ui.Error(fmt.Sprintf("Could not shut down VM: %s", err.Error()))
 				return false
@@ -66,7 +67,7 @@ func (StepShutdown) Run(state multistep.StateBag) multistep.StepAction {
 
 	if !success {
 		ui.Say("WARNING: Forcing hard shutdown of the VM...")
-		err = instance.HardShutdown()
+		err = c.client.VM.HardShutdown(c.session, instance)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Could not hard shut down VM -- giving up: %s", err.Error()))
 			return multistep.ActionHalt

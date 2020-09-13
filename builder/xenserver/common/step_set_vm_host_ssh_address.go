@@ -2,33 +2,33 @@ package common
 
 import (
 	"fmt"
+
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
 type StepSetVmHostSshAddress struct{}
 
 func (self *StepSetVmHostSshAddress) Run(state multistep.StateBag) multistep.StepAction {
 
-	client := state.Get("client").(xsclient.XenAPIClient)
+	c := state.Get("client").(*Connection)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Set SSH address to VM host IP")
 
 	uuid := state.Get("instance_uuid").(string)
-	instance, err := client.GetVMByUuid(uuid)
+	instance, err := c.client.VM.GetByUUID(c.session, uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
-	host, err := instance.GetResidentOn()
+	host, err := c.client.VM.GetResidentOn(c.session, instance)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM Host for VM '%s': %s", uuid, err.Error()))
 	}
 
-	address, err := host.GetAddress()
+	address, err := c.client.Host.GetAddress(c.session, host)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get address from VM Host: %s", err.Error()))
 	}

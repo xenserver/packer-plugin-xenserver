@@ -4,16 +4,17 @@ package common
 
 import (
 	"fmt"
-	"github.com/mitchellh/go-vnc"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	"github.com/mitchellh/packer/template/interpolate"
 	"log"
 	"net"
 	"strings"
 	"time"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/mitchellh/go-vnc"
+	"github.com/mitchellh/multistep"
+	"github.com/mitchellh/packer/packer"
+	"github.com/mitchellh/packer/template/interpolate"
 )
 
 const KeyLeftShift uint = 0xFFE1
@@ -195,7 +196,9 @@ func vncSendString(c *vnc.ClientConn, original string) {
 		}
 
 		c.KeyEvent(keyCode, true)
+		time.Sleep(time.Second / 10)
 		c.KeyEvent(keyCode, false)
+		time.Sleep(time.Second / 10)
 
 		if keyShift {
 			c.KeyEvent(uint32(KeyLeftShift), false)

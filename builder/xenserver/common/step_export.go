@@ -3,13 +3,13 @@ package common
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
+
+	"github.com/mitchellh/multistep"
+	"github.com/mitchellh/packer/packer"
 )
 
 type StepExport struct{}
@@ -82,33 +82,33 @@ func downloadFile(url, filename string, ui packer.Ui) (err error) {
 func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(xsclient.XenAPIClient)
+	c := state.Get("client").(*Connection)
 	instance_uuid := state.Get("instance_uuid").(string)
 	suffix := ".vhd"
 	extrauri := "&format=vhd"
 
-	instance, err := client.GetVMByUuid(instance_uuid)
+	instance, err := c.client.VM.GetByUUID(c.session, instance_uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Could not get VM with UUID '%s': %s", instance_uuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
 	if len(config.ExportNetworkNames) > 0 {
-		vifs, err := instance.GetVIFs()
+		vifs, err := c.client.VM.GetVIFs(c.session, instance)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Error occured getting VIFs: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 
 		for _, vif := range vifs {
-			err := vif.Destroy()
+			err := c.client.VIF.Destroy(c.session, vif)
 			if err != nil {
-				ui.Error(fmt.Sprintf("Destroy vif fail: '%s': %s", vif.Ref, err.Error()))
+				ui.Error(fmt.Sprintf("Destroy vif fail: '%s': %s", vif, err.Error()))
 				return multistep.ActionHalt
 			}
 		}
 		for i, networkNameLabel := range config.ExportNetworkNames {
-			networks, err := client.GetNetworkByNameLabel(networkNameLabel)
+			networks, err := c.client.Network.GetByNameLabel(c.session, networkNameLabel)
 
 			if err != nil {
 				ui.Error(fmt.Sprintf("Error occured getting Network by name-label: %s", err.Error()))
@@ -126,7 +126,7 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 
 			//we need the VIF index string
 			vifIndexString := fmt.Sprintf("%d", i)
-			_, err = instance.ConnectNetwork(networks[0], vifIndexString)
+			_, err = ConnectNetwork(c, networks[0], instance, vifIndexString)
 
 			if err != nil {
 				ui.Say(err.Error())
@@ -157,10 +157,10 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 		if xe, e := exec.LookPath("xe"); e == nil && use_xe {
 			cmd := exec.Command(
 				xe,
-				"-s", client.Host,
+				"-s", c.Host,
 				"-p", "443",
-				"-u", client.Username,
-				"-pw", client.Password,
+				"-u", c.Username,
+				"-pw", c.Password,
 				"vm-export",
 				"vm="+instance_uuid,
 				compress_option_xe,
@@ -172,10 +172,10 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 			err = cmd.Run()
 		} else {
 			export_url := fmt.Sprintf("https://%s/export?%suuid=%s&session_id=%s",
-				client.Host,
+				c.Host,
 				compress_option_url,
 				instance_uuid,
-				client.Session.(string),
+				c.GetSession(),
 			)
 
 			ui.Say("Getting XVA " + export_url)
@@ -194,28 +194,28 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 	case "vdi_vhd":
 		// export the disks
 
-		disks, err := instance.GetDisks()
+		disks, err := GetDisks(c, instance)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Could not get VM disks: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 		for _, disk := range disks {
-			disk_uuid, err := disk.GetUuid()
+			disk_uuid, err := c.client.VDI.GetUUID(c.session, disk)
 			if err != nil {
 				ui.Error(fmt.Sprintf("Could not get disk with UUID '%s': %s", disk_uuid, err.Error()))
 				return multistep.ActionHalt
 			}
 
 			// Work out XenServer version
-			hosts, err := client.GetHosts()
+			hosts, err := c.client.Host.GetAll(c.session)
 
 			if err != nil {
 				ui.Error(fmt.Sprintf("Could not retrieve hosts in the pool: %s", err.Error()))
 				return multistep.ActionHalt
 			}
 			host := hosts[0]
-			host_software_versions, err := host.GetSoftwareVersion()
-			xs_version := host_software_versions["product_version"].(string)
+			host_software_versions, err := c.client.Host.GetSoftwareVersion(c.session, host)
+			xs_version := host_software_versions["product_version"]
 
 			if err != nil {
 				ui.Error(fmt.Sprintf("Could not get the software version: %s", err.Error()))
@@ -228,7 +228,7 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 			if xs_version <= "6.5.0" && config.Format == "vdi_vhd" {
 				// Export the VHD using a Transfer VM
 
-				disk_export_url, err = disk.Expose("vhd")
+				disk_export_url, err = Expose(c, disk, "vhd")
 
 				if err != nil {
 					ui.Error(fmt.Sprintf("Failed to expose disk %s: %s", disk_uuid, err.Error()))
@@ -242,9 +242,9 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 				// accepted for some reason.
 				// @todo: raise with XAPI team.
 				disk_export_url = fmt.Sprintf("https://%s:%s@%s/export_raw_vdi?vdi=%s%s",
-					client.Username,
-					client.Password,
-					client.Host,
+					c.Username,
+					c.Password,
+					c.Host,
 					disk_uuid,
 					extrauri)
 
@@ -261,7 +261,7 @@ func (StepExport) Run(state multistep.StateBag) multistep.StepAction {
 
 			// Call unexpose in case a TVM was used. The call is harmless
 			// if that is not the case.
-			disk.Unexpose()
+			Unexpose(c, disk)
 
 		}
 

@@ -37,7 +37,7 @@ func init() {
 	}
 
 	ops := make([]string, 0, len(constraintOperators))
-	for k := range constraintOperators {
+	for k, _ := range constraintOperators {
 		ops = append(ops, regexp.QuoteMeta(k))
 	}
 

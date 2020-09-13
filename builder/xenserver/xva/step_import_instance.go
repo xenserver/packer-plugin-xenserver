@@ -6,25 +6,26 @@ import (
 
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
+	xsclient "github.com/terra-farm/go-xen-api-client"
 	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
 
 type stepImportInstance struct {
-	instance *xsclient.VM
-	vdi      *xsclient.VDI
+	instance xsclient.VMRef
+	vdi      xsclient.VDIRef
 }
 
 func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepAction {
 
-	client := state.Get("client").(xsclient.XenAPIClient)
+	c := state.Get("client").(*xscommon.Connection)
 	config := state.Get("config").(config)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Import Instance")
 
 	// find the SR
-	sr, err := config.GetSR(client)
+	srs, err := c.GetClient().SR.GetAll(c.GetSessionRef())
+	sr := srs[0]
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
 		return multistep.ActionHalt
@@ -38,41 +39,41 @@ func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepActi
 	}
 
 	result, err := xscommon.HTTPUpload(fmt.Sprintf("https://%s/import?session_id=%s&sr_id=%s",
-		client.Host,
-		client.Session.(string),
-		sr.Ref,
+		c.Host,
+		c.GetSession(),
+		sr,
 	), fh, state)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to upload VDI: %s", err.Error()))
 		return multistep.ActionHalt
 	}
-	if result == nil {
+	if result == "" {
 		ui.Error("XAPI did not reply with an instance reference")
 		return multistep.ActionHalt
 	}
 
-	instance := xsclient.VM(*result)
+	instance := xsclient.VMRef(result)
 
-	instanceId, err := instance.GetUuid()
+	instanceId, err := c.GetClient().VM.GetUUID(c.GetSessionRef(), instance)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM UUID: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 	state.Put("instance_uuid", instanceId)
 
-	err = instance.SetVCPUsMax(config.VCPUsMax)
+	err = c.GetClient().VM.SetVCPUsMax(c.GetSessionRef(), instance, int(config.VCPUsMax))
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM VCPUs Max=%d: %s", config.VCPUsMax, err.Error()))
 		return multistep.ActionHalt
 	}
 
-	err = instance.SetVCPUsAtStartup(config.VCPUsAtStartup)
+	err = c.GetClient().VM.SetVCPUsAtStartup(c.GetSessionRef(), instance, int(config.VCPUsAtStartup))
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM VCPUs At Startup=%d: %s", config.VCPUsAtStartup, err.Error()))
 		return multistep.ActionHalt
 	}
 
-	instance.SetDescription(config.VMDescription)
+	err = c.GetClient().VM.SetNameDescription(c.GetSessionRef(), instance, config.VMDescription)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM description: %s", err.Error()))
 		return multistep.ActionHalt

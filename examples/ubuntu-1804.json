@@ -1,0 +1,42 @@
+{
+  "builders": [
+    {
+      "type": "xenserver-iso",
+      "tools_iso_name": "guest-tools.iso",
+      "remote_host": "",
+      "remote_username": "root",
+      "remote_password": "",
+
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-1804-minimalvm.cfg<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": 40960,
+      "http_directory": "examples/http",
+      "iso_checksum": "443511f6bf12402c12503733059269a2e10dec602916c0a75263e5d990f6bb93",
+      "iso_checksum_type": "sha256",
+      "iso_url": "https://releases.ubuntu.com/20.04.1/ubuntu-20.04.1-live-server-amd64.iso",
+      "vm_other_config": {
+          "conversionvm":"true"
+      },
+      "network_names": [
+          "Host internal management network",
+          "Pool-wide network associated with eth0"
+      ],
+      "output_directory": "packer-centos-6.6-x86_64-xenserver",
+      "shutdown_command": "/sbin/halt",
+      "ssh_username": "root",
+      "ssh_password": "vmpassword",
+      "ssh_wait_timeout": "10000s",
+      "vm_name": "packer-centos-6.6-x86_64",
+      "vm_description": "Build time: {{isotime}}",
+      "clone_template": "Ubuntu Bionic Beaver 18.04",
+      "disk_size": "20000",
+      "vm_memory": "2048"
+    }
+  ],
+
+  "variables": {
+    "mirror": "http://www.mirrorservice.org/sites/mirror.centos.org"
+  }
+}

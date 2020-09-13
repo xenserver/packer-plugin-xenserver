@@ -10,7 +10,6 @@ import (
 	"github.com/mitchellh/packer/common"
 	commonssh "github.com/mitchellh/packer/common/ssh"
 	"github.com/mitchellh/packer/template/interpolate"
-	xsclient "github.com/xenserver/go-xenserver-client"
 )
 
 type CommonConfig struct {
@@ -219,29 +218,5 @@ func (c CommonConfig) ShouldKeepVM(state multistep.StateBag) bool {
 		return !(cancelled || halted)
 	default:
 		panic(fmt.Sprintf("Unknown keep_vm value '%s'", c.KeepVM))
-	}
-}
-
-func (config CommonConfig) GetSR(client xsclient.XenAPIClient) (*xsclient.SR, error) {
-	if config.SrName == "" {
-		// Find the default SR
-		return client.GetDefaultSR()
-
-	} else {
-		// Use the provided name label to find the SR to use
-		srs, err := client.GetSRByNameLabel(config.SrName)
-
-		if err != nil {
-			return nil, err
-		}
-
-		switch {
-		case len(srs) == 0:
-			return nil, fmt.Errorf("Couldn't find a SR with the specified name-label '%s'", config.SrName)
-		case len(srs) > 1:
-			return nil, fmt.Errorf("Found more than one SR with the name '%s'. The name must be unique", config.SrName)
-		}
-
-		return srs[0], nil
 	}
 }

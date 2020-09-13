@@ -5,17 +5,19 @@ import (
 
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
+	xenapi "github.com/terra-farm/go-xen-api-client"
+	xsclient "github.com/terra-farm/go-xen-api-client"
+	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
 
 type stepCreateInstance struct {
-	instance *xsclient.VM
-	vdi      *xsclient.VDI
+	instance *xsclient.VMRef
+	vdi      *xsclient.VDIRef
 }
 
 func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepAction {
 
-	client := state.Get("client").(xsclient.XenAPIClient)
+	c := state.Get("client").(*xscommon.Connection)
 	config := state.Get("config").(config)
 	ui := state.Get("ui").(packer.Ui)
 
@@ -23,7 +25,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 	// Get the template to clone from
 
-	vms, err := client.GetVMByNameLabel(config.CloneTemplate)
+	vms, err := c.GetClient().VM.GetByNameLabel(c.GetSessionRef(), config.CloneTemplate)
 
 	switch {
 	case len(vms) == 0:
@@ -37,51 +39,51 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	template := vms[0]
 
 	// Clone that VM template
-	instance, err := template.Clone(config.VMName)
+	instance, err := c.GetClient().VM.Clone(c.GetSessionRef(), template, config.VMName)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error cloning VM: %s", err.Error()))
 		return multistep.ActionHalt
 	}
-	self.instance = instance
+	self.instance = &instance
 
-	err = instance.SetIsATemplate(false)
+	err = c.GetClient().VM.SetIsATemplate(c.GetSessionRef(), instance, false)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting is_a_template=false: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 
-	err = instance.SetVCPUsMax(config.VCPUsMax)
+	err = c.GetClient().VM.SetVCPUsMax(c.GetSessionRef(), instance, int(config.VCPUsMax))
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM VCPUs Max=%d: %s", config.VCPUsMax, err.Error()))
 		return multistep.ActionHalt
 	}
 
-	err = instance.SetVCPUsAtStartup(config.VCPUsAtStartup)
+	err = c.GetClient().VM.SetVCPUsAtStartup(c.GetSessionRef(), instance, int(config.VCPUsAtStartup))
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM VCPUs At Startup=%d: %s", config.VCPUsAtStartup, err.Error()))
 		return multistep.ActionHalt
 	}
 
-	err = instance.SetStaticMemoryRange(uint64(config.VMMemory*1024*1024), uint64(config.VMMemory*1024*1024))
-	if err != nil {
-		ui.Error(fmt.Sprintf("Error setting VM memory=%d: %s", config.VMMemory*1024*1024, err.Error()))
-		return multistep.ActionHalt
-	}
+	// err = c.GetClient().VM.SetMemoryStaticRange(c.GetSessionRef(), instance, int(config.VMMemory*1024*1024), int(config.VMMemory*1024*1024))
+	// if err != nil {
+	// 	ui.Error(fmt.Sprintf("Error setting VM memory=%d: %s", config.VMMemory*1024*1024, err.Error()))
+	// 	return multistep.ActionHalt
+	// }
 
-	err = instance.SetPlatform(config.PlatformArgs)
+	err = c.GetClient().VM.SetPlatform(c.GetSessionRef(), instance, config.PlatformArgs)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM platform: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 
-	err = instance.SetDescription(config.VMDescription)
+	err = c.GetClient().VM.SetNameDescription(c.GetSessionRef(), instance, config.VMDescription)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM description: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 
 	if len(config.VMOtherConfig) != 0 {
-		vm_other_config, err := instance.GetOtherConfig()
+		vm_other_config, err := c.GetClient().VM.GetOtherConfig(c.GetSessionRef(), instance)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Error getting VM other-config: %s", err.Error()))
 			return multistep.ActionHalt
@@ -89,7 +91,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		for key, value := range config.VMOtherConfig {
 			vm_other_config[key] = value
 		}
-		err = instance.SetOtherConfig(vm_other_config)
+		err = c.GetClient().VM.SetOtherConfig(c.GetSessionRef(), instance, vm_other_config)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Error setting VM other-config: %s", err.Error()))
 			return multistep.ActionHalt
@@ -98,20 +100,31 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 	// Create VDI for the instance
 
-	sr, err := config.GetSR(client)
+	srs, err := c.GetClient().SR.GetByNameLabel(c.GetSessionRef(), "Local storage")
+	sr := srs[0]
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 
-	vdi, err := sr.CreateVdi("Packer-disk", int64(config.DiskSize*1024*1024))
+	vdi, err := c.GetClient().VDI.Create(c.GetSessionRef(), xenapi.VDIRecord{
+		NameLabel:   "Packer-disk",
+		VirtualSize: int(config.DiskSize * 1024 * 1024),
+		Type:        "user",
+		Sharable:    false,
+		ReadOnly:    false,
+		SR:          sr,
+		OtherConfig: map[string]string{
+			"temp": "temp",
+		},
+	})
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to create packer disk VDI: %s", err.Error()))
 		return multistep.ActionHalt
 	}
-	self.vdi = vdi
+	self.vdi = &vdi
 
-	err = instance.ConnectVdi(vdi, xsclient.Disk, "")
+	err = xscommon.ConnectVdi(c, instance, vdi, xsclient.VbdTypeDisk)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
 		return multistep.ActionHalt
@@ -119,15 +132,11 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 	// Connect Network
 
-	var network *xsclient.Network
+	var network xsclient.NetworkRef
 
 	if len(config.NetworkNames) == 0 {
 		// No network has be specified. Use the management interface
-		network = new(xsclient.Network)
-		network.Ref = ""
-		network.Client = &client
-
-		pifs, err := client.GetPIFs()
+		pifs, err := c.GetClient().PIF.GetAll(c.GetSessionRef())
 
 		if err != nil {
 			ui.Error(fmt.Sprintf("Error getting PIFs: %s", err.Error()))
@@ -135,25 +144,25 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		}
 
 		for _, pif := range pifs {
-			pif_rec, err := pif.GetRecord()
+			pif_rec, err := c.GetClient().PIF.GetRecord(c.GetSessionRef(), pif)
 
 			if err != nil {
 				ui.Error(fmt.Sprintf("Error getting PIF record: %s", err.Error()))
 				return multistep.ActionHalt
 			}
 
-			if pif_rec["management"].(bool) {
-				network.Ref = pif_rec["network"].(string)
+			if pif_rec.Management {
+				network = pif_rec.Network
 			}
 
 		}
 
-		if network.Ref == "" {
+		if string(network) == "" {
 			ui.Error("Error: couldn't find management network. Aborting.")
 			return multistep.ActionHalt
 		}
 
-		_, err = instance.ConnectNetwork(network, "0")
+		_, err = xscommon.ConnectNetwork(c, network, instance, "0")
 
 		if err != nil {
 			ui.Say(err.Error())
@@ -162,7 +171,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	} else {
 		// Look up each network by it's name label
 		for i, networkNameLabel := range config.NetworkNames {
-			networks, err := client.GetNetworkByNameLabel(networkNameLabel)
+			networks, err := c.GetClient().Network.GetByNameLabel(c.GetSessionRef(), networkNameLabel)
 
 			if err != nil {
 				ui.Error(fmt.Sprintf("Error occured getting Network by name-label: %s", err.Error()))
@@ -180,15 +189,15 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 			//we need the VIF index string
 			vifIndexString := fmt.Sprintf("%d", i)
-			_, err = instance.ConnectNetwork(networks[0], vifIndexString)
+			_, err = xscommon.ConnectNetwork(c, networks[0], instance, vifIndexString)
 
 			if err != nil {
-				ui.Say(err.Error())
+				ui.Say(fmt.Sprintf("Failed to connect VIF with error: %v", err.Error()))
 			}
 		}
 	}
 
-	instanceId, err := instance.GetUuid()
+	instanceId, err := c.GetClient().VM.GetUUID(c.GetSessionRef(), instance)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM UUID: %s", err.Error()))
 		return multistep.ActionHalt
@@ -207,11 +216,12 @@ func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
 	}
 
 	ui := state.Get("ui").(packer.Ui)
+	c := state.Get("client").(*xscommon.Connection)
 
 	if self.instance != nil {
 		ui.Say("Destroying VM")
-		_ = self.instance.HardShutdown() // redundant, just in case
-		err := self.instance.Destroy()
+		_ = c.GetClient().VM.HardShutdown(c.GetSessionRef(), *self.instance) // redundant, just in case
+		err := c.GetClient().VM.Destroy(c.GetSessionRef(), *self.instance)
 		if err != nil {
 			ui.Error(err.Error())
 		}
@@ -219,7 +229,7 @@ func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
 
 	if self.vdi != nil {
 		ui.Say("Destroying VDI")
-		err := self.vdi.Destroy()
+		err := c.GetClient().VDI.Destroy(c.GetSessionRef(), *self.vdi)
 		if err != nil {
 			ui.Error(err.Error())
 		}

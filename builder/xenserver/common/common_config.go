@@ -51,6 +51,8 @@ type CommonConfig struct {
 	RawSSHWaitTimeout string `mapstructure:"ssh_wait_timeout"`
 	SSHWaitTimeout    time.Duration
 
+	ConvertToTemplate bool `mapstructure:"convert_to_template"`
+
 	OutputDir string `mapstructure:"output_directory"`
 	Format    string `mapstructure:"format"`
 	KeepVM    string `mapstructure:"keep_vm"`

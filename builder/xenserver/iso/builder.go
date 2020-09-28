@@ -332,6 +332,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
+		new(xscommon.StepConvertToTemplate),
 		new(xscommon.StepExport),
 	}
 

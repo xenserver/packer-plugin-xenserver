@@ -22,19 +22,35 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	ui.Say("Step: Create Instance")
 
 	// Get the template to clone from
+	var template *xsclient.VM
+	var err error
 
-	vms, err := client.GetVMByNameLabel(config.CloneTemplate)
+	if len(config.CloneTemplate) >= 7 && config.CloneTemplate[:7] == "uuid://" {
+		templateUuid := config.CloneTemplate[7:]
 
-	switch {
-	case len(vms) == 0:
-		ui.Error(fmt.Sprintf("Couldn't find a template with the name-label '%s'. Aborting.", config.CloneTemplate))
-		return multistep.ActionHalt
-	case len(vms) > 1:
-		ui.Error(fmt.Sprintf("Found more than one template with the name '%s'. The name must be unique. Aborting.", config.CloneTemplate))
-		return multistep.ActionHalt
+		template, err = client.GetVMByUuid(templateUuid)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Could not get template with UUID '%s': %s", templateUuid, err.Error()))
+			return multistep.ActionHalt
+		}
+	} else {
+		templates, err := client.GetVMByNameLabel(config.CloneTemplate)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Error getting template: %s", err.Error()))
+			return multistep.ActionHalt
+		}
+
+		switch {
+		case len(templates) == 0:
+			ui.Error(fmt.Sprintf("Couldn't find a template with the name-label '%s'.", config.CloneTemplate))
+			return multistep.ActionHalt
+		case len(templates) > 1:
+			ui.Error(fmt.Sprintf("Found more than one template with the name '%s'. The name must be unique. Aborting.", config.CloneTemplate))
+			return multistep.ActionHalt
+		}
+
+		template = templates[0]
 	}
-
-	template := vms[0]
 
 	// Clone that VM template
 	instance, err := template.Clone(config.VMName)

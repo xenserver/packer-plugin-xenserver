@@ -98,7 +98,8 @@ each category, the available options are alphabetized and described.
   media", this is "other", but you can get _dramatic_ performance improvements
   by setting this to the proper value. To view all available values for this
   run `xe template-list`. Setting the correct value hints to XenServer how to
-  optimize the virtual hardware to work best with that operating system.
+  optimize the virtual hardware to work best with that operating system. Setting
+  this to a template's UUID is also acceptable: "uuid://c6a9dee0-0069-24a5-d45d-4a4101a9d7f4".
 
 * `disk_size` (integer) - The size, in megabytes, of the hard disk to create
   for the VM. By default, this is 40000 (about 40 GB).

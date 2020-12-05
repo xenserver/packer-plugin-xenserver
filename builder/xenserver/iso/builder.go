@@ -271,6 +271,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiUuidKey: "isoname_vdi_uuid",
 		},
 		new(stepCreateInstance),
+		new(xscommon.StepConfigureNetworking),
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 			VdiType:    xsclient.Floppy,

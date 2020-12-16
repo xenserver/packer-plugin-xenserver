@@ -64,11 +64,12 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		return multistep.ActionHalt
 	}
 
-	// err = c.GetClient().VM.SetMemoryStaticRange(c.GetSessionRef(), instance, int(config.VMMemory*1024*1024), int(config.VMMemory*1024*1024))
-	// if err != nil {
-	// 	ui.Error(fmt.Sprintf("Error setting VM memory=%d: %s", config.VMMemory*1024*1024, err.Error()))
-	// 	return multistep.ActionHalt
-	// }
+	memory := int(config.VMMemory * 1024 * 1024)
+	err = c.GetClient().VM.SetMemoryLimits(c.GetSessionRef(), instance, memory, memory, memory, memory)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error setting VM memory=%d: %s", memory, err.Error()))
+		return multistep.ActionHalt
+	}
 
 	err = c.GetClient().VM.SetPlatform(c.GetSessionRef(), instance, config.PlatformArgs)
 	if err != nil {

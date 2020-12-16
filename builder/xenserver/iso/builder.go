@@ -287,14 +287,13 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		},
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepSetVmHostSshAddress),
-		new(xscommon.StepGetVNCPort),
-		&xscommon.StepForwardPortOverSSH{
-			RemotePort:  xscommon.InstanceVNCPort,
-			RemoteDest:  xscommon.InstanceVNCIP,
-			HostPortMin: self.config.HostPortMin,
-			HostPortMax: self.config.HostPortMax,
-			ResultKey:   "local_vnc_port",
-		},
+		// &xscommon.StepForwardPortOverSSH{
+		// 	RemotePort:  xscommon.InstanceVNCPort,
+		// 	RemoteDest:  xscommon.InstanceVNCIP,
+		// 	HostPortMin: self.config.HostPortMin,
+		// 	HostPortMax: self.config.HostPortMax,
+		// 	ResultKey:   "local_vnc_port",
+		// },
 		new(xscommon.StepBootWait),
 		&xscommon.StepTypeBootCommand{
 			Ctx: self.config.ctx,

@@ -3,7 +3,9 @@ package common
 /* Heavily borrowed from builder/quemu/step_type_boot_command.go */
 
 import (
+	"crypto/tls"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"strings"
@@ -32,18 +34,46 @@ type StepTypeBootCommand struct {
 func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
-	vnc_port := state.Get("local_vnc_port").(uint)
-	http_port := state.Get("http_port").(uint)
+	c := state.Get("client").(*Connection)
+	httpPort := state.Get("http_port").(uint)
 
 	// skip this step if we have nothing to type
 	if len(config.BootCommand) == 0 {
 		return multistep.ActionContinue
 	}
 
-	// Connect to the local VNC port as we have set up a SSH port forward
-	ui.Say("Connecting to the VM over VNC")
-	ui.Message(fmt.Sprintf("Using local port: %d", vnc_port))
-	net_conn, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", vnc_port))
+	vmRef, err := c.client.VM.GetByNameLabel(c.session, config.VMName)
+
+	if err != nil {
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
+
+	if len(vmRef) != 1 {
+		ui.Error(fmt.Sprintf("expected to find a single VM, instead found '%d'. Ensure the VM name is unique", len(vmRef)))
+	}
+
+	consoles, err := c.client.VM.GetConsoles(c.session, vmRef[0])
+	if err != nil {
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
+
+	if len(consoles) != 1 {
+		ui.Error(fmt.Sprintf("expected to find a VM console, instead found '%d'. Ensure there is only one console", len(consoles)))
+		return multistep.ActionHalt
+	}
+
+	location, err := c.client.Console.GetLocation(c.session, consoles[0])
+	if err != nil {
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
+
+	ui.Say("Connecting to the VM console VNC over xapi")
+	conn, err := net.Dial("tcp", fmt.Sprintf("%s:443", config.HostIp))
 
 	if err != nil {
 		err := fmt.Errorf("Error connecting to VNC: %s", err)
@@ -52,9 +82,40 @@ func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 		return multistep.ActionHalt
 	}
 
-	defer net_conn.Close()
+	defer conn.Close()
 
-	c, err := vnc.Client(net_conn, &vnc.ClientConfig{Exclusive: true})
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	tlsConn := tls.Client(conn, tlsConfig)
+
+	locationPieces := strings.SplitAfter(location, "/")
+	consoleLocation := strings.TrimSpace(fmt.Sprintf("/%s", locationPieces[len(locationPieces)-1]))
+	httpReq := fmt.Sprintf("CONNECT %s HTTP/1.0\r\nCookie: session_id=%s\r\n\r\n", consoleLocation, c.session)
+	fmt.Printf("Sending the follow http req: %v", httpReq)
+
+	ui.Say(fmt.Sprintf("Making HTTP request to initiate VNC connection: %s", httpReq))
+	_, err = io.WriteString(tlsConn, httpReq)
+
+	if err != nil {
+		err := fmt.Errorf("failed to start vnc session: %v", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
+
+	buffer := make([]byte, 10000)
+	_, err = tlsConn.Read(buffer)
+	if err != nil && err != io.EOF {
+		err := fmt.Errorf("failed to read vnc session response: %v", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
+
+	ui.Say(fmt.Sprintf("Received response: %s", string(buffer)))
+
+	vncClient, err := vnc.Client(tlsConn, &vnc.ClientConfig{Exclusive: true})
 
 	if err != nil {
 		err := fmt.Errorf("Error establishing VNC session: %s", err)
@@ -63,9 +124,9 @@ func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 		return multistep.ActionHalt
 	}
 
-	defer c.Close()
+	defer vncClient.Close()
 
-	log.Printf("Connected to the VNC console: %s", c.DesktopName)
+	log.Printf("Connected to the VNC console: %s", vncClient.DesktopName)
 
 	// find local ip
 	envVar, err := ExecuteHostSSHCmd(state, "echo $SSH_CLIENT")
@@ -83,7 +144,7 @@ func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 	self.Ctx.Data = &bootCommandTemplateData{
 		config.VMName,
 		localIp,
-		http_port,
+		httpPort,
 	}
 
 	ui.Say("Typing boot commands over VNC...")
@@ -102,7 +163,7 @@ func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 			return multistep.ActionHalt
 		}
 
-		vncSendString(c, command)
+		vncSendString(vncClient, command)
 	}
 
 	ui.Say("Finished typing.")

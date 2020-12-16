@@ -4,3 +4,4 @@ bin
 pkg
 crash.log
 packer_cache/*
+builder-*

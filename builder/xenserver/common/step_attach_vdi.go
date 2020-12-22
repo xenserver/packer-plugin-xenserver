@@ -20,6 +20,7 @@ func (self *StepAttachVdi) Run(state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
 
+	log.Printf("Running attach vdi for key %s\n", self.VdiUuidKey)
 	var vdiUuid string
 	if vdiUuidRaw, ok := state.GetOk(self.VdiUuidKey); ok {
 		vdiUuid = vdiUuidRaw.(string)

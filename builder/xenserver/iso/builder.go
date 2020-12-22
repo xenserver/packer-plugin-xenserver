@@ -317,6 +317,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		},
 		new(common.StepProvision),
 		new(xscommon.StepShutdown),
+		new(xscommon.StepSetVmToTemplate),
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "iso_vdi_uuid",
 		},

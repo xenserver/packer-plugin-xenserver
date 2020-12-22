@@ -2,6 +2,7 @@ package iso
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
@@ -100,13 +101,14 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 	}
 
 	// Create VDI for the instance
+	sr, err := config.GetSR(c)
 
-	srs, err := c.GetClient().SR.GetByNameLabel(c.GetSessionRef(), "Local storage")
-	sr := srs[0]
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
 		return multistep.ActionHalt
 	}
+
+	ui.Say(fmt.Sprintf("Using the following SR for the VM: %s", sr.NameLabel))
 
 	vdi, err := c.GetClient().VDI.Create(c.GetSessionRef(), xenapi.VDIRecord{
 		NameLabel:   "Packer-disk",
@@ -114,7 +116,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		Type:        "user",
 		Sharable:    false,
 		ReadOnly:    false,
-		SR:          sr,
+		SR:          xenapi.SRRef(sr.UUID),
 		OtherConfig: map[string]string{
 			"temp": "temp",
 		},
@@ -137,6 +139,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 
 	if len(config.NetworkNames) == 0 {
 		// No network has be specified. Use the management interface
+		log.Println("No network name given, attempting to use management interface")
 		pifs, err := c.GetClient().PIF.GetAll(c.GetSessionRef())
 
 		if err != nil {
@@ -163,6 +166,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 			return multistep.ActionHalt
 		}
 
+		log.Printf("Creating VIF on network '%s' on VM '%s'\n", network, instance)
 		_, err = xscommon.ConnectNetwork(c, network, instance, "0")
 
 		if err != nil {
@@ -170,6 +174,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		}
 
 	} else {
+		log.Printf("Using provided network names: %v\n", config.NetworkNames)
 		// Look up each network by it's name label
 		for i, networkNameLabel := range config.NetworkNames {
 			networks, err := c.GetClient().Network.GetByNameLabel(c.GetSessionRef(), networkNameLabel)

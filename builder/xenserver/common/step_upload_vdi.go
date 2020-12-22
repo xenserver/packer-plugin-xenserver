@@ -18,6 +18,7 @@ type StepUploadVdi struct {
 }
 
 func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
+	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
 
@@ -34,19 +35,10 @@ func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 	srs, err := c.client.SR.GetAll(c.session)
 	ui.Say(fmt.Sprintf("Step: Found SRs '%v'", srs))
 
-	// TODO (ddelnano): This must be changed to match the ISO Storage repository available
-	nameLabel := "LocalISO"
-	// nameLabel := "ISOs"
-	srs, err = c.client.SR.GetByNameLabel(c.session, nameLabel)
+	sr, err := config.GetISOSR(c)
 
-	if len(srs) != 1 {
-		ui.Error(fmt.Sprintf("expected to find a single storage repository with name '%s', instead found '%d' storage repositories", nameLabel, len(srs)))
-	}
-
-	sr := srs[0]
-	ui.Say(fmt.Sprintf("Step: Found SRs '%v' Choosing: '%v'", srs, sr))
 	if err != nil {
-		ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
+		ui.Error(fmt.Sprintf("Unable to get SR: %v", err))
 		return multistep.ActionHalt
 	}
 

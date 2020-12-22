@@ -61,7 +61,6 @@ func (self *StepAttachVdi) Cleanup(state multistep.StateBag) {
 		return
 	}
 
-	// TODO: What the fuck does this mean?
 	if self.vdi == "" {
 		return
 	}

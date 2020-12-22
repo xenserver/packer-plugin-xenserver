@@ -108,7 +108,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		return multistep.ActionHalt
 	}
 
-	ui.Say(fmt.Sprintf("Using the following SR for the VM: %s", sr.NameLabel))
+	ui.Say(fmt.Sprintf("Using the following SR for the VM: %s", sr))
 
 	vdi, err := c.GetClient().VDI.Create(c.GetSessionRef(), xenapi.VDIRecord{
 		NameLabel:   "Packer-disk",
@@ -116,7 +116,7 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		Type:        "user",
 		Sharable:    false,
 		ReadOnly:    false,
-		SR:          xenapi.SRRef(sr.UUID),
+		SR:          sr,
 		OtherConfig: map[string]string{
 			"temp": "temp",
 		},

@@ -2,9 +2,10 @@ package common
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/mitchellh/multistep"
 	"github.com/mitchellh/packer/packer"
-	"strconv"
 )
 
 type StepGetVNCPort struct{}
@@ -14,8 +15,8 @@ func (self *StepGetVNCPort) Run(state multistep.StateBag) multistep.StepAction {
 
 	ui.Say("Step: forward the instances VNC port over SSH")
 
-	domid := state.Get("domid").(string)
-	cmd := fmt.Sprintf("xenstore-read /local/domain/%s/console/vnc-port", domid)
+	domid := state.Get("domid").(int)
+	cmd := fmt.Sprintf("xenstore-read /local/domain/%d/console/vnc-port", domid)
 
 	remote_vncport, err := ExecuteHostSSHCmd(state, cmd)
 	if err != nil {

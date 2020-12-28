@@ -2,12 +2,12 @@ package common
 
 import (
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
-	gossh "golang.org/x/crypto/ssh"
 	"log"
 	"time"
+
+	"github.com/mitchellh/multistep"
+	"github.com/mitchellh/packer/packer"
+	gossh "golang.org/x/crypto/ssh"
 )
 
 type StepStartOnHIMN struct{}
@@ -23,19 +23,19 @@ type StepStartOnHIMN struct{}
 func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction {
 
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(xsclient.XenAPIClient)
+	c := state.Get("client").(*Connection)
 
 	ui.Say("Step: Start VM on the Host Internal Mangement Network")
 
 	uuid := state.Get("instance_uuid").(string)
-	instance, err := client.GetVMByUuid(uuid)
+	instance, err := c.client.VM.GetByUUID(c.session, uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
 	// Find the HIMN Ref
-	networks, err := client.GetNetworkByNameLabel("Host internal management network")
+	networks, err := c.client.Network.GetByNameLabel(c.session, "Host internal management network")
 	if err != nil || len(networks) == 0 {
 		ui.Error("Unable to find a host internal management network")
 		ui.Error(err.Error())
@@ -45,7 +45,7 @@ func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	himn := networks[0]
 
 	// Create a VIF for the HIMN
-	himn_vif, err := instance.ConnectNetwork(himn, "0")
+	himn_vif, err := ConnectNetwork(c, himn, instance, "0")
 	if err != nil {
 		ui.Error("Error creating VIF")
 		ui.Error(err.Error())
@@ -53,22 +53,22 @@ func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	}
 
 	// Start the VM
-	instance.Start(false, false)
+	c.client.VM.Start(c.session, instance, false, false)
 
 	var himn_iface_ip string = ""
 
 	// Obtain the allocated IP
 	err = InterruptibleWait{
 		Predicate: func() (found bool, err error) {
-			ips, err := himn.GetAssignedIPs()
+			ips, err := c.client.Network.GetAssignedIps(c.session, himn)
 			if err != nil {
 				return false, fmt.Errorf("Can't get assigned IPs: %s", err.Error())
 			}
 			log.Printf("IPs: %s", ips)
-			log.Printf("Ref: %s", instance.Ref)
+			log.Printf("Ref: %s", instance)
 
 			//Check for instance.Ref in map
-			if vm_ip, ok := ips[himn_vif.Ref]; ok && vm_ip != "" {
+			if vm_ip, ok := ips[*himn_vif]; ok && vm_ip != "" {
 				ui.Say("Found the VM's IP: " + vm_ip)
 				himn_iface_ip = vm_ip
 				return true, nil

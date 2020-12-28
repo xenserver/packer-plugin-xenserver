@@ -10,8 +10,7 @@ description: |-
 Type: `xenserver-iso`
 
 The XenServer Packer builder is able to create [XenServer](https://www.xenserver.org/)
-virtual machines and export them either as an XVA or a VDI, starting from an
-ISO image.
+virtual machines and export them either as an XVA or a VDI and create VM templates starting from an ISO image.
 
 The builder builds a virtual machine by creating a new virtual machine
 from scratch, booting it, installing an OS, provisioning software within

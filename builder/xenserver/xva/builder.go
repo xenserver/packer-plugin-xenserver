@@ -12,7 +12,7 @@ import (
 	hconfig "github.com/mitchellh/packer/helper/config"
 	"github.com/mitchellh/packer/packer"
 	"github.com/mitchellh/packer/template/interpolate"
-	xsclient "github.com/xenserver/go-xenserver-client"
+	xsclient "github.com/terra-farm/go-xen-api-client"
 	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
 
@@ -20,10 +20,10 @@ type config struct {
 	common.PackerConfig   `mapstructure:",squash"`
 	xscommon.CommonConfig `mapstructure:",squash"`
 
-	SourcePath string `mapstructure:"source_path"`
-	VCPUsMax   uint   `mapstructure:"vcpus_max"`
-	VCPUsAtStartup   uint   `mapstructure:"vcpus_atstartup"`
-	VMMemory   uint   `mapstructure:"vm_memory"`
+	SourcePath     string `mapstructure:"source_path"`
+	VCPUsMax       uint   `mapstructure:"vcpus_max"`
+	VCPUsAtStartup uint   `mapstructure:"vcpus_atstartup"`
+	VMMemory       uint   `mapstructure:"vm_memory"`
 
 	PlatformArgs map[string]string `mapstructure:"platform_args"`
 
@@ -99,21 +99,21 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 
 func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packer.Artifact, error) {
 	//Setup XAPI client
-	client := xsclient.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
+	c, err := xscommon.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
 
-	err := client.Login()
 	if err != nil {
-		return nil, err.(error)
+		return nil, err
 	}
+
 	ui.Say("XAPI client session established")
 
-	client.GetHosts()
+	c.GetClient().Host.GetAll(c.GetSessionRef())
 
 	//Share state between the other steps using a statebag
 	state := new(multistep.BasicStateBag)
 	state.Put("cache", cache)
-	state.Put("client", client)
-	state.Put("config", self.config)
+	state.Put("client", c)
+	// state.Put("config", self.config)
 	state.Put("commonconfig", self.config.CommonConfig)
 	state.Put("hook", hook)
 	state.Put("ui", ui)
@@ -149,22 +149,14 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		new(stepImportInstance),
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
-			VdiType:    xsclient.Floppy,
+			VdiType:    xsclient.VbdTypeFloppy,
 		},
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
-			VdiType:    xsclient.CD,
+			VdiType:    xsclient.VbdTypeCD,
 		},
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepSetVmHostSshAddress),
-		new(xscommon.StepGetVNCPort),
-		&xscommon.StepForwardPortOverSSH{
-			RemotePort:  xscommon.InstanceVNCPort,
-			RemoteDest:  xscommon.InstanceVNCIP,
-			HostPortMin: self.config.HostPortMin,
-			HostPortMax: self.config.HostPortMax,
-			ResultKey:   "local_vnc_port",
-		},
 		new(xscommon.StepBootWait),
 		&xscommon.StepTypeBootCommand{
 			Ctx: self.config.ctx,
@@ -172,13 +164,6 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		&xscommon.StepWaitForIP{
 			Chan:    httpReqChan,
 			Timeout: 300 * time.Minute, /*self.config.InstallTimeout*/ // @todo change this
-		},
-		&xscommon.StepForwardPortOverSSH{
-			RemotePort:  xscommon.InstanceSSHPort,
-			RemoteDest:  xscommon.InstanceSSHIP,
-			HostPortMin: self.config.HostPortMin,
-			HostPortMax: self.config.HostPortMax,
-			ResultKey:   "local_ssh_port",
 		},
 		&communicator.StepConnect{
 			Config:    &self.config.SSHConfig.Comm,

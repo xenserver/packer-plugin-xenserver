@@ -1,9 +1,10 @@
 package iso
 
 import (
-	"github.com/mitchellh/packer/packer"
 	"reflect"
 	"testing"
+
+	"github.com/mitchellh/packer/packer"
 )
 
 func testConfig() map[string]interface{} {
@@ -90,7 +91,7 @@ func TestBuilderPrepare_DiskSize(t *testing.T) {
 	}
 
 	if b.config.DiskSize != 60000 {
-		t.Fatalf("bad size: %s", b.config.DiskSize)
+		t.Fatalf("bad size: %d", b.config.DiskSize)
 	}
 }
 

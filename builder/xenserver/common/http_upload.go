@@ -3,14 +3,15 @@ package common
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
+
+	"github.com/mitchellh/multistep"
+	"github.com/mitchellh/packer/packer"
+	xsclient "github.com/terra-farm/go-xen-api-client"
 )
 
 func appendQuery(urlstring, k, v string) (string, error) {
@@ -24,18 +25,18 @@ func appendQuery(urlstring, k, v string) (string, error) {
 	return u.String(), err
 }
 
-func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (result *xsclient.XenAPIObject, err error) {
+func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (result string, err error) {
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(xsclient.XenAPIClient)
+	c := state.Get("client").(*Connection)
 
-	task, err := client.CreateTask()
+	task, err := c.client.Task.Create(c.session, "packer-task", "Packer task")
 	if err != nil {
 		err = fmt.Errorf("Unable to create task: %s", err.Error())
 		return
 	}
-	defer task.Destroy()
+	defer c.client.Task.Destroy(c.session, task)
 
-	import_task_url, err := appendQuery(import_url, "task_id", task.Ref)
+	import_task_url, err := appendQuery(import_url, "task_id", string(task))
 	if err != nil {
 		return
 	}
@@ -75,13 +76,13 @@ func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (resul
 	logIteration := 0
 	err = InterruptibleWait{
 		Predicate: func() (bool, error) {
-			status, err := task.GetStatus()
+			status, err := c.client.Task.GetStatus(c.session, task)
 			if err != nil {
 				return false, fmt.Errorf("Failed to get task status: %s", err.Error())
 			}
 			switch status {
-			case xsclient.Pending:
-				progress, err := task.GetProgress()
+			case xsclient.TaskStatusTypePending:
+				progress, err := c.client.Task.GetProgress(c.session, task)
 				if err != nil {
 					return false, fmt.Errorf("Failed to get progress: %s", err.Error())
 				}
@@ -90,15 +91,15 @@ func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (resul
 					log.Printf("Upload %.0f%% complete", progress*100)
 				}
 				return false, nil
-			case xsclient.Success:
+			case xsclient.TaskStatusTypeSuccess:
 				return true, nil
-			case xsclient.Failure:
-				errorInfo, err := task.GetErrorInfo()
+			case xsclient.TaskStatusTypeFailure:
+				errorInfo, err := c.client.Task.GetErrorInfo(c.session, task)
 				if err != nil {
 					errorInfo = []string{fmt.Sprintf("furthermore, failed to get error info: %s", err.Error())}
 				}
 				return false, fmt.Errorf("Task failed: %s", errorInfo)
-			case xsclient.Cancelling, xsclient.Cancelled:
+			case xsclient.TaskStatusTypeCancelling, xsclient.TaskStatusTypeCancelled:
 				return false, fmt.Errorf("Task cancelled")
 			default:
 				return false, fmt.Errorf("Unknown task status %v", status)
@@ -115,7 +116,7 @@ func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (resul
 		return
 	}
 
-	result, err = task.GetResult()
+	result, err = c.client.Task.GetResult(c.session, task)
 	if err != nil {
 		err = fmt.Errorf("Error getting result: %s", err.Error())
 		return

@@ -1,0 +1,6 @@
+{
+    "builders": [{
+        "type": "xenserver-iso",
+        "tools_iso_name": "guest-tools.iso"
+    }]
+}

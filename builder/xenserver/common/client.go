@@ -4,9 +4,10 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/nilshell/xmlrpc"
 	"log"
-	"regexp"
+
+	xmlrpc "github.com/amfranz/go-xmlrpc-client"
+	xenapi "github.com/terra-farm/go-xen-api-client"
 )
 
 type XenAPIClient struct {
@@ -62,9 +63,8 @@ const (
 
 func (c *XenAPIClient) RPCCall(result interface{}, method string, params []interface{}) (err error) {
 	fmt.Println(params)
-	p := new(xmlrpc.Params)
-	p.Params = params
-	err = c.RPC.Call(method, *p, result)
+	p := xmlrpc.Params{Params: params}
+	err = c.RPC.Call(method, p, result)
 	return err
 }
 
@@ -202,24 +202,6 @@ func (client *XenAPIClient) GetVMByNameLabel(name_label string) (vms []*VM, err 
 	return vms, nil
 }
 
-func (client *XenAPIClient) GetSRByNameLabel(name_label string) (srs []*SR, err error) {
-	srs = make([]*SR, 0)
-	result := APIResult{}
-	err = client.APICall(&result, "SR.get_by_name_label", name_label)
-	if err != nil {
-		return srs, err
-	}
-
-	for _, elem := range result.Value.([]interface{}) {
-		sr := new(SR)
-		sr.Ref = elem.(string)
-		sr.Client = client
-		srs = append(srs, sr)
-	}
-
-	return srs, nil
-}
-
 func (client *XenAPIClient) GetNetworkByUuid(network_uuid string) (network *Network, err error) {
 	network = new(Network)
 	result := APIResult{}
@@ -268,18 +250,6 @@ func (client *XenAPIClient) GetVdiByNameLabel(name_label string) (vdis []*VDI, e
 	return vdis, nil
 }
 
-func (client *XenAPIClient) GetSRByUuid(sr_uuid string) (sr *SR, err error) {
-	sr = new(SR)
-	result := APIResult{}
-	err = client.APICall(&result, "SR.get_by_uuid", sr_uuid)
-	if err != nil {
-		return nil, err
-	}
-	sr.Ref = result.Value.(string)
-	sr.Client = client
-	return
-}
-
 func (client *XenAPIClient) GetVdiByUuid(vdi_uuid string) (vdi *VDI, err error) {
 	vdi = new(VDI)
 	result := APIResult{}
@@ -307,20 +277,6 @@ func (client *XenAPIClient) GetPIFs() (pifs []*PIF, err error) {
 	}
 
 	return pifs, nil
-}
-
-func (client *XenAPIClient) CreateTask() (task *Task, err error) {
-	result := APIResult{}
-	err = client.APICall(&result, "task.create", "packer-task", "Packer task")
-
-	if err != nil {
-		return
-	}
-
-	task = new(Task)
-	task.Ref = result.Value.(string)
-	task.Client = client
-	return
 }
 
 // Host associated functions
@@ -400,18 +356,8 @@ func (self *VM) CleanShutdown() (err error) {
 	return
 }
 
-func (self *VM) HardShutdown() (err error) {
-	result := APIResult{}
-	err = self.Client.APICall(&result, "VM.hard_shutdown", self.Ref)
-	if err != nil {
-		return err
-	}
-	return
-}
-
-func (self *VM) Unpause() (err error) {
-	result := APIResult{}
-	err = self.Client.APICall(&result, "VM.unpause", self.Ref)
+func Unpause(c *Connection, vmRef xenapi.VMRef) (err error) {
+	err = c.client.VM.Unpause(c.session, vmRef)
 	if err != nil {
 		return err
 	}
@@ -495,39 +441,22 @@ func (self *VM) GetVBDs() (vbds []VBD, err error) {
 	return vbds, nil
 }
 
-func (self *VM) GetVIFs() (vifs []VIF, err error) {
-	vifs = make([]VIF, 0)
-	result := APIResult{}
-	err = self.Client.APICall(&result, "VM.get_VIFs", self.Ref)
-	if err != nil {
-		return vifs, err
-	}
-	for _, elem := range result.Value.([]interface{}) {
-		vif := VIF{}
-		vif.Ref = elem.(string)
-		vif.Client = self.Client
-		vifs = append(vifs, vif)
-	}
-
-	return vifs, nil
-}
-
-func (self *VM) GetDisks() (vdis []*VDI, err error) {
+func GetDisks(c *Connection, vmRef xenapi.VMRef) (vdis []xenapi.VDIRef, err error) {
 	// Return just data disks (non-isos)
-	vdis = make([]*VDI, 0)
-	vbds, err := self.GetVBDs()
+	vdis = make([]xenapi.VDIRef, 0)
+	vbds, err := c.client.VM.GetVBDs(c.session, vmRef)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, vbd := range vbds {
-		rec, err := vbd.GetRecord()
+		rec, err := c.client.VBD.GetRecord(c.session, vbd)
 		if err != nil {
 			return nil, err
 		}
-		if rec["type"] == "Disk" {
+		if rec.Type == "Disk" {
 
-			vdi, err := vbd.GetVDI()
+			vdi, err := c.client.VBD.GetVDI(c.session, vbd)
 			if err != nil {
 				return nil, err
 			}
@@ -576,51 +505,53 @@ func (self *VM) SetStaticMemoryRange(min, max uint) (err error) {
 	return
 }
 
-func (self *VM) ConnectVdi(vdi *VDI, vdiType VDIType) (err error) {
+func ConnectVdi(c *Connection, vmRef xenapi.VMRef, vdiRef xenapi.VDIRef, vbdType xenapi.VbdType) (err error) {
 
-	// 1. Create a VBD
-
-	vbd_rec := make(xmlrpc.Struct)
-	vbd_rec["VM"] = self.Ref
-	vbd_rec["VDI"] = vdi.Ref
-	vbd_rec["userdevice"] = "autodetect"
-	vbd_rec["empty"] = false
-	vbd_rec["other_config"] = make(xmlrpc.Struct)
-	vbd_rec["qos_algorithm_type"] = ""
-	vbd_rec["qos_algorithm_params"] = make(xmlrpc.Struct)
-
-	switch vdiType {
-	case CD:
-		vbd_rec["mode"] = "RO"
-		vbd_rec["bootable"] = true
-		vbd_rec["unpluggable"] = false
-		vbd_rec["type"] = "CD"
-	case Disk:
-		vbd_rec["mode"] = "RW"
-		vbd_rec["bootable"] = false
-		vbd_rec["unpluggable"] = false
-		vbd_rec["type"] = "Disk"
-	case Floppy:
-		vbd_rec["mode"] = "RW"
-		vbd_rec["bootable"] = false
-		vbd_rec["unpluggable"] = true
-		vbd_rec["type"] = "Floppy"
+	var mode xenapi.VbdMode
+	var unpluggable bool
+	var bootable bool
+	var t xenapi.VbdType
+	switch vbdType {
+	case xenapi.VbdTypeCD:
+		mode = xenapi.VbdModeRO
+		bootable = true
+		unpluggable = false
+		t = xenapi.VbdTypeCD
+	case xenapi.VbdTypeDisk:
+		mode = xenapi.VbdModeRW
+		bootable = false
+		unpluggable = false
+		t = xenapi.VbdTypeDisk
+	case xenapi.VbdTypeFloppy:
+		mode = xenapi.VbdModeRW
+		bootable = false
+		unpluggable = true
+		t = xenapi.VbdTypeFloppy
 	}
 
-	result := APIResult{}
-	err = self.Client.APICall(&result, "VBD.create", vbd_rec)
+	vbd_ref, err := c.client.VBD.Create(c.session, xenapi.VBDRecord{
+		VM:         xenapi.VMRef(vmRef),
+		VDI:        xenapi.VDIRef(vdiRef),
+		Userdevice: "autodetect",
+		Empty:      false,
+		// OtherConfig: map[string]interface{{}},
+		QosAlgorithmType: "",
+		// QosAlgorithmParams: map[string]interface{{}},
+		Mode:        mode,
+		Unpluggable: unpluggable,
+		Bootable:    bootable,
+		Type:        t,
+	})
 
 	if err != nil {
 		return err
 	}
 
-	vbd_ref := result.Value.(string)
 	fmt.Println("VBD Ref:", vbd_ref)
 
-	result = APIResult{}
-	err = self.Client.APICall(&result, "VBD.get_uuid", vbd_ref)
+	uuid, err := c.client.VBD.GetUUID(c.session, vbd_ref)
 
-	fmt.Println("VBD UUID: ", result.Value.(string))
+	fmt.Println("VBD UUID: ", uuid)
 	/*
 	   // 2. Plug VBD (Non need - the VM hasn't booted.
 	   // @todo - check VM state
@@ -634,34 +565,32 @@ func (self *VM) ConnectVdi(vdi *VDI, vdiType VDIType) (err error) {
 	return
 }
 
-func (self *VM) DisconnectVdi(vdi *VDI) error {
-	vbds, err := self.GetVBDs()
+func DisconnectVdi(c *Connection, vmRef xenapi.VMRef, vdi xenapi.VDIRef) error {
+	vbds, err := c.client.VM.GetVBDs(c.session, vmRef)
 	if err != nil {
 		return fmt.Errorf("Unable to get VM VBDs: %s", err.Error())
 	}
 
 	for _, vbd := range vbds {
-		rec, err := vbd.GetRecord()
+		rec, err := c.client.VBD.GetRecord(c.session, vbd)
 		if err != nil {
-			return fmt.Errorf("Could not get record for VBD '%s': %s", vbd.Ref, err.Error())
+			return fmt.Errorf("Could not get record for VBD '%s': %s", vbd, err.Error())
 		}
-
-		if recVdi, ok := rec["VDI"].(string); ok {
-			if recVdi == vdi.Ref {
-				_ = vbd.Unplug()
-				err = vbd.Destroy()
-				if err != nil {
-					return fmt.Errorf("Could not destroy VBD '%s': %s", vbd.Ref, err.Error())
-				}
-
-				return nil
+		recVdi := rec.VDI
+		if recVdi == vdi {
+			_ = c.client.VBD.Unplug(c.session, vbd)
+			err = c.client.VBD.Destroy(c.session, vbd)
+			if err != nil {
+				return fmt.Errorf("Could not destroy VBD '%s': %s", vbd, err.Error())
 			}
+
+			return nil
 		} else {
-			log.Printf("Could not find VDI record in VBD '%s'", vbd.Ref)
+			log.Printf("Could not find VDI record in VBD '%s'", vbd)
 		}
 	}
 
-	return fmt.Errorf("Could not find VBD for VDI '%s'", vdi.Ref)
+	return fmt.Errorf("Could not find VBD for VDI '%s'", vdi)
 }
 
 func (self *VM) SetPlatform(params map[string]string) (err error) {
@@ -679,31 +608,25 @@ func (self *VM) SetPlatform(params map[string]string) (err error) {
 	return
 }
 
-func (self *VM) ConnectNetwork(network *Network, device string) (vif *VIF, err error) {
+func ConnectNetwork(c *Connection, networkRef xenapi.NetworkRef, vmRef xenapi.VMRef, device string) (*xenapi.VIFRef, error) {
 	// Create the VIF
+	// vif_rec["other_config"] = make(xmlrpc.Struct)
+	// vif_rec["qos_algorithm_params"] = make(xmlrpc.Struct)
 
-	vif_rec := make(xmlrpc.Struct)
-	vif_rec["network"] = network.Ref
-	vif_rec["VM"] = self.Ref
-	vif_rec["MAC"] = ""
-	vif_rec["device"] = device
-	vif_rec["MTU"] = "1504"
-	vif_rec["other_config"] = make(xmlrpc.Struct)
-	vif_rec["qos_algorithm_type"] = ""
-	vif_rec["qos_algorithm_params"] = make(xmlrpc.Struct)
-
-	result := APIResult{}
-	err = self.Client.APICall(&result, "VIF.create", vif_rec)
+	vif, err := c.client.VIF.Create(c.session, xenapi.VIFRecord{
+		Network:          networkRef,
+		VM:               vmRef,
+		MAC:              "",
+		Device:           device,
+		MTU:              1504,
+		QosAlgorithmType: "",
+	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	vif = new(VIF)
-	vif.Ref = result.Value.(string)
-	vif.Client = self.Client
-
-	return vif, nil
+	return &vif, nil
 }
 
 //      Setters
@@ -901,9 +824,9 @@ type TransferRecord struct {
 	UrlFull string `xml:"url_full,attr"`
 }
 
-func (self *VDI) Expose(format string) (url string, err error) {
+func Expose(c *Connection, vdiRef xenapi.VDIRef, format string) (url string, err error) {
 
-	hosts, err := self.Client.GetHosts()
+	hosts, err := c.client.Host.GetAll(c.session)
 
 	if err != nil {
 		err = errors.New(fmt.Sprintf("Could not retrieve hosts in the pool: %s", err.Error()))
@@ -911,33 +834,31 @@ func (self *VDI) Expose(format string) (url string, err error) {
 	}
 	host := hosts[0]
 
-	disk_uuid, err := self.GetUuid()
-
 	if err != nil {
-		err = errors.New(fmt.Sprintf("Failed to get VDI uuid for %s: %s", self.Ref, err.Error()))
+		err = errors.New(fmt.Sprintf("Failed to get VDI uuid for %s: %s", vdiRef, err.Error()))
 		return "", err
 	}
 
 	args := make(map[string]string)
 	args["transfer_mode"] = "http"
-	args["vdi_uuid"] = disk_uuid
+	args["vdi_uuid"] = string(vdiRef)
 	args["expose_vhd"] = "true"
 	args["network_uuid"] = "management"
 	args["timeout_minutes"] = "5"
 
-	handle, err := host.CallPlugin("transfer", "expose", args)
+	handle, err := c.client.Host.CallPlugin(c.session, host, "transfer", "expose", args)
 
 	if err != nil {
-		err = errors.New(fmt.Sprintf("Error whilst exposing VDI %s: %s", disk_uuid, err.Error()))
+		err = errors.New(fmt.Sprintf("Error whilst exposing VDI %s: %s", vdiRef, err.Error()))
 		return "", err
 	}
 
 	args = make(map[string]string)
 	args["record_handle"] = handle
-	record_xml, err := host.CallPlugin("transfer", "get_record", args)
+	record_xml, err := c.client.Host.CallPlugin(c.session, host, "transfer", "get_record", args)
 
 	if err != nil {
-		err = errors.New(fmt.Sprintf("Unable to retrieve transfer record for VDI %s: %s", disk_uuid, err.Error()))
+		err = errors.New(fmt.Sprintf("Unable to retrieve transfer record for VDI %s: %s", vdiRef, err.Error()))
 		return "", err
 	}
 
@@ -961,17 +882,15 @@ func (self *VDI) Expose(format string) (url string, err error) {
 	return
 }
 
-// Unexpose a VDI if exposed with a Transfer VM.
+func Unexpose(c *Connection, vdiRef xenapi.VDIRef) (err error) {
 
-func (self *VDI) Unexpose() (err error) {
-
-	disk_uuid, err := self.GetUuid()
+	disk_uuid, err := c.client.VDI.GetUUID(c.session, vdiRef)
 
 	if err != nil {
 		return err
 	}
 
-	hosts, err := self.Client.GetHosts()
+	hosts, err := c.client.Host.GetAll(c.session)
 
 	if err != nil {
 		err = errors.New(fmt.Sprintf("Could not retrieve hosts in the pool: %s", err.Error()))
@@ -983,7 +902,7 @@ func (self *VDI) Unexpose() (err error) {
 	args := make(map[string]string)
 	args["vdi_uuid"] = disk_uuid
 
-	result, err := host.CallPlugin("transfer", "unexpose", args)
+	result, err := c.client.Host.CallPlugin(c.session, host, "transfer", "unexpose", args)
 
 	if err != nil {
 		return err
@@ -996,94 +915,65 @@ func (self *VDI) Unexpose() (err error) {
 
 // Task associated functions
 
-func (self *Task) GetStatus() (status TaskStatusType, err error) {
-	result := APIResult{}
-	err = self.Client.APICall(&result, "task.get_status", self.Ref)
-	if err != nil {
-		return
-	}
-	rawStatus := result.Value.(string)
-	switch rawStatus {
-	case "pending":
-		status = Pending
-	case "success":
-		status = Success
-	case "failure":
-		status = Failure
-	case "cancelling":
-		status = Cancelling
-	case "cancelled":
-		status = Cancelled
-	default:
-		panic(fmt.Sprintf("Task.get_status: Unknown status '%s'", rawStatus))
-	}
-	return
-}
-
-func (self *Task) GetProgress() (progress float64, err error) {
-	result := APIResult{}
-	err = self.Client.APICall(&result, "task.get_progress", self.Ref)
-	if err != nil {
-		return
-	}
-	progress = result.Value.(float64)
-	return
-}
-
-func (self *Task) GetResult() (object *XenAPIObject, err error) {
-	result := APIResult{}
-	err = self.Client.APICall(&result, "task.get_result", self.Ref)
-	if err != nil {
-		return
-	}
-	switch ref := result.Value.(type) {
-	case string:
-		// @fixme: xapi currently sends us an xmlrpc-encoded string via xmlrpc.
-		// This seems to be a bug in xapi. Remove this workaround when it's fixed
-		re := regexp.MustCompile("^<value><array><data><value>([^<]*)</value>.*</data></array></value>$")
-		match := re.FindStringSubmatch(ref)
-		if match == nil {
-			object = nil
-		} else {
-			object = &XenAPIObject{
-				Ref:    match[1],
-				Client: self.Client,
-			}
-		}
-	case nil:
-		object = nil
-	default:
-		err = fmt.Errorf("task.get_result: unknown value type %T (expected string or nil)", ref)
-	}
-	return
-}
-
-func (self *Task) GetErrorInfo() (errorInfo []string, err error) {
-	result := APIResult{}
-	err = self.Client.APICall(&result, "task.get_error_info", self.Ref)
-	if err != nil {
-		return
-	}
-	errorInfo = make([]string, 0)
-	for _, infoRaw := range result.Value.([]interface{}) {
-		errorInfo = append(errorInfo, fmt.Sprintf("%v", infoRaw))
-	}
-	return
-}
-
-func (self *Task) Destroy() (err error) {
-	result := APIResult{}
-	err = self.Client.APICall(&result, "task.destroy", self.Ref)
-	return
-}
+// func (self *Task) GetResult() (object *XenAPIObject, err error) {
+// 	result := APIResult{}
+// 	err = self.Client.APICall(&result, "task.get_result", self.Ref)
+// 	if err != nil {
+// 		return
+// 	}
+// 	switch ref := result.Value.(type) {
+// 	case string:
+// 		// @fixme: xapi currently sends us an xmlrpc-encoded string via xmlrpc.
+// 		// This seems to be a bug in xapi. Remove this workaround when it's fixed
+// 		re := regexp.MustCompile("^<value><array><data><value>([^<]*)</value>.*</data></array></value>$")
+// 		match := re.FindStringSubmatch(ref)
+// 		if match == nil {
+// 			object = nil
+// 		} else {
+// 			object = &XenAPIObject{
+// 				Ref:    match[1],
+// 				Client: self.Client,
+// 			}
+// 		}
+// 	case nil:
+// 		object = nil
+// 	default:
+// 		err = fmt.Errorf("task.get_result: unknown value type %T (expected string or nil)", ref)
+// 	}
+// 	return
+// }
 
 // Client Initiator
+type Connection struct {
+	client   *xenapi.Client
+	session  xenapi.SessionRef
+	Host     string
+	Username string
+	Password string
+}
 
-func NewXenAPIClient(host, username, password string) (client XenAPIClient) {
-	client.Host = host
-	client.Url = "http://" + host
-	client.Username = username
-	client.Password = password
-	client.RPC, _ = xmlrpc.NewClient(client.Url, nil)
-	return
+func (c Connection) GetSession() string {
+	return string(c.session)
+}
+
+func NewXenAPIClient(host, username, password string) (*Connection, error) {
+	client, err := xenapi.NewClient("https://"+host, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	session, err := client.Session.LoginWithPassword(username, password, "1.0", "packer")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Connection{client, session, host, username, password}, nil
+}
+
+func (c *Connection) GetClient() *xenapi.Client {
+	return c.client
+}
+
+func (c *Connection) GetSessionRef() xenapi.SessionRef {
+	return c.session
 }

@@ -10,11 +10,12 @@ builds:
     # usage by users in CI/CD systems like Terraform Cloud where
     # they are unable to install libraries.
     - CGO_ENABLED=0
+  main: plugin/builder-xenserver-iso/main.go
   mod_timestamp: '{{ .CommitTimestamp }}'
   flags:
     - -trimpath
   ldflags:
-    - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}'
+    - '-X main.version={{.Version}} -X main.commit={{.Commit}}'
   goos:
     - freebsd
     - windows

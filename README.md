@@ -5,8 +5,8 @@ This builder plugin extends packer.io to support building images for XenServer.
 This is a fork of the original builder since the original project was abandoned and no longer compilied with recent versions of Go or worked with Xenserver 7.6 and later.
 
 It improves the original project in the following ways:
-2. Developed alongside the [Xenorchestra terraform provider](https://github.com/ddelnano/terraform-provider-xenorchestra) to ensure the hashicorp ecosystem is interoperable.
-3. Reimplements how the boot commands are sent over VNC to be compatible with later versions of Xenserver (Citrix hypervisor) and XCP
+1. Developed alongside the [Xenorchestra terraform provider](https://github.com/ddelnano/terraform-provider-xenorchestra) to ensure the hashicorp ecosystem is interoperable.
+2. Reimplements how the boot commands are sent over VNC to be compatible with later versions of Xenserver (Citrix hypervisor) and XCP
 
 ## Status
 

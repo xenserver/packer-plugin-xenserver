@@ -13,7 +13,6 @@ It improves the original project in the following ways:
 At the time of this writing the packer builder has been verified to work with Xenserver 7.6 and can launch VMs with the packer output through the xenorchestra terraform provider.
 
 The following list contains things that are incomplete but will be worked on soon:
-- Official binaries have not been released yet
 - The documentation is still in an inconsistent state with upstream
 - Examples that are easier for new users to get up and running quickly
 - XVA builder is untested
@@ -21,7 +20,7 @@ The following list contains things that are incomplete but will be worked on soo
 
 ## Using the builder
 
-Official release binaries will be attached to the project's GitHub releases. Download the relevant release and copy the binary to `~/.packer.d/plugin/packer-builder-xenserver-iso`.
+Download the relevant release from the project's [releases page](https://github.com/ddelnano/packer-builder-xenserver/releases) and copy the binary to `~/.packer.d/plugin/packer-builder-xenserver-iso`.
 
 ## Developing the builder
 

@@ -5,15 +5,14 @@ This builder plugin extends packer.io to support building images for XenServer.
 This is a fork of the original builder since the original project was abandoned and no longer compilied with recent versions of Go or worked with Xenserver 7.6 and later.
 
 It improves the original project in the following ways:
-2. Developed alongside the [Xenorchestra terraform provider](https://github.com/ddelnano/terraform-provider-xenorchestra) to ensure the hashicorp ecosystem is interoperable.
-3. Reimplements how the boot commands are sent over VNC to be compatible with later versions of Xenserver (Citrix hypervisor) and XCP
+1. Developed alongside the [Xenorchestra terraform provider](https://github.com/ddelnano/terraform-provider-xenorchestra) to ensure the hashicorp ecosystem is interoperable.
+2. Reimplements how the boot commands are sent over VNC to be compatible with later versions of Xenserver (Citrix hypervisor) and XCP
 
 ## Status
 
 At the time of this writing the packer builder has been verified to work with Xenserver 7.6 and can launch VMs with the packer output through the xenorchestra terraform provider.
 
 The following list contains things that are incomplete but will be worked on soon:
-- Official binaries have not been released yet
 - The documentation is still in an inconsistent state with upstream
 - Examples that are easier for new users to get up and running quickly
 - XVA builder is untested
@@ -21,7 +20,7 @@ The following list contains things that are incomplete but will be worked on soo
 
 ## Using the builder
 
-Official release binaries will be attached to the project's GitHub releases. Download the relevant release and copy the binary to `~/.packer.d/plugin/packer-builder-xenserver-iso`.
+Download the relevant release from the project's [releases page](https://github.com/ddelnano/packer-builder-xenserver/releases) and copy the binary to `~/.packer.d/plugin/packer-builder-xenserver-iso`.
 
 ## Developing the builder
 

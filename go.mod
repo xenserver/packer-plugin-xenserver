@@ -34,6 +34,3 @@ require (
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 	launchpad.net/xmlpath v0.0.0-20130614043138-000000000004 // indirect
 )
-
-// replace github.com/glycerine/sshego => github.com/ddelnano/sshego v1.0.1
-replace github.com/glycerine/sshego => /home/ddelnano/code/sshego

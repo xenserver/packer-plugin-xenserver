@@ -244,7 +244,7 @@ will be replaced by the proper key:
   is useful if you have to generally wait for the UI to update before typing more.
 
 In addition to the special keys, each command to type is treated as a
-[configuration template](/docs/templates/configuration-templates.html).
+configuration template.
 The available variables are:
 
 * `HTTPIP` and `HTTPPort` - The IP and port, respectively of an HTTP server

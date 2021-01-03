@@ -7,9 +7,8 @@ In order to see an exhaustive list of configuration options for the packer build
 ### Running the examples
 
 In order to run this example you will need to perform the following steps:
-1. Ensure that you are running packer from a machine on the same subnet as the VM packer will be launching. This can be overriden with the `network_names` builder configuration if needed.
-2. Export the `XAPI_HOST`, `XAPI_USERNAME` and `XAPI_PASSWORD` environment variables to the current shell. Note: The `XAPI_HOST` must be the resource pool primary.
-3. Run the `packer build` command specifying the storage repositories to use for the ISO upload and for the VM created during the build.
+1. Export the `XAPI_HOST`, `XAPI_USERNAME` and `XAPI_PASSWORD` environment variables to the current shell. Note: The `XAPI_HOST` must be the resource pool primary.
+2. Run the `packer build` command specifying the storage repositories to use for the ISO upload and for the VM created during the build.
 
 ```
 # Replace sr_name and sr_iso_name with your storage repositories names

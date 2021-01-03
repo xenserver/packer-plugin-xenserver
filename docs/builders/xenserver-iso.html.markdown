@@ -2,7 +2,7 @@
 layout: "docs"
 page_title: "XenServer Builder (from an ISO)"
 description: |-
-  The XenServer Packer builder is able to create XenServer virtual machines and export them either as an XVA or a VDI, starting from an ISO image.
+  The XenServer Packer builder is able to create XenServer virtual machines and export them either as an XVA or a VDI and create VM templates starting from an ISO image.
 ---
 
 # XenServer Builder (from an ISO)
@@ -18,32 +18,6 @@ the OS, then shutting it down. The result of the XenServer builder is a
 directory containing all the files necessary to run the virtual machine
 portably.
 
-## Basic Example
-
-Here is a basic example. This example is not functional. Even when the
-`remote_*` fields have been completed, it will start the OS installer but then
-fail because we don't provide the preseed file for Ubuntu to self-install.
-Still, the example serves to show the basic configuration:
-
-```javascript
-{
-  "type": "xenserver-iso",
-  "remote_host": "your-server.example.com",
-  "remote_username": "root",
-  "remote_password": "password",
-  "iso_url": "http://releases.ubuntu.com/12.04/ubuntu-12.04.5-server-amd64.iso",
-  "iso_checksum": "769474248a3897f4865817446f9a4a53",
-  "iso_checksum_type": "md5",
-  "ssh_username": "packer",
-  "ssh_password": "packer",
-  "ssh_wait_timeout": "30s",
-  "shutdown_command": "echo 'packer' | sudo -S shutdown -P now"
-}
-```
-
-It is important to add a `shutdown_command`. By default Packer forcibly halts the
-virtual machine and the file system may not be sync'd. Thus, changes made in a
-provisioner might not be saved.
 
 ## Configuration Reference
 
@@ -69,7 +43,7 @@ each category, the available options are alphabetized and described.
   If this is an HTTP URL, Packer will download it and cache it between
   runs.
 
-* `remote_host` (string) - The host of the remote machine.
+* `remote_host` (string) - The host of the Xenserver / XCP-ng pool primary. Typically these will be specified through environment variables as seen in the [examples](../../examples/centos8.json).
 
 * `remote_username` (string) - The XenServer username used to access the remote machine.
 
@@ -85,7 +59,7 @@ each category, the available options are alphabetized and described.
   be to type just enough to initialize the operating system installer. Special
   keys can be typed as well, and are covered in the section below on the boot
   command. If this is not specified, it is assumed the installer will start
-  itself.
+  itself. See the [Ubuntu](../../examples/ubuntu-2004.json) and [centos](../../examples/centos8.json) examples to see how these are used to launch autoinstall and kickstart respectively.
 
 * `boot_wait` (string) - The time to wait after booting the initial virtual
   machine before typing the `boot_command`. The value of this should be
@@ -270,7 +244,7 @@ will be replaced by the proper key:
   is useful if you have to generally wait for the UI to update before typing more.
 
 In addition to the special keys, each command to type is treated as a
-[configuration template](/docs/templates/configuration-templates.html).
+configuration template.
 The available variables are:
 
 * `HTTPIP` and `HTTPPort` - The IP and port, respectively of an HTTP server
@@ -278,19 +252,4 @@ The available variables are:
   configuration parameter. If `http_directory` isn't specified, these will be
   blank!
 
-Example boot command. This is actually a working boot command used to start
-an Ubuntu 12.04 installer:
-
-```javascript
-[
-  "&lt;esc&gt;&lt;esc&gt;&lt;enter&gt;&lt;wait&gt;",
-  "/install/vmlinuz noapic ",
-  "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
-  "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
-  "hostname={{ .Name }} ",
-  "fb=false debconf/frontend=noninteractive ",
-  "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
-  "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
-  "initrd=/install/initrd.gz -- &lt;enter&gt;"
-]
-```
+See the [examples](../../examples/) for working boot commands.

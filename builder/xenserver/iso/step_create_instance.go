@@ -170,7 +170,8 @@ func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepActi
 		_, err = xscommon.ConnectNetwork(c, network, instance, "0")
 
 		if err != nil {
-			ui.Say(err.Error())
+			ui.Error(fmt.Sprintf("Failed to create VIF with error: %v", err))
+			return multistep.ActionHalt
 		}
 
 	} else {

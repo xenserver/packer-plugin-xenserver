@@ -609,22 +609,17 @@ func (self *VM) SetPlatform(params map[string]string) (err error) {
 }
 
 func ConnectNetwork(c *Connection, networkRef xenapi.NetworkRef, vmRef xenapi.VMRef, device string) (*xenapi.VIFRef, error) {
-	// Create the VIF
-	// vif_rec["other_config"] = make(xmlrpc.Struct)
-	// vif_rec["qos_algorithm_params"] = make(xmlrpc.Struct)
-
 	vif, err := c.client.VIF.Create(c.session, xenapi.VIFRecord{
-		Network:          networkRef,
-		VM:               vmRef,
-		MAC:              "",
-		Device:           device,
-		MTU:              1504,
-		QosAlgorithmType: "",
+		Network:     networkRef,
+		VM:          vmRef,
+		Device:      device,
+		LockingMode: xenapi.VifLockingModeNetworkDefault,
 	})
 
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("Created the following VIF: %s", vif)
 
 	return &vif, nil
 }

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/mitchellh/packer/helper/communicator"
-	"github.com/mitchellh/packer/template/interpolate"
+	"github.com/hashicorp/packer/helper/communicator"
+	"github.com/hashicorp/packer/template/interpolate"
 )
 
 type SSHConfig struct {
@@ -32,7 +32,7 @@ func (c *SSHConfig) Prepare(ctx *interpolate.Context) []error {
 
 	// TODO: backwards compatibility, write fixer instead
 	if c.SSHKeyPath != "" {
-		c.Comm.SSHPrivateKey = c.SSHKeyPath
+		c.Comm.SSHPrivateKeyFile = c.SSHKeyPath
 	}
 	if c.SSHWaitTimeout != 0 {
 		c.Comm.SSHTimeout = c.SSHWaitTimeout

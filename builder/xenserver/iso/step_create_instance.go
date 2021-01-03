@@ -1,11 +1,12 @@
 package iso
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 	xenapi "github.com/terra-farm/go-xen-api-client"
 	xsclient "github.com/terra-farm/go-xen-api-client"
 	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
@@ -16,7 +17,7 @@ type stepCreateInstance struct {
 	vdi      *xsclient.VDIRef
 }
 
-func (self *stepCreateInstance) Run(state multistep.StateBag) multistep.StepAction {
+func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
 	c := state.Get("client").(*xscommon.Connection)
 	config := state.Get("config").(config)

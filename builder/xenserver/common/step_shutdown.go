@@ -1,17 +1,18 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 	xenapi "github.com/terra-farm/go-xen-api-client"
 )
 
 type StepShutdown struct{}
 
-func (StepShutdown) Run(state multistep.StateBag) multistep.StepAction {
+func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)

@@ -1,9 +1,11 @@
 package common
 
 import (
+	"context"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 )
 
 type StepForwardPortOverSSH struct {
@@ -16,7 +18,7 @@ type StepForwardPortOverSSH struct {
 	ResultKey string
 }
 
-func (self *StepForwardPortOverSSH) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepForwardPortOverSSH) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)

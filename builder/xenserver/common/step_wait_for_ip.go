@@ -1,11 +1,12 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 )
 
 type StepWaitForIP struct {
@@ -13,7 +14,7 @@ type StepWaitForIP struct {
 	Timeout time.Duration
 }
 
-func (self *StepWaitForIP) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
 	config := state.Get("commonconfig").(CommonConfig)

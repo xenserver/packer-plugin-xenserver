@@ -1,14 +1,16 @@
 package common
 
-// Taken from mitchellh/packer/builder/qemu/step_http_server.go
+// Taken from hashicorp/packer/builder/qemu/step_http_server.go
 
 import (
+	"context"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
 	"log"
 	"net"
 	"net/http"
+
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 )
 
 // This step creates and runs the HTTP server that is serving files from the
@@ -46,7 +48,7 @@ func (snooper IPSnooper) ServeHTTP(resp http.ResponseWriter, req *http.Request) 
 	snooper.handler.ServeHTTP(resp, req)
 }
 
-func (s *StepHTTPServer) Run(state multistep.StateBag) multistep.StepAction {
+func (s *StepHTTPServer) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 

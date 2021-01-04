@@ -1,3 +1,4 @@
+//go:generate mapstructure-to-hcl2 -type config
 package iso
 
 import (
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer/common"
 	"github.com/hashicorp/packer/helper/communicator"
 	hconfig "github.com/hashicorp/packer/helper/config"
@@ -48,7 +50,9 @@ type Builder struct {
 	runner multistep.Runner
 }
 
-func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error) {
+func (self *Builder) ConfigSpec() hcldec.ObjectSpec { return self.config.FlatMapstructure().HCL2Spec() }
+
+func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []string, retErr error) {
 
 	var errs *packer.MultiError
 
@@ -172,7 +176,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		retErr = errors.New(errs.Error())
 	}
 
-	return nil, retErr
+	return nil, nil, retErr
 
 }
 

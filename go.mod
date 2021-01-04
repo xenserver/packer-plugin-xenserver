@@ -58,7 +58,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
-	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
+	github.com/hashicorp/hcl/v2 v2.6.0
 	github.com/hashicorp/packer v1.6.5
 	github.com/hashicorp/serf v0.9.2 // indirect
 	github.com/hashicorp/vault/api v1.0.4 // indirect
@@ -114,6 +114,7 @@ require (
 	github.com/vmware/govmomi v0.23.1 // indirect
 	github.com/xanzy/go-cloudstack v0.0.0-20190526095453-42f262b63ed0 // indirect
 	github.com/yandex-cloud/go-sdk v0.0.0-20200921111412-ef15ded2014c // indirect
+	github.com/zclconf/go-cty v1.4.0
 	github.com/zclconf/go-cty-yaml v1.0.1 // indirect
 	golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9
 	golang.org/x/mobile v0.0.0-20191130191448-5c0e7e404af8 // indirect

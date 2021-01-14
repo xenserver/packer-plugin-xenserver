@@ -46,3 +46,7 @@ $ cp builder-xenserver-iso  ~/.packer.d/plugins/packer-builder-xenserver-iso
 
 For complete documentation on configuration commands, see [the
 xenserver-iso docs](docs/builders/xenserver-iso.html.markdown)
+
+## Support
+
+You can discuss any issues you have or feature requests in [Discord](https://discord.gg/ZpNq8ez).

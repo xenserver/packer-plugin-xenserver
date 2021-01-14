@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer/common"
 	"github.com/hashicorp/packer/helper/communicator"
 	hconfig "github.com/hashicorp/packer/helper/config"
@@ -16,26 +17,14 @@ import (
 	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
 
-type config struct {
-	common.PackerConfig   `mapstructure:",squash"`
-	xscommon.CommonConfig `mapstructure:",squash"`
-
-	SourcePath     string `mapstructure:"source_path"`
-	VCPUsMax       uint   `mapstructure:"vcpus_max"`
-	VCPUsAtStartup uint   `mapstructure:"vcpus_atstartup"`
-	VMMemory       uint   `mapstructure:"vm_memory"`
-
-	PlatformArgs map[string]string `mapstructure:"platform_args"`
-
-	ctx interpolate.Context
-}
-
 type Builder struct {
-	config config
+	config xscommon.Config
 	runner multistep.Runner
 }
 
-func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error) {
+func (self *Builder) ConfigSpec() hcldec.ObjectSpec { return self.config.FlatMapstructure().HCL2Spec() }
+
+func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []string, retErr error) {
 
 	var errs *packer.MultiError
 
@@ -53,7 +42,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	}
 
 	errs = packer.MultiErrorAppend(
-		errs, self.config.CommonConfig.Prepare(&self.config.ctx, &self.config.PackerConfig)...)
+		errs, self.config.CommonConfig.Prepare(self.config.GetInterpContext(), &self.config.PackerConfig)...)
 
 	// Set default values
 	if self.config.VCPUsMax == 0 {
@@ -93,7 +82,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		retErr = errors.New(errs.Error())
 	}
 
-	return nil, retErr
+	return nil, nil, retErr
 
 }
 
@@ -158,7 +147,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		new(xscommon.StepSetVmHostSshAddress),
 		new(xscommon.StepBootWait),
 		&xscommon.StepTypeBootCommand{
-			Ctx: self.config.ctx,
+			Ctx: *self.config.GetInterpContext(),
 		},
 		&xscommon.StepWaitForIP{
 			Chan:    httpReqChan,

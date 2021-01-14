@@ -160,7 +160,7 @@ func forward(local_conn net.Conn, config *gossh.ClientConfig, server, remote_des
 	return nil
 }
 
-func ssh_port_forward(local_listener net.Listener, remote_port uint, remote_dest, host, username, password string) error {
+func ssh_port_forward(local_listener net.Listener, remote_port int, remote_dest, host, username, password string) error {
 
 	config := &gossh.ClientConfig{
 		User: username,
@@ -179,7 +179,7 @@ func ssh_port_forward(local_listener net.Listener, remote_port uint, remote_dest
 		}
 
 		// Forward to a remote port
-		go forward(local_connection, config, host, remote_dest, remote_port)
+		go forward(local_connection, config, host, remote_dest, uint(remote_port))
 	}
 
 	return nil

@@ -36,7 +36,7 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
-	httpPort := state.Get("http_port").(uint)
+	httpPort := state.Get("http_port").(int)
 
 	// skip this step if we have nothing to type
 	if len(config.BootCommand) == 0 {
@@ -145,7 +145,7 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	self.Ctx.Data = &bootCommandTemplateData{
 		config.VMName,
 		localIp,
-		httpPort,
+		uint(httpPort),
 	}
 
 	ui.Say("Typing boot commands over VNC...")

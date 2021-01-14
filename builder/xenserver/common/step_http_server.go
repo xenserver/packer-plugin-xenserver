@@ -54,7 +54,9 @@ func (s *StepHTTPServer) Run(ctx context.Context, state multistep.StateBag) mult
 
 	var httpPort uint = 0
 	if config.HTTPDir == "" {
-		state.Put("http_port", httpPort)
+		// the packer provision steps assert this type is an int
+		// so this cannot be a uint like the rest of the code
+		state.Put("http_port", int(httpPort))
 		return multistep.ActionContinue
 	}
 
@@ -79,7 +81,9 @@ func (s *StepHTTPServer) Run(ctx context.Context, state multistep.StateBag) mult
 	go server.Serve(s.l)
 
 	// Save the address into the state so it can be accessed in the future
-	state.Put("http_port", httpPort)
+	// the packer provision steps assert this type is an int
+	// so this cannot be a uint like the rest of the code
+	state.Put("http_port", int(httpPort))
 
 	return multistep.ActionContinue
 }

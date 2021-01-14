@@ -19,7 +19,7 @@ type stepImportInstance struct {
 func (self *stepImportInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
 	c := state.Get("client").(*xscommon.Connection)
-	config := state.Get("config").(config)
+	config := state.Get("config").(xscommon.Config)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Import Instance")

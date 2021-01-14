@@ -9,7 +9,7 @@ import (
 )
 
 type StepForwardPortOverSSH struct {
-	RemotePort func(state multistep.StateBag) (uint, error)
+	RemotePort func(state multistep.StateBag) (int, error)
 	RemoteDest func(state multistep.StateBag) (string, error)
 
 	HostPortMin uint

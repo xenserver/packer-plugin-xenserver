@@ -20,7 +20,7 @@ type stepCreateInstance struct {
 func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
 	c := state.Get("client").(*xscommon.Connection)
-	config := state.Get("config").(config)
+	config := state.Get("config").(xscommon.Config)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Create Instance")
@@ -218,7 +218,7 @@ func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 }
 
 func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
-	config := state.Get("config").(config)
+	config := state.Get("config").(xscommon.Config)
 	if config.ShouldKeepVM(state) {
 		return
 	}

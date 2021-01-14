@@ -1,4 +1,3 @@
-//go:generate mapstructure-to-hcl2 -type config
 package iso
 
 import (
@@ -20,33 +19,8 @@ import (
 	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
 
-type config struct {
-	common.PackerConfig   `mapstructure:",squash"`
-	xscommon.CommonConfig `mapstructure:",squash"`
-
-	VCPUsMax       uint              `mapstructure:"vcpus_max"`
-	VCPUsAtStartup uint              `mapstructure:"vcpus_atstartup"`
-	VMMemory       uint              `mapstructure:"vm_memory"`
-	DiskSize       uint              `mapstructure:"disk_size"`
-	CloneTemplate  string            `mapstructure:"clone_template"`
-	VMOtherConfig  map[string]string `mapstructure:"vm_other_config"`
-
-	ISOChecksum     string   `mapstructure:"iso_checksum"`
-	ISOChecksumType string   `mapstructure:"iso_checksum_type"`
-	ISOUrls         []string `mapstructure:"iso_urls"`
-	ISOUrl          string   `mapstructure:"iso_url"`
-	ISOName         string   `mapstructure:"iso_name"`
-
-	PlatformArgs map[string]string `mapstructure:"platform_args"`
-
-	RawInstallTimeout string        `mapstructure:"install_timeout"`
-	InstallTimeout    time.Duration ``
-
-	ctx interpolate.Context
-}
-
 type Builder struct {
-	config config
+	config xscommon.Config
 	runner multistep.Runner
 }
 
@@ -70,8 +44,8 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	}
 
 	errs = packer.MultiErrorAppend(
-		errs, self.config.CommonConfig.Prepare(&self.config.ctx, &self.config.PackerConfig)...)
-	errs = packer.MultiErrorAppend(errs, self.config.SSHConfig.Prepare(&self.config.ctx)...)
+		errs, self.config.CommonConfig.Prepare(self.config.GetInterpContext(), &self.config.PackerConfig)...)
+	errs = packer.MultiErrorAppend(errs, self.config.SSHConfig.Prepare(self.config.GetInterpContext())...)
 
 	// Set default values
 
@@ -284,7 +258,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		// },
 		new(xscommon.StepBootWait),
 		&xscommon.StepTypeBootCommand{
-			Ctx: self.config.ctx,
+			Ctx: *self.config.GetInterpContext(),
 		},
 		&xscommon.StepWaitForIP{
 			Chan:    httpReqChan,
@@ -299,9 +273,9 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		},
 		&communicator.StepConnect{
 			Config:    &self.config.SSHConfig.Comm,
-			Host:      xscommon.CommHost,
-			SSHConfig: xscommon.SSHConfigFunc(self.config.CommonConfig.SSHConfig),
-			SSHPort:   xscommon.SSHPort,
+			Host:      xscommon.InstanceSSHIP,
+			SSHConfig: self.config.Comm.SSHConfigFunc(),
+			SSHPort:   xscommon.InstanceSSHPort,
 		},
 		new(common.StepProvision),
 		new(xscommon.StepShutdown),

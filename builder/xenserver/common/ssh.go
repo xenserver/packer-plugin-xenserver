@@ -2,15 +2,17 @@ package common
 
 import (
 	"bytes"
+	"encoding/pem"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
+	"os"
 	"strings"
 
-	"github.com/mitchellh/multistep"
-	commonssh "github.com/mitchellh/packer/common/ssh"
-	"github.com/mitchellh/packer/communicator/ssh"
+	"github.com/hashicorp/packer/communicator/ssh"
+	"github.com/hashicorp/packer/helper/multistep"
 	gossh "golang.org/x/crypto/ssh"
 )
 
@@ -48,7 +50,7 @@ func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConf
 		}
 
 		if config.SSHKeyPath != "" {
-			signer, err := commonssh.FileSigner(config.SSHKeyPath)
+			signer, err := FileSigner(config.SSHKeyPath)
 			if err != nil {
 				return nil, err
 			}
@@ -158,7 +160,7 @@ func forward(local_conn net.Conn, config *gossh.ClientConfig, server, remote_des
 	return nil
 }
 
-func ssh_port_forward(local_listener net.Listener, remote_port uint, remote_dest, host, username, password string) error {
+func ssh_port_forward(local_listener net.Listener, remote_port int, remote_dest, host, username, password string) error {
 
 	config := &gossh.ClientConfig{
 		User: username,
@@ -177,8 +179,42 @@ func ssh_port_forward(local_listener net.Listener, remote_port uint, remote_dest
 		}
 
 		// Forward to a remote port
-		go forward(local_connection, config, host, remote_dest, remote_port)
+		go forward(local_connection, config, host, remote_dest, uint(remote_port))
 	}
 
 	return nil
+}
+
+// FileSigner returns an gossh.Signer for a key file.
+func FileSigner(path string) (gossh.Signer, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	keyBytes, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	// We parse the private key on our own first so that we can
+	// show a nicer error if the private key has a password.
+	block, _ := pem.Decode(keyBytes)
+	if block == nil {
+		return nil, fmt.Errorf(
+			"Failed to read key '%s': no key found", path)
+	}
+	if block.Headers["Proc-Type"] == "4,ENCRYPTED" {
+		return nil, fmt.Errorf(
+			"Failed to read key '%s': password protected keys are\n"+
+				"not supported. Please decrypt the key prior to use.", path)
+	}
+
+	signer, err := gossh.ParsePrivateKey(keyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("Error setting up SSH config: %s", err)
+	}
+
+	return signer, nil
 }

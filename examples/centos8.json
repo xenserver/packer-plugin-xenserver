@@ -34,6 +34,7 @@
       "ssh_username": "vagrant",
       "ssh_password": "vagrant",
       "ssh_wait_timeout": "10000s",
+      "ssh_agent_auth": false,
       "vm_name": "packer-centos-8.3-x86_64-{{isotime}}",
       "vm_description": "Build time: {{isotime}}",
       "keep_vm": "always"

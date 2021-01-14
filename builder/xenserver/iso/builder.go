@@ -1,54 +1,32 @@
 package iso
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"log"
 	"path"
 	"strings"
 	"time"
 
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/common"
-	"github.com/mitchellh/packer/helper/communicator"
-	hconfig "github.com/mitchellh/packer/helper/config"
-	"github.com/mitchellh/packer/packer"
-	"github.com/mitchellh/packer/template/interpolate"
+	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/hashicorp/packer/common"
+	"github.com/hashicorp/packer/helper/communicator"
+	hconfig "github.com/hashicorp/packer/helper/config"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
+	"github.com/hashicorp/packer/template/interpolate"
 	xsclient "github.com/terra-farm/go-xen-api-client"
 	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
 
-type config struct {
-	common.PackerConfig   `mapstructure:",squash"`
-	xscommon.CommonConfig `mapstructure:",squash"`
-
-	VCPUsMax       uint              `mapstructure:"vcpus_max"`
-	VCPUsAtStartup uint              `mapstructure:"vcpus_atstartup"`
-	VMMemory       uint              `mapstructure:"vm_memory"`
-	DiskSize       uint              `mapstructure:"disk_size"`
-	CloneTemplate  string            `mapstructure:"clone_template"`
-	VMOtherConfig  map[string]string `mapstructure:"vm_other_config"`
-
-	ISOChecksum     string   `mapstructure:"iso_checksum"`
-	ISOChecksumType string   `mapstructure:"iso_checksum_type"`
-	ISOUrls         []string `mapstructure:"iso_urls"`
-	ISOUrl          string   `mapstructure:"iso_url"`
-	ISOName         string   `mapstructure:"iso_name"`
-
-	PlatformArgs map[string]string `mapstructure:"platform_args"`
-
-	RawInstallTimeout string        `mapstructure:"install_timeout"`
-	InstallTimeout    time.Duration ``
-
-	ctx interpolate.Context
-}
-
 type Builder struct {
-	config config
+	config xscommon.Config
 	runner multistep.Runner
 }
 
-func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error) {
+func (self *Builder) ConfigSpec() hcldec.ObjectSpec { return self.config.FlatMapstructure().HCL2Spec() }
+
+func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []string, retErr error) {
 
 	var errs *packer.MultiError
 
@@ -66,8 +44,8 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	}
 
 	errs = packer.MultiErrorAppend(
-		errs, self.config.CommonConfig.Prepare(&self.config.ctx, &self.config.PackerConfig)...)
-	errs = packer.MultiErrorAppend(errs, self.config.SSHConfig.Prepare(&self.config.ctx)...)
+		errs, self.config.CommonConfig.Prepare(self.config.GetInterpContext(), &self.config.PackerConfig)...)
+	errs = packer.MultiErrorAppend(errs, self.config.SSHConfig.Prepare(self.config.GetInterpContext())...)
 
 	// Set default values
 
@@ -148,12 +126,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 				} else {
 					self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
 				}
-
-				if hash := common.HashForType(self.config.ISOChecksumType); hash == nil {
-					errs = packer.MultiErrorAppend(
-						errs, fmt.Errorf("Unsupported checksum type: %s", self.config.ISOChecksumType))
-				}
-
 			}
 		}
 
@@ -168,14 +140,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 			errs = packer.MultiErrorAppend(
 				errs, errors.New("Only one of iso_url or iso_urls may be specified."))
 		}
-
-		for i, url := range self.config.ISOUrls {
-			self.config.ISOUrls[i], err = common.DownloadableURL(url)
-			if err != nil {
-				errs = packer.MultiErrorAppend(
-					errs, fmt.Errorf("Failed to parse iso_urls[%d]: %s", i, err))
-			}
-		}
 	} else {
 
 		// An ISO name has been provided. It should be attached from an available SR.
@@ -186,11 +150,11 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		retErr = errors.New(errs.Error())
 	}
 
-	return nil, retErr
+	return nil, nil, retErr
 
 }
 
-func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packer.Artifact, error) {
+func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
 	c, err := xscommon.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
 
 	if err != nil {
@@ -202,7 +166,6 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 
 	//Share state between the other steps using a statebag
 	state := new(multistep.BasicStateBag)
-	state.Put("cache", cache)
 	state.Put("client", c)
 	state.Put("config", self.config)
 	state.Put("commonconfig", self.config.CommonConfig)
@@ -214,11 +177,10 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	//Build the steps
 	download_steps := []multistep.Step{
 		&common.StepDownload{
-			Checksum:     self.config.ISOChecksum,
-			ChecksumType: self.config.ISOChecksumType,
-			Description:  "ISO",
-			ResultKey:    "iso_path",
-			Url:          self.config.ISOUrls,
+			Checksum:    self.config.ISOChecksum,
+			Description: "ISO",
+			ResultKey:   "iso_path",
+			Url:         self.config.ISOUrls,
 		},
 	}
 
@@ -296,7 +258,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		// },
 		new(xscommon.StepBootWait),
 		&xscommon.StepTypeBootCommand{
-			Ctx: self.config.ctx,
+			Ctx: *self.config.GetInterpContext(),
 		},
 		&xscommon.StepWaitForIP{
 			Chan:    httpReqChan,
@@ -311,9 +273,9 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		},
 		&communicator.StepConnect{
 			Config:    &self.config.SSHConfig.Comm,
-			Host:      xscommon.CommHost,
-			SSHConfig: xscommon.SSHConfigFunc(self.config.CommonConfig.SSHConfig),
-			SSHPort:   xscommon.SSHPort,
+			Host:      xscommon.InstanceSSHIP,
+			SSHConfig: self.config.Comm.SSHConfigFunc(),
+			SSHPort:   xscommon.InstanceSSHPort,
 		},
 		new(common.StepProvision),
 		new(xscommon.StepShutdown),
@@ -338,7 +300,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	}
 
 	self.runner = &multistep.BasicRunner{Steps: steps}
-	self.runner.Run(state)
+	self.runner.Run(ctx, state)
 
 	if rawErr, ok := state.GetOk("error"); ok {
 		return nil, rawErr.(error)
@@ -355,12 +317,4 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	artifact, _ := xscommon.NewArtifact(self.config.OutputDir)
 
 	return artifact, nil
-}
-
-func (self *Builder) Cancel() {
-	if self.runner != nil {
-		log.Println("Cancelling the step runner...")
-		self.runner.Cancel()
-	}
-	fmt.Println("Cancelling the builder")
 }

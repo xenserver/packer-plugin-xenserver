@@ -1,13 +1,14 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"time"
 
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 	xenapi "github.com/terra-farm/go-xen-api-client"
 )
 
@@ -17,7 +18,7 @@ type StepUploadVdi struct {
 	VdiUuidKey    string
 }
 
-func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepUploadVdi) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)

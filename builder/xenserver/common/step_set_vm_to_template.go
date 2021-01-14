@@ -1,15 +1,16 @@
 package common
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 )
 
 type StepSetVmToTemplate struct{}
 
-func (StepSetVmToTemplate) Run(state multistep.StateBag) multistep.StepAction {
+func (StepSetVmToTemplate) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
 	instance_uuid := state.Get("instance_uuid").(string)

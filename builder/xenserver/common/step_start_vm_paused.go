@@ -1,16 +1,17 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 )
 
 type StepStartVmPaused struct{}
 
-func (self *StepStartVmPaused) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepStartVmPaused) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
 	c := state.Get("client").(*Connection)
 	ui := state.Get("ui").(packer.Ui)

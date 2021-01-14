@@ -1,18 +1,19 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
 )
 
 type StepDetachVdi struct {
 	VdiUuidKey string
 }
 
-func (self *StepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepDetachVdi) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
 

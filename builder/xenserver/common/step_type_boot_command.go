@@ -3,6 +3,7 @@ package common
 /* Heavily borrowed from builder/quemu/step_type_boot_command.go */
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -13,10 +14,10 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer/packer"
+	"github.com/hashicorp/packer/template/interpolate"
 	"github.com/mitchellh/go-vnc"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	"github.com/mitchellh/packer/template/interpolate"
 )
 
 const KeyLeftShift uint = 0xFFE1
@@ -31,11 +32,11 @@ type StepTypeBootCommand struct {
 	Ctx interpolate.Context
 }
 
-func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
-	httpPort := state.Get("http_port").(uint)
+	httpPort := state.Get("http_port").(int)
 
 	// skip this step if we have nothing to type
 	if len(config.BootCommand) == 0 {
@@ -144,7 +145,7 @@ func (self *StepTypeBootCommand) Run(state multistep.StateBag) multistep.StepAct
 	self.Ctx.Data = &bootCommandTemplateData{
 		config.VMName,
 		localIp,
-		httpPort,
+		uint(httpPort),
 	}
 
 	ui.Say("Typing boot commands over VNC...")

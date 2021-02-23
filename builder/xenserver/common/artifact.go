@@ -2,7 +2,7 @@ package common
 
 import (
 	"fmt"
-	"github.com/hashicorp/packer/packer"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"os"
 	"path/filepath"
 )

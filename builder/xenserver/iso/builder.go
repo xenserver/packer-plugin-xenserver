@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
-	"github.com/hashicorp/packer/common"
-	"github.com/hashicorp/packer/helper/communicator"
-	hconfig "github.com/hashicorp/packer/helper/config"
-	"github.com/hashicorp/packer/helper/multistep"
-	"github.com/hashicorp/packer/packer"
-	"github.com/hashicorp/packer/template/interpolate"
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	commonsteps "github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
+	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
+	hconfig "github.com/hashicorp/packer-plugin-sdk/template/config"
 	xsclient "github.com/terra-farm/go-xen-api-client"
 	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
@@ -176,7 +176,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 
 	//Build the steps
 	download_steps := []multistep.Step{
-		&common.StepDownload{
+		&commonsteps.StepDownload{
 			Checksum:    self.config.ISOChecksum,
 			Description: "ISO",
 			ResultKey:   "iso_path",
@@ -189,7 +189,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			Force: self.config.PackerForce,
 			Path:  self.config.OutputDir,
 		},
-		&common.StepCreateFloppy{
+		&commonsteps.StepCreateFloppy{
 			Files: self.config.FloppyFiles,
 		},
 		&xscommon.StepHTTPServer{
@@ -277,7 +277,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			SSHConfig: self.config.Comm.SSHConfigFunc(),
 			SSHPort:   xscommon.InstanceSSHPort,
 		},
-		new(common.StepProvision),
+		new(commonsteps.StepProvision),
 		new(xscommon.StepShutdown),
 		new(xscommon.StepSetVmToTemplate),
 		&xscommon.StepDetachVdi{

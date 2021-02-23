@@ -4,9 +4,9 @@ package common
 import (
 	"time"
 
+	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	"github.com/hashicorp/packer-plugin-sdk/common"
 )
 
 type Config struct {

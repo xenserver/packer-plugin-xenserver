@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	"github.com/hashicorp/packer-plugin-sdk/common"
 	xenapi "github.com/terra-farm/go-xen-api-client"
 )
 

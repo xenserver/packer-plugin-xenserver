@@ -12,9 +12,9 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	commonsteps "github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
-	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	hconfig "github.com/hashicorp/packer-plugin-sdk/template/config"
+	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	xsclient "github.com/terra-farm/go-xen-api-client"
 	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )

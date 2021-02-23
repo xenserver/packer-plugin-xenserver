@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/plugin"
 	"github.com/hashicorp/packer-plugin-sdk/version"
 )
+
 var (
 	// Version is the main version number that is being run at the moment.
 	Version = "0.3.0"

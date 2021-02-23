@@ -6,3 +6,5 @@ crash.log
 packer_cache/*
 builder-*
 dist/*
+vendor/*
+packer-plugin-xenserver

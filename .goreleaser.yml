@@ -7,7 +7,7 @@ before:
   hooks:
     # We strongly recommend running tests to catch any regression before release. 
     # Even though, this an optional step.
-    - go test ./...
+    # - go test ./...
 
 builds:
   # A separated build to run the packer-plugins-check only once for a linux_amd64 binary

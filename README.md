@@ -27,7 +27,7 @@ Download the relevant release from the project's [releases page](https://github.
 ### Dependencies
 * Packer >= v1.7.0 (https://packer.io)
 * XenServer / Citrix Hypervisor > 7.6
-* Golang 1.14
+* Golang 1.16
 
 ## Compile the plugin
 

@@ -11,8 +11,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/hashicorp/packer/communicator/ssh"
-	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	gossh "golang.org/x/crypto/ssh"
 )
 
@@ -45,8 +44,6 @@ func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConf
 		config := state.Get("commonconfig").(CommonConfig)
 		auth := []gossh.AuthMethod{
 			gossh.Password(config.SSHPassword),
-			gossh.KeyboardInteractive(
-				ssh.PasswordKeyboardInteractive(config.SSHPassword)),
 		}
 
 		if config.SSHKeyPath != "" {

@@ -1,7 +1,7 @@
 package common
 
 import (
-	"github.com/hashicorp/packer/helper/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"time"
 )
 

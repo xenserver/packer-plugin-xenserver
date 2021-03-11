@@ -20,14 +20,14 @@ The following list contains things that are incomplete but will be worked on soo
 
 ## Using the builder
 
-Download the relevant release from the project's [releases page](https://github.com/ddelnano/packer-builder-xenserver/releases) and copy the binary to `~/.packer.d/plugin/packer-builder-xenserver-iso`.
+Download the relevant release from the project's [releases page](https://github.com/ddelnano/packer-builder-xenserver/releases) and copy the binary to `~/.packer.d/plugins/packer-builder-xenserver-iso`.
 
 ## Developing the builder
 
 ### Dependencies
-* Packer >= v0.10.2 (https://packer.io)
+* Packer >= v1.7.0 (https://packer.io)
 * XenServer / Citrix Hypervisor > 7.6
-* Golang 1.14
+* Golang 1.16
 
 ## Compile the plugin
 
@@ -35,7 +35,7 @@ Once you have installed Packer, you must compile this plugin and install the
 resulting binary.
 
 ```shell
-$ go build github.com/xenserver/packer-builder-xenserver/plugin/builder-xenserver-iso
+$ go build -o packer-plugin-xenserver
 
 # Add the builder to the location packer expects it to be installed in
 $ mkdir -p ~/.packer.d/plugins/

@@ -1,55 +1,78 @@
-# Visit https://goreleaser.com for documentation on how to customize this
-# behavior.
+
+# This is an example goreleaser.yaml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+env:
+  - CGO_ENABLED=0
 before:
   hooks:
-    # this is just an example and not a requirement for provider building/publishing
-    - go mod tidy
+    # We strongly recommend running tests to catch any regression before release. 
+    # Even though, this an optional step.
+    # - go test ./...
+
 builds:
-- env:
-    # goreleaser does not work with CGO, it could also complicate
-    # usage by users in CI/CD systems like Terraform Cloud where
-    # they are unable to install libraries.
-    - CGO_ENABLED=0
-  main: plugin/builder-xenserver-iso/main.go
-  mod_timestamp: '{{ .CommitTimestamp }}'
-  flags:
-    - -trimpath
-  ldflags:
-    - '-X main.version={{.Version}} -X main.commit={{.Commit}}'
-  goos:
-    - freebsd
-    - windows
-    - linux
-    - darwin
-  goarch:
-    - amd64
-    - '386'
-    - arm
-    - arm64
-  ignore:
-    - goos: darwin
-      goarch: '386'
-  binary: '{{ .ProjectName }}_v{{ .Version }}'
+  # A separated build to run the packer-plugins-check only once for a linux_amd64 binary
+  -
+    id: plugin-check
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    hooks:
+      post:
+        # This will check plugin compatibility against latest version of Packer
+        - cmd: |
+            go install github.com/hashicorp/packer/cmd/packer-plugins-check@latest &&
+            packer-plugins-check -load={{ .Name }}
+          dir: "{{ dir .Path}}"
+    flags:
+      - -trimpath #removes all file system paths from the compiled executable
+    ldflags:
+      - '-s -w -X main.Version={{.Version}} -X main.VersionPrerelease= '
+    goos:
+      - linux
+    goarch:
+      - amd64
+    binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
+  - 
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath #removes all file system paths from the compiled executable
+    ldflags:
+      - '-s -w -X main.version={{.Version}} -X main.VersionPrerelease= '
+    goos:
+      - freebsd
+      - windows
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - '386'
+      - arm
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: '386'
+      - goos: linux
+        goarch: amd64
+
+    binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
 archives:
 - format: zip
-  name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+  name_template: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
 checksum:
-  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+  name_template: '{{ .ProjectName }}_v{{ .Version }}_SHA256SUMS'
   algorithm: sha256
 signs:
   - artifacts: checksum
     args:
-      # if you are using this is a GitHub action or some other automated pipeline, you 
+      # if you are using this is in a GitHub action or some other automated pipeline, you 
       # need to pass the batch flag to indicate its not interactive.
       - "--batch"
       - "--local-user"
-      - "{{ .Env.GPG_FINGERPRINT }}" # set this environment variable for your signing key
+      - "{{ .Env.GPG_FINGERPRINT }}"
       - "--output"
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
 release:
-  # Visit your project's GitHub Releases page to publish this release.
+  # If you want to manually examine the release before its live, uncomment this line:
   draft: true
 changelog:
   skip: true

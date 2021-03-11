@@ -7,12 +7,12 @@ import (
 	"time"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
-	"github.com/hashicorp/packer/common"
-	"github.com/hashicorp/packer/helper/communicator"
-	hconfig "github.com/hashicorp/packer/helper/config"
-	"github.com/hashicorp/packer/helper/multistep"
-	"github.com/hashicorp/packer/packer"
-	"github.com/hashicorp/packer/template/interpolate"
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	commonsteps "github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
+	hconfig "github.com/hashicorp/packer-plugin-sdk/template/config"
+	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	xsclient "github.com/terra-farm/go-xen-api-client"
 	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
@@ -114,7 +114,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			Force: self.config.PackerForce,
 			Path:  self.config.OutputDir,
 		},
-		&common.StepCreateFloppy{
+		&commonsteps.StepCreateFloppy{
 			Files: self.config.FloppyFiles,
 		},
 		new(xscommon.StepHTTPServer),
@@ -159,7 +159,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			SSHConfig: xscommon.SSHConfigFunc(self.config.CommonConfig.SSHConfig),
 			SSHPort:   xscommon.SSHPort,
 		},
-		new(common.StepProvision),
+		new(commonsteps.StepProvision),
 		new(xscommon.StepShutdown),
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",

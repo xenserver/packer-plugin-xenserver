@@ -35,9 +35,8 @@
       "ssh_password": "ubuntu",
       "ssh_wait_timeout": "60000s",
       "ssh_timeout": "60000s",
-      "vm_name": "packer-ubuntu-2004-x86_64",
+      "vm_name": "packer-ubuntu-2004-x86_64 {{isotime}}",
       "vm_description": "Build time: {{isotime}}",
-      "disk_size": "20000",
       "vm_memory": "4096",
       "keep_vm": "always",
       "ssh_handshake_attempts": "10000"

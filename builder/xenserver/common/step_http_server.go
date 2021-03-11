@@ -9,8 +9,8 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/hashicorp/packer/helper/multistep"
-	"github.com/hashicorp/packer/packer"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 // This step creates and runs the HTTP server that is serving files from the

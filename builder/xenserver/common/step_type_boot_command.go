@@ -68,13 +68,15 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	}
 
 	location, err := c.client.Console.GetLocation(c.session, consoles[0])
+	ui.Say(fmt.Sprintf("LOCATION: %s", location))
 	if err != nil {
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
-
+	locationPieces := strings.SplitAfter(location, "/")
+	consoleHost := strings.TrimSuffix(locationPieces[2], "/")
 	ui.Say("Connecting to the VM console VNC over xapi")
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:443", config.HostIp))
+	conn, err := net.Dial("tcp", fmt.Sprintf("%s:443", consoleHost))
 
 	if err != nil {
 		err := fmt.Errorf("Error connecting to VNC: %s", err)
@@ -90,9 +92,9 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	}
 	tlsConn := tls.Client(conn, tlsConfig)
 
-	locationPieces := strings.SplitAfter(location, "/")
+	ui.Say(fmt.Sprintf("%s", strings.TrimSuffix(locationPieces[2], "/")))
 	consoleLocation := strings.TrimSpace(fmt.Sprintf("/%s", locationPieces[len(locationPieces)-1]))
-	httpReq := fmt.Sprintf("CONNECT %s HTTP/1.0\r\nCookie: session_id=%s\r\n\r\n", consoleLocation, c.session)
+	httpReq := fmt.Sprintf("CONNECT %s HTTP/1.0\r\nHost: %s\r\nCookie: session_id=%s\r\n\r\n", consoleLocation, consoleHost, c.session)
 	fmt.Printf("Sending the follow http req: %v", httpReq)
 
 	ui.Say(fmt.Sprintf("Making HTTP request to initiate VNC connection: %s", httpReq))

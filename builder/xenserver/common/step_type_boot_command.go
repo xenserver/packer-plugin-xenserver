@@ -91,7 +91,6 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	}
 	tlsConn := tls.Client(conn, tlsConfig)
 
-	ui.Say(fmt.Sprintf("%s", strings.TrimSuffix(locationPieces[2], "/")))
 	consoleLocation := strings.TrimSpace(fmt.Sprintf("/%s", locationPieces[len(locationPieces)-1]))
 	httpReq := fmt.Sprintf("CONNECT %s HTTP/1.0\r\nHost: %s\r\nCookie: session_id=%s\r\n\r\n", consoleLocation, consoleHost, c.session)
 	fmt.Printf("Sending the follow http req: %v", httpReq)

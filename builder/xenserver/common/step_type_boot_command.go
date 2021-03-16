@@ -68,14 +68,13 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	}
 
 	location, err := c.client.Console.GetLocation(c.session, consoles[0])
-	ui.Say(fmt.Sprintf("LOCATION: %s", location))
 	if err != nil {
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
 	locationPieces := strings.SplitAfter(location, "/")
 	consoleHost := strings.TrimSuffix(locationPieces[2], "/")
-	ui.Say("Connecting to the VM console VNC over xapi")
+	ui.Say(fmt.Sprintf("Connecting to the VM console VNC over xapi via %s", consoleHost))
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:443", consoleHost))
 
 	if err != nil {

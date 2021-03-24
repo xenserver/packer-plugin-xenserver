@@ -124,6 +124,10 @@ each category, the available options are alphabetized and described.
   regardless of success. "on_success" requests that the VM only be cleaned up if an
   artifact was produced. The latter is useful for debugging templates that fail.
 
+* `network_names` (array of strings) - A list of networks identified by their name label which 
+  will be used for the VM during creation. The first network will correspond to the VM's
+  first network interface (VIF), the second will corespond to the second VIF and so on.
+
 * `output_directory` (string) - This is the path to the directory where the
   resulting virtual machine will be created. This may be relative or absolute.
   If relative, the path is relative to the working directory when `packer`

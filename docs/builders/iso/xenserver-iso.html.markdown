@@ -124,7 +124,7 @@ each category, the available options are alphabetized and described.
   regardless of success. "on_success" requests that the VM only be cleaned up if an
   artifact was produced. The latter is useful for debugging templates that fail.
 
-* `network_names` (array of strings) - A list of networks identified by their name label which 
+* `network_names` (list) - A list of networks identified by their name label which 
   will be used for the VM during creation. The first network will correspond to the VM's
   first network interface (VIF), the second will corespond to the second VIF and so on.
 
@@ -153,6 +153,13 @@ each category, the available options are alphabetized and described.
   the machine once all the provisioning is done. If this is omitted, packer
   will shut down the VM gracefully through the Xen api's vm shutdown command. Unless
   you have special requirements this should typically be left to its default.
+  the machine once all the provisioning is done. By default this is an empty
+  string, which tells Packer to just forcefully shut down the machine.
+
+* `shutdown_timeout` (string) - The amount of time to wait after executing
+  the `shutdown_command` for the virtual machine to actually shut down.
+  If it doesn't shut down in this time, it is an error. By default, the timeout
+  is "5m", or five minutes.
 
 * `ssh_host_port_min` and `ssh_host_port_max` (integer) - The minimum and
   maximum port to use for the SSH port on the host machine which is forwarded

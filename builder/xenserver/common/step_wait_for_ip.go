@@ -10,6 +10,7 @@ import (
 )
 
 type StepWaitForIP struct {
+	VmCleanup
 	Chan    <-chan string
 	Timeout time.Duration
 }
@@ -83,8 +84,6 @@ func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) mu
 
 	return multistep.ActionContinue
 }
-
-func (self *StepWaitForIP) Cleanup(state multistep.StateBag) {}
 
 func InstanceSSHIP(state multistep.StateBag) (string, error) {
 	ip := state.Get("instance_ssh_address").(string)

@@ -1,6 +1,6 @@
 module github.com/xenserver/packer-builder-xenserver
 
-go 1.14
+go 1.16
 
 require (
 	github.com/amfranz/go-xmlrpc-client v0.0.0-20190612172737-76858463955d

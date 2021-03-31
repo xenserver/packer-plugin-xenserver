@@ -30,7 +30,6 @@
           "conversionvm":"true"
       },
       "output_directory": "packer-ubuntu-2004-x86_64-xenserver",
-      "shutdown_command": "/sbin/shutdown",
       "ssh_username": "testuser",
       "ssh_password": "ubuntu",
       "ssh_wait_timeout": "60000s",

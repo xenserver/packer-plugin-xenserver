@@ -30,7 +30,6 @@
           "conversionvm":"true"
       },
       "output_directory": "packer-centos-8.3-x86_64-xenserver",
-      "shutdown_command": "/sbin/shutdown",
       "ssh_username": "vagrant",
       "ssh_password": "vagrant",
       "ssh_wait_timeout": "10000s",

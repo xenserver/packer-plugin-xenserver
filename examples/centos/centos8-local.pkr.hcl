@@ -1,3 +1,12 @@
+packer {
+  required_plugins {
+   xenserver= {
+      version = "= v0.3.0-dev9"
+      source = "github.com/ddelnano/xenserver"
+    }
+  }
+}
+
 variable "remote_host" {
   type        = string
   description = "The ip or fqdn of your XenServer. This will be pulled from the env var 'PKR_VAR_XAPI_HOST'"
@@ -51,7 +60,7 @@ source "xenserver-iso" "centos8-local" {
   remote_username = var.remote_username
 
   vm_name        = "packer-centos8-local-${local.timestamp}"
-  vm_description = "Build started: ${local.timestamp}\n This was installed From the dvd"
+  vm_description = "Build started: ${local.timestamp}\n This was installed from the dvd"
   vm_memory      = 4096
   disk_size      = 4096
 

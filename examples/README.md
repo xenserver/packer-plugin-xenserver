@@ -25,21 +25,6 @@ so for example:
 
 ### Ubuntu
 
-This example has not yet updated to HCL.
-
-In order to run this example you will need to perform the following steps:
-1. Export the `XAPI_HOST`, `XAPI_USERNAME` and `XAPI_PASSWORD` environment variables to the current shell. Note: The `XAPI_HOST` must be the resource pool primary.
-2. Run the `packer build` command specifying the storage repositories to use for the ISO upload and for the VM created during the build.
-
-```
-# Replace sr_name and sr_iso_name with your storage repositories names
-packer build -debug  --var sr_name='Local storage' --var sr_iso_name=LocalISO examples/centos8.json
-
-# Do the same variable replacement for the ubuntu example as well.
-packer build -debug  --var sr_name='Local storage' --var sr_iso_name=LocalISO examples/ubuntu-2004.json
-```
-
-
 The Ubuntu example uses the [autoinstall tool](https://ubuntu.com/server/docs/install/autoinstallhttps://ubuntu.com/server/docs/install/autoinstall) to configure the VM template. Please see the [autoinstall docs](https://ubuntu.com/server/docs/install/autoinstall-reference) for an exhaustive list of what is supported.
 
 Packer will create a http server to serve the files as specified from the `http_directory` specified in the builder configuration. This is where the [user-data](http/ubuntu-2004/user-data) and [meta-data](http/ubuntu-2004/meta-data) for autoinstall must be present.

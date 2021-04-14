@@ -1,3 +1,15 @@
+# This is for packer to find the xenserver plugin
+# so that you no longer need to install it by hand
+packer {
+  required_plugins {
+   xenserver= {
+      version = ">= v0.3.2"
+      source = "github.com/ddelnano/xenserver"
+    }
+  }
+}
+
+
 source "xenserver-iso" "example" {
   #
   # Where to get the iso

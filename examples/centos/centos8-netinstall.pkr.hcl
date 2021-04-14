@@ -1,3 +1,12 @@
+packer {
+  required_plugins {
+   xenserver= {
+      version = "= v0.3.0-dev9"
+      source = "github.com/ddelnano/xenserver"
+    }
+  }
+}
+
 variable "remote_host" {
   type        = string
   description = "The ip or fqdn of your XenServer. This will be pulled from the env var 'PKR_VAR_XAPI_HOST'"

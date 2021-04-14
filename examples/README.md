@@ -17,6 +17,7 @@ PKR_VAR_sr_iso_name
 ``` 
 `PKR_VAR_remote_host` must be the resource pool primary, aka the master.
 
+2. Run `packer init path/to/defenition.pkr.hcl` to download the xenserver plugin
 
 2. Run `packer build  path/to/defenition.pkr.hcl`   
 so for example:

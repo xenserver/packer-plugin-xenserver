@@ -28,6 +28,21 @@ This examples composes the following files from the examples folder
 
 ## Explanation of centos8-example.pkr.hcl
 
+```hcl
+packer {
+  required_plugins {
+   xenserver= {
+      version = ">= v0.3.2"
+      source = "github.com/ddelnano/xenserver"
+    }
+  }
+}
+```
+this tells packer that it needs the `xenserver` plugin to run this script.  
+`version = ">= v0.3.2"` with  a version higher than 0.3.2   
+`source = "github.com/ddelnano/xenserver"` found on github   
+
+
 * `source "xenserver-iso" "example" { } ` directs packer to configure an Artifact named example using the `xenserver-iso` builder
 
 * `iso_url  = "http://mirrors.ocf.berkeley.edu/centos/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso" ` use the iso obtainable from this url

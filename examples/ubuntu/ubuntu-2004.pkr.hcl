@@ -75,7 +75,6 @@ source "xenserver-iso" "ubuntu-2004" {
   ssh_username     = "testuser"
   ssh_password     = "ubuntu"
   ssh_wait_timeout = "10m"
-  shutdown_command = "/sbin/shutdown"
 
   output_directory = "packer-ubuntu-2004-iso"
   keep_vm          = "always"

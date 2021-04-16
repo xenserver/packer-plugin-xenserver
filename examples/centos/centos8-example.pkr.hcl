@@ -61,7 +61,6 @@ source "xenserver-iso" "example" {
   ssh_username     = "root" # The ssh user packer uses to connect to the VM
   ssh_password     = "centos" # The ssh password packer uses to connect to the VM
   ssh_wait_timeout = "10m" # consider install failed if unable to connect via ssh 10m into the build
-  shutdown_command = "/sbin/shutdown" #  After connection via ssh issue this command to shut down the vm
   #
   # What to do with the resulting VM
   #

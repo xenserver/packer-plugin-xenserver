@@ -71,7 +71,6 @@ source "xenserver-iso" "centos8-netinstall" {
   ssh_username     = "root"
   ssh_password     = "centos"
   ssh_wait_timeout = "10000s"
-  shutdown_command = "/sbin/shutdown"
 
   output_directory = "packer-centos8-netinstall"
   keep_vm          = "always"

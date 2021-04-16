@@ -48,9 +48,9 @@ locals {
 
 
 source "xenserver-iso" "ubuntu-2004" {
-  iso_checksum      = "443511f6bf12402c12503733059269a2e10dec602916c0a75263e5d990f6bb93"
+  iso_checksum      = "d1f2bf834bbe9bb43faf16f9be992a6f3935e65be0edece1dee2aa6eb1767423"
   iso_checksum_type = "sha256"
-  iso_url           = "http://releases.ubuntu.com/20.04/ubuntu-20.04.1-live-server-amd64.iso"
+  iso_url           = "http://releases.ubuntu.com/20.04/ubuntu-20.04.2-live-server-amd64.iso"
 
   sr_iso_name    = var.sr_iso_name
   sr_name        = var.sr_name

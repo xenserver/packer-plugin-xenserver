@@ -153,8 +153,6 @@ each category, the available options are alphabetized and described.
   the machine once all the provisioning is done. If this is omitted, packer
   will shut down the VM gracefully through the Xen api's vm shutdown command. Unless
   you have special requirements this should typically be left to its default.
-  the machine once all the provisioning is done. By default this is an empty
-  string, which tells Packer to just forcefully shut down the machine.
 
 * `shutdown_timeout` (string) - The amount of time to wait after executing
   the `shutdown_command` for the virtual machine to actually shut down.

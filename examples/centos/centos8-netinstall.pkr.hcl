@@ -9,21 +9,21 @@ packer {
 
 variable "remote_host" {
   type        = string
-  description = "The ip or fqdn of your XenServer. This will be pulled from the env var 'PKR_VAR_XAPI_HOST'"
+  description = "The ip or fqdn of your XenServer. This will be pulled from the env var 'PKR_VAR_remote_host'"
   sensitive   = true
   default     = null
 }
 
 variable "remote_password" {
   type        = string
-  description = "The password used to interact with your XenServer. This will be pulled from the env var 'PKR_VAR_XAPI_PASSWORD'"
+  description = "The password used to interact with your XenServer. This will be pulled from the env var 'PKR_VAR_remote_password'"
   sensitive   = true
   default     = null
 }
 
 variable "remote_username" {
   type        = string
-  description = "The username used to interact with your XenServer. This will be pulled from the env var 'PKR_VAR_XAPI_USERNAME'"
+  description = "The username used to interact with your XenServer. This will be pulled from the env var 'PKR_VAR_remote_username'"
   sensitive   = true
   default     = null
 

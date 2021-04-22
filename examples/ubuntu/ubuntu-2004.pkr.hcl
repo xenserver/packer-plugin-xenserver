@@ -72,9 +72,10 @@ source "xenserver-iso" "ubuntu-2004" {
   ]
   boot_wait      = "10s"
 
-  ssh_username     = "testuser"
-  ssh_password     = "ubuntu"
-  ssh_wait_timeout = "10m"
+  ssh_username            = "testuser"
+  ssh_password            = "ubuntu"
+  ssh_wait_timeout        = "60000s"
+  ssh_handshake_attempts  = 10000
 
   output_directory = "packer-ubuntu-2004-iso"
   keep_vm          = "always"

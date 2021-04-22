@@ -154,11 +154,6 @@ each category, the available options are alphabetized and described.
   will shut down the VM gracefully through the Xen api's vm shutdown command. Unless
   you have special requirements this should typically be left to its default.
 
-* `shutdown_timeout` (string) - The amount of time to wait after executing
-  the `shutdown_command` for the virtual machine to actually shut down.
-  If it doesn't shut down in this time, it is an error. By default, the timeout
-  is "5m", or five minutes.
-
 * `ssh_host_port_min` and `ssh_host_port_max` (integer) - The minimum and
   maximum port to use for the SSH port on the host machine which is forwarded
   to the SSH port on the guest machine. Because Packer often runs in parallel,

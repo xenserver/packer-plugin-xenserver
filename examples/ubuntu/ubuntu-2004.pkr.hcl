@@ -65,12 +65,10 @@ source "xenserver-iso" "ubuntu-2004" {
   vm_memory      = 4096
   disk_size      = 20000
 
-  http_directory = "examples/http/ubuntu-2004"
-  boot_command   = [
-    "<esc><f6> autoinstall ds=nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/<enter><wait>",
-    "<f6><wait><esc><wait> autoinstall ds=nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/<enter><wait>"
+  floppy_files = [
+    "examples/http/ubuntu-2004/meta-data",
+    "examples/http/ubuntu-2004/user-data",
   ]
-  boot_wait      = "10s"
 
   ssh_username            = "testuser"
   ssh_password            = "ubuntu"

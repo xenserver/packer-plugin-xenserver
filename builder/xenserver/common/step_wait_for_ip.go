@@ -60,7 +60,8 @@ func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) mu
 						return false, err
 					}
 					networks := metrics.Networks
-					if ip, ok := networks["0/ip"]; ok {
+					var ok bool
+					if ip, ok = networks["0/ip"]; ok {
 						if ip != "" {
 							ui.Message(fmt.Sprintf("Got IP '%s' from XenServer tools", ip))
 							return true, nil

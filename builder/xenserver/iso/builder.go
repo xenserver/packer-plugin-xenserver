@@ -191,6 +191,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		},
 		&commonsteps.StepCreateFloppy{
 			Files: self.config.FloppyFiles,
+			Label: "cidata",
 		},
 		&xscommon.StepHTTPServer{
 			Chan: httpReqChan,

@@ -67,3 +67,7 @@ xenserver-iso docs](docs/builders/xenserver-iso.html.markdown)
 ## Support
 
 You can discuss any issues you have or feature requests in [Discord](https://discord.gg/ZpNq8ez).
+
+If you'd like to support my effort on the project, please consider buying me a coffee
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/ddelnano)

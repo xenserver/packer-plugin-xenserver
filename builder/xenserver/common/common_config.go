@@ -223,29 +223,11 @@ func (c CommonConfig) ShouldKeepVM(state multistep.StateBag) bool {
 }
 
 func (config CommonConfig) GetSR(c *Connection) (xenapi.SRRef, error) {
-	var srRef xenapi.SRRef
 	if config.SrName == "" {
-		hostRef, err := c.GetClient().Session.GetThisHost(c.session, c.session)
-
-		if err != nil {
-			return srRef, err
-		}
-
-		pools, err := c.GetClient().Pool.GetAllRecords(c.session)
-
-		if err != nil {
-			return srRef, err
-		}
-
-		for _, pool := range pools {
-			if pool.Master == hostRef {
-				return pool.DefaultSR, nil
-			}
-		}
-
-		return srRef, errors.New(fmt.Sprintf("failed to find default SR on host '%s'", hostRef))
-
+		return getDefaultSR(c)
 	} else {
+		var srRef xenapi.SRRef
+
 		// Use the provided name label to find the SR to use
 		srs, err := c.GetClient().SR.GetByNameLabel(c.session, config.SrName)
 
@@ -267,7 +249,7 @@ func (config CommonConfig) GetSR(c *Connection) (xenapi.SRRef, error) {
 func (config CommonConfig) GetISOSR(c *Connection) (xenapi.SRRef, error) {
 	var srRef xenapi.SRRef
 	if config.SrISOName == "" {
-		return srRef, errors.New("sr_iso_name must be specified in the packer configuration")
+		return getDefaultSR(c)
 
 	} else {
 		// Use the provided name label to find the SR to use
@@ -286,4 +268,27 @@ func (config CommonConfig) GetISOSR(c *Connection) (xenapi.SRRef, error) {
 
 		return srs[0], nil
 	}
+}
+
+func getDefaultSR(c *Connection) (xenapi.SRRef, error) {
+	var srRef xenapi.SRRef
+	hostRef, err := c.GetClient().Session.GetThisHost(c.session, c.session)
+
+	if err != nil {
+		return srRef, err
+	}
+
+	pools, err := c.GetClient().Pool.GetAllRecords(c.session)
+
+	if err != nil {
+		return srRef, err
+	}
+
+	for _, pool := range pools {
+		if pool.Master == hostRef {
+			return pool.DefaultSR, nil
+		}
+	}
+
+	return srRef, errors.New(fmt.Sprintf("failed to find default SR on host '%s'", hostRef))
 }

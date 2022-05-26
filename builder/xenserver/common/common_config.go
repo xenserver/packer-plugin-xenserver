@@ -272,21 +272,29 @@ func (config CommonConfig) GetISOSR(c *Connection) (xenapi.SRRef, error) {
 
 func getDefaultSR(c *Connection) (xenapi.SRRef, error) {
 	var srRef xenapi.SRRef
-	hostRef, err := c.GetClient().Session.GetThisHost(c.session, c.session)
+	client := c.GetClient()
+	hostRef, err := client.Session.GetThisHost(c.session, c.session)
 
 	if err != nil {
 		return srRef, err
 	}
 
-	pools, err := c.GetClient().Pool.GetAllRecords(c.session)
+	// The current version of the go-xen-api-client does not fully support XenAPI version 8.2
+	// In particular, some values for the pool `allowed_operations` are not recognised, resulting
+	// in a parse error when retrieving pool records. As a workaround, we only fetch pool refs.
+	pool_refs, err := client.Pool.GetAll(c.session)
 
 	if err != nil {
 		return srRef, err
 	}
 
-	for _, pool := range pools {
-		if pool.Master == hostRef {
-			return pool.DefaultSR, nil
+	for _, pool_ref := range pool_refs {
+		pool_master, err := client.Pool.GetMaster(c.session, pool_ref)
+		if err != nil {
+			return srRef, err
+		}
+		if pool_master == hostRef {
+			return client.Pool.GetDefaultSR(c.session, pool_ref)
 		}
 	}
 

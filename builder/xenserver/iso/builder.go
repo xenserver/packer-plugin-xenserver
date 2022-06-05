@@ -77,6 +77,10 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 		self.config.CloneTemplate = "Other install media"
 	}
 
+	if self.config.Firmware == "" {
+		self.config.Firmware = "bios"
+	}
+
 	if len(self.config.PlatformArgs) == 0 {
 		pargs := make(map[string]string)
 		pargs["viridian"] = "false"

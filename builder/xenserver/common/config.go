@@ -33,6 +33,8 @@ type Config struct {
 	InstallTimeout    time.Duration ``
 	SourcePath        string        `mapstructure:"source_path"`
 
+	Firmware string `mapstructure:"firmware"`
+
 	ctx interpolate.Context
 }
 

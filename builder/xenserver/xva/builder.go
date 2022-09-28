@@ -38,7 +38,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	}, raws...)
 
 	if err != nil {
-		packer.MultiErrorAppend(errs, err)
+		errs = packer.MultiErrorAppend(errs, err)
 	}
 
 	errs = packer.MultiErrorAppend(

@@ -115,35 +115,35 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	}
 
 	if self.config.ISOName == "" {
-
 		// If ISO name is not specified, assume a URL and checksum has been provided.
-
-		if self.config.ISOChecksumType == "" {
-			errs = packer.MultiErrorAppend(
-				errs, errors.New("The iso_checksum_type must be specified."))
-		} else {
-			self.config.ISOChecksumType = strings.ToLower(self.config.ISOChecksumType)
-			if self.config.ISOChecksumType != "none" {
-				if self.config.ISOChecksum == "" {
-					errs = packer.MultiErrorAppend(
-						errs, errors.New("Due to the file size being large, an iso_checksum is required."))
-				} else {
-					self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
-				}
-			}
-		}
+		self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
 
 		if len(self.config.ISOUrls) == 0 {
 			if self.config.ISOUrl == "" {
 				errs = packer.MultiErrorAppend(
-					errs, errors.New("One of iso_url or iso_urls must be specified."))
+						errs, errors.New("One of iso_url or iso_urls must be specified."))
 			} else {
 				self.config.ISOUrls = []string{self.config.ISOUrl}
 			}
+
 		} else if self.config.ISOUrl != "" {
 			errs = packer.MultiErrorAppend(
 				errs, errors.New("Only one of iso_url or iso_urls may be specified."))
 		}
+
+		//The SDK can validate the ISO checksum and other sanity checks on the url.
+		iso_config := commonsteps.ISOConfig {
+			ISOChecksum: self.config.ISOChecksum,
+			ISOUrls: self.config.ISOUrls,
+		}
+
+		_, iso_errs := iso_config.Prepare(nil)
+		if iso_errs != nil {
+				for _, this_err := range iso_errs {
+					errs = packer.MultiErrorAppend(errs, this_err)
+				}
+		}
+
 	} else {
 
 		// An ISO name has been provided. It should be attached from an available SR.

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/common"
 )
 
 func testConfig() map[string]interface{} {
@@ -16,7 +17,7 @@ func testConfig() map[string]interface{} {
 		"ssh_username":     "foo",
 		"source_path":      ".",
 
-		packer.BuildNameConfigKey: "foo",
+		common.BuildNameConfigKey: "foo",
 	}
 }
 

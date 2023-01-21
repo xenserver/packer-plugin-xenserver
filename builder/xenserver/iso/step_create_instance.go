@@ -101,6 +101,12 @@ func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 		}
 	}
 
+	err = c.GetClient().VM.RemoveFromOtherConfig(c.GetSessionRef(), instance, "disks")
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error removing disks from VM other-config: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
 	// Create VDI for the instance
 	sr, err := config.GetSR(c)
 

@@ -48,9 +48,9 @@ locals {
 
 
 source "xenserver-iso" "ubuntu-2004" {
-  iso_checksum      = "d1f2bf834bbe9bb43faf16f9be992a6f3935e65be0edece1dee2aa6eb1767423"
+  iso_checksum      = "5035be37a7e9abbdc09f0d257f3e33416c1a0fb322ba860d42d74aa75c3468d4"
   iso_checksum_type = "sha256"
-  iso_url           = "http://releases.ubuntu.com/20.04/ubuntu-20.04.2-live-server-amd64.iso"
+  iso_url           = "http://releases.ubuntu.com/20.04/ubuntu-20.04.5-live-server-amd64.iso"
 
   sr_iso_name    = var.sr_iso_name
   sr_name        = var.sr_name
@@ -60,6 +60,8 @@ source "xenserver-iso" "ubuntu-2004" {
   remote_password = var.remote_password
   remote_username = var.remote_username
 
+  # Change this to match the ISO of ubuntu you are using in the iso_url variable
+  clone_template = "Ubuntu Focal Fossa 20.04"
   vm_name        = "packer-ubuntu-2004-${local.timestamp}"
   vm_description = "Build started: ${local.timestamp}"
   vm_memory      = 4096

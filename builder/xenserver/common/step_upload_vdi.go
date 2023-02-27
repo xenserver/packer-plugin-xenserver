@@ -18,7 +18,7 @@ type StepUploadVdi struct {
 	VdiUuidKey    string
 }
 
-func (self *StepUploadVdi) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+func (self *StepUploadVdi) uploadVdi(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
@@ -33,10 +33,8 @@ func (self *StepUploadVdi) Run(ctx context.Context, state multistep.StateBag) mu
 	ui.Say(fmt.Sprintf("Step: Upload VDI '%s'", vdiName))
 
 	// Create VDI for the image
-	srs, err := c.client.SR.GetAll(c.session)
-	ui.Say(fmt.Sprintf("Step: Found SRs '%v'", srs))
-
 	sr, err := config.GetISOSR(c)
+	ui.Say(fmt.Sprintf("Step: Found SR for upload '%v'", sr))
 
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get SR: %v", err))
@@ -94,6 +92,10 @@ func (self *StepUploadVdi) Run(ctx context.Context, state multistep.StateBag) mu
 	}
 
 	return multistep.ActionContinue
+}
+
+func (self *StepUploadVdi) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+	return self.uploadVdi(ctx, state)
 }
 
 func (self *StepUploadVdi) Cleanup(state multistep.StateBag) {

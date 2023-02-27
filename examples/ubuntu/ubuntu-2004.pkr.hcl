@@ -7,25 +7,6 @@ packer {
   }
 }
 
-# This local determines what Ubuntu iso URL and sha256 hash we lookup. Updating
-# this will allow a new version to be pulled in.
-local "ubuntu_version" {
-  expression = "22.04"
-}
-
-
-data "http" "ubuntu_sha_and_release" {
-  url = "https://releases.ubuntu.com/22.04/SHA256SUMS"
-}
-
-local "ubuntu_sha256" {
-  expression = regex("([A-Za-z0-9]+)[\\s\\*]+ubuntu-.*server", data.http.ubuntu_sha_and_release.body)
-}
-
-local "ubuntu_url_path" {
-  expression = regex("[A-Za-z0-9]+[\\s\\*]+ubuntu-${local.ubuntu_version}.(\\d+)-live-server-amd64.iso", data.http.ubuntu_sha_and_release.body)
-}
-
 variable "remote_host" {
   type        = string
   description = "The ip or fqdn of your XenServer. This will be pulled from the env var 'PKR_VAR_XAPI_HOST'"
@@ -67,9 +48,9 @@ locals {
 
 
 source "xenserver-iso" "ubuntu-2004" {
-  iso_checksum      = local.ubuntu_sha256.0
+  iso_checksum      = "5035be37a7e9abbdc09f0d257f3e33416c1a0fb322ba860d42d74aa75c3468d4"
   iso_checksum_type = "sha256"
-  iso_url           = "https://releases.ubuntu.com/22.04/ubuntu-22.04.${local.ubuntu_url_path.0}-live-server-amd64.iso"
+  iso_url           = "http://releases.ubuntu.com/20.04/ubuntu-20.04.5-live-server-amd64.iso"
 
   sr_iso_name    = var.sr_iso_name
   sr_name        = var.sr_name
@@ -84,7 +65,7 @@ source "xenserver-iso" "ubuntu-2004" {
   vm_name        = "packer-ubuntu-2004-${local.timestamp}"
   vm_description = "Build started: ${local.timestamp}"
   vm_memory      = 4096
-  disk_size      = 30720
+  disk_size      = 20000
 
   floppy_files = [
     "examples/http/ubuntu-2004/meta-data",

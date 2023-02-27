@@ -42,7 +42,7 @@ If you are using an older version of packer or are still using json templates yo
 ## Developing the builder
 
 ### Dependencies
-* Packer >= v1.8.x (https://packer.io)
+* Packer >= v1.7.1 (https://packer.io)
 * XenServer / Citrix Hypervisor > 7.6
 * Golang 1.16
 

@@ -7,8 +7,7 @@ In order to see an exhaustive list of configuration options for the packer build
 ### Running the examples
 
 In order to run the examples you will need to perform the following steps:
-1. Install packer 1.8 or later (the Ubuntu example requires the `http` data source)
-2. Export those vars:
+1. Export those vars:
 ```
 PKR_VAR_remote_host
 PKR_VAR_remote_password
@@ -18,9 +17,9 @@ PKR_VAR_sr_iso_name
 ``` 
 `PKR_VAR_remote_host` must be the resource pool primary, aka the master.
 
-3. Run `packer init path/to/defenition.pkr.hcl` to download the xenserver plugin
+2. Run `packer init path/to/defenition.pkr.hcl` to download the xenserver plugin
 
-4. Run `packer build  path/to/defenition.pkr.hcl`   
+2. Run `packer build  path/to/defenition.pkr.hcl`   
 so for example:
 `packer build  examples/centos/centos8-netinstall.pkr.hcl`
 

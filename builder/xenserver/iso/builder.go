@@ -187,7 +187,6 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			Url:         self.config.ISOUrls,
 		},
 	}
-
 	steps := []multistep.Step{
 		&xscommon.StepPrepareOutputDir{
 			Force: self.config.PackerForce,
@@ -212,20 +211,22 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			},
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
-		&xscommon.StepUploadVdi{
-			VdiNameFunc: func() string {
-				if len(self.config.ISOUrls) > 0 {
-					return path.Base(self.config.ISOUrls[0])
-				}
-				return ""
+		&xscommon.StepFindOrUploadVdi{
+			xscommon.StepUploadVdi{
+				VdiNameFunc: func() string {
+					if len(self.config.ISOUrls) > 0 {
+						return path.Base(self.config.ISOUrls[0])
+					}
+					return ""
+				},
+				ImagePathFunc: func() string {
+					if isoPath, ok := state.GetOk("iso_path"); ok {
+						return isoPath.(string)
+					}
+					return ""
+				},
+				VdiUuidKey: "iso_vdi_uuid",
 			},
-			ImagePathFunc: func() string {
-				if isoPath, ok := state.GetOk("iso_path"); ok {
-					return isoPath.(string)
-				}
-				return ""
-			},
-			VdiUuidKey: "iso_vdi_uuid",
 		},
 		&xscommon.StepFindVdi{
 			VdiName:    self.config.ToolsIsoName,

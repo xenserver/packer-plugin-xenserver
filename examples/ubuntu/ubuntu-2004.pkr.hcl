@@ -1,10 +1,35 @@
 packer {
   required_plugins {
    xenserver= {
-      version = ">= v0.3.2"
+      version = ">= v0.5.2"
       source = "github.com/ddelnano/xenserver"
     }
   }
+}
+
+# The ubuntu_version value determines what Ubuntu iso URL and sha256 hash we lookup. Updating
+# this will allow a new version to be pulled in.
+data "null" "ubuntu_version" {
+  input = "20.04"
+}
+
+locals {
+  timestamp = regex_replace(timestamp(), "[- TZ:]", "")
+  ubuntu_version = data.null.ubuntu_version.output
+}
+
+# TODO(ddelnano): Update this to use a local once https://github.com/hashicorp/packer/issues/11011
+# is fixed.
+data "http" "ubuntu_sha_and_release" {
+  url = "https://releases.ubuntu.com/${data.null.ubuntu_version.output}/SHA256SUMS"
+}
+
+local "ubuntu_sha256" {
+  expression = regex("([A-Za-z0-9]+)[\\s\\*]+ubuntu-.*server", data.http.ubuntu_sha_and_release.body)
+}
+
+local "ubuntu_url_path" {
+  expression = regex("[A-Za-z0-9]+[\\s\\*]+ubuntu-${local.ubuntu_version}.(\\d+)-live-server-amd64.iso", data.http.ubuntu_sha_and_release.body)
 }
 
 variable "remote_host" {
@@ -42,15 +67,10 @@ variable "sr_name" {
   description = "The name of the SR to packer will use"
 }
 
-locals {
-  timestamp = regex_replace(timestamp(), "[- TZ:]", "") 
-}
-
-
 source "xenserver-iso" "ubuntu-2004" {
-  iso_checksum      = "5035be37a7e9abbdc09f0d257f3e33416c1a0fb322ba860d42d74aa75c3468d4"
+  iso_checksum      = local.ubuntu_sha256.0
   iso_checksum_type = "sha256"
-  iso_url           = "http://releases.ubuntu.com/20.04/ubuntu-20.04.5-live-server-amd64.iso"
+  iso_url           = "https://releases.ubuntu.com/${local.ubuntu_version}/ubuntu-${local.ubuntu_version}.${local.ubuntu_url_path.0}-live-server-amd64.iso"
 
   sr_iso_name    = var.sr_iso_name
   sr_name        = var.sr_name

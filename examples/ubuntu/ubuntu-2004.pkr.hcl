@@ -16,6 +16,12 @@ data "null" "ubuntu_version" {
 locals {
   timestamp = regex_replace(timestamp(), "[- TZ:]", "")
   ubuntu_version = data.null.ubuntu_version.output
+
+  # Update this map to support future releases. At this time, the Ubuntu
+  # jammy template is not available yet.
+  ubuntu_template_name = {
+    20.04 = "Ubuntu Focal Fossa 20.04"
+  }
 }
 
 # TODO(ddelnano): Update this to use a local once https://github.com/hashicorp/packer/issues/11011
@@ -81,8 +87,8 @@ source "xenserver-iso" "ubuntu-2004" {
   remote_username = var.remote_username
 
   # Change this to match the ISO of ubuntu you are using in the iso_url variable
-  clone_template = "Ubuntu Focal Fossa 20.04"
-  vm_name        = "packer-ubuntu-2004-${local.timestamp}"
+  clone_template = local.ubuntu_template_name[data.null.ubuntu_version.output]
+  vm_name        = "packer-ubuntu-${data.null.ubuntu_version.output}-${local.timestamp}"
   vm_description = "Build started: ${local.timestamp}"
   vm_memory      = 4096
   disk_size      = 20000

@@ -91,7 +91,7 @@ source "xenserver-iso" "ubuntu-2004" {
   vm_name        = "packer-ubuntu-${data.null.ubuntu_version.output}-${local.timestamp}"
   vm_description = "Build started: ${local.timestamp}"
   vm_memory      = 4096
-  disk_size      = 20000
+  disk_size      = 30720
 
   floppy_files = [
     "examples/http/ubuntu-2004/meta-data",

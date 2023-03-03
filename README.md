@@ -62,7 +62,7 @@ $ cp builder-xenserver-iso  ~/.packer.d/plugins/packer-builder-xenserver-iso
 # Documentation
 
 For complete documentation on configuration commands, see [the
-xenserver-iso docs](docs/builders/xenserver-iso.html.markdown)
+xenserver-iso docs](docs/builders/iso/xenserver-iso.html.markdown)
 
 ## Support
 

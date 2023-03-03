@@ -43,7 +43,7 @@ each category, the available options are alphabetized and described.
   If this is an HTTP URL, Packer will download it and cache it between
   runs.
 
-* `remote_host` (string) - The host of the Xenserver / XCP-ng pool primary. Typically these will be specified through environment variables as seen in the [examples](https://github.com/ddelnano/packer-plugin-xenserver/tree/master/examples).
+* `remote_host` (string) - The host of the Xenserver / XCP-ng pool primary. Typically these will be specified through environment variables as seen in the [examples](examples).
 
 * `remote_username` (string) - The XenServer username used to access the remote machine.
 
@@ -59,7 +59,7 @@ each category, the available options are alphabetized and described.
   be to type just enough to initialize the operating system installer. Special
   keys can be typed as well, and are covered in the section below on the boot
   command. If this is not specified, it is assumed the installer will start
-  itself. See the [Ubuntu](https://github.com/ddelnano/packer-plugin-xenserver/tree/master/examples/ubuntu) and [centos](https://github.com/ddelnano/packer-plugin-xenserver/tree/master/examples/centos) examples to see how these are used to launch autoinstall and kickstart respectively.
+  itself. See the [Ubuntu](examples/ubuntu) and [centos](examples/centos) examples to see how these are used to launch autoinstall and kickstart respectively.
 
 * `boot_wait` (string) - The time to wait after booting the initial virtual
   machine before typing the `boot_command`. The value of this should be
@@ -252,4 +252,4 @@ The available variables are:
   configuration parameter. If `http_directory` isn't specified, these will be
   blank!
 
-See the [examples](https://github.com/ddelnano/packer-plugin-xenserver/tree/master/examples) for working boot commands.
+See the [examples](../../../examples) for working boot commands.

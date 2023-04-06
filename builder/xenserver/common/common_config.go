@@ -271,7 +271,7 @@ func (config CommonConfig) GetISOSR(c *Connection) (xenapi.SRRef, error) {
 
 	} else {
 		// Use the provided name label to find the SR to use
-		srs, err := c.GetClient().SR.GetByNameLabel(c.session, config.SrName)
+		srs, err := c.GetClient().SR.GetByNameLabel(c.session, config.SrISOName)
 
 		if err != nil {
 			return srRef, err
@@ -279,9 +279,9 @@ func (config CommonConfig) GetISOSR(c *Connection) (xenapi.SRRef, error) {
 
 		switch {
 		case len(srs) == 0:
-			return srRef, fmt.Errorf("Couldn't find a SR with the specified name-label '%s'", config.SrName)
+			return srRef, fmt.Errorf("Couldn't find a SR with the specified name-label '%s'", config.SrISOName)
 		case len(srs) > 1:
-			return srRef, fmt.Errorf("Found more than one SR with the name '%s'. The name must be unique", config.SrName)
+			return srRef, fmt.Errorf("Found more than one SR with the name '%s'. The name must be unique", config.SrISOName)
 		}
 
 		return srs[0], nil

@@ -74,8 +74,7 @@ variable "sr_name" {
 }
 
 source "xenserver-iso" "ubuntu-2004" {
-  iso_checksum      = local.ubuntu_sha256.0
-  iso_checksum_type = "sha256"
+  iso_checksum      = "sha256:${local.ubuntu_sha256.0}"
   iso_url           = "https://releases.ubuntu.com/${local.ubuntu_version}/ubuntu-${local.ubuntu_version}.${local.ubuntu_url_path.0}-live-server-amd64.iso"
 
   sr_iso_name    = var.sr_iso_name

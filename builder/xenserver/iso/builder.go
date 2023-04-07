@@ -95,12 +95,11 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	// Template substitution
 
 	templates := map[string]*string{
-		"clone_template":    &self.config.CloneTemplate,
-		"iso_checksum":      &self.config.ISOChecksum,
-		"iso_checksum_type": &self.config.ISOChecksumType,
-		"iso_url":           &self.config.ISOUrl,
-		"iso_name":          &self.config.ISOName,
-		"install_timeout":   &self.config.RawInstallTimeout,
+		"clone_template":  &self.config.CloneTemplate,
+		"iso_checksum":    &self.config.ISOChecksum,
+		"iso_url":         &self.config.ISOUrl,
+		"iso_name":        &self.config.ISOName,
+		"install_timeout": &self.config.RawInstallTimeout,
 	}
 	for i := range self.config.ISOUrls {
 		templates[fmt.Sprintf("iso_urls[%d]", i)] = &self.config.ISOUrls[i]
@@ -121,7 +120,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 		if len(self.config.ISOUrls) == 0 {
 			if self.config.ISOUrl == "" {
 				errs = packer.MultiErrorAppend(
-						errs, errors.New("One of iso_url or iso_urls must be specified."))
+					errs, errors.New("One of iso_url or iso_urls must be specified."))
 			} else {
 				self.config.ISOUrls = []string{self.config.ISOUrl}
 			}
@@ -132,16 +131,16 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 		}
 
 		//The SDK can validate the ISO checksum and other sanity checks on the url.
-		iso_config := commonsteps.ISOConfig {
+		iso_config := commonsteps.ISOConfig{
 			ISOChecksum: self.config.ISOChecksum,
-			ISOUrls: self.config.ISOUrls,
+			ISOUrls:     self.config.ISOUrls,
 		}
 
 		_, iso_errs := iso_config.Prepare(nil)
 		if iso_errs != nil {
-				for _, this_err := range iso_errs {
-					errs = packer.MultiErrorAppend(errs, this_err)
-				}
+			for _, this_err := range iso_errs {
+				errs = packer.MultiErrorAppend(errs, this_err)
+			}
 		}
 
 	} else {

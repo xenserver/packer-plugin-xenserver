@@ -47,8 +47,7 @@ locals {
 }
 
 source "xenserver-iso" "centos8-netinstall" {
-  iso_checksum      = "07a8e59c42cc086ec4c49bdce4fae5a17b077dea"
-  iso_checksum_type = "sha1"
+  iso_checksum      = "sha1:07a8e59c42cc086ec4c49bdce4fae5a17b077dea"
   iso_url           = "http://mirrors.ocf.berkeley.edu/centos/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-boot.iso"
 
   sr_iso_name    = var.sr_iso_name

@@ -24,7 +24,7 @@ type FlatConfig struct {
 	VMName                    *string           `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
 	VMDescription             *string           `mapstructure:"vm_description" cty:"vm_description" hcl:"vm_description"`
 	SrName                    *string           `mapstructure:"sr_name" cty:"sr_name" hcl:"sr_name"`
-	SrISOName                 *string           `mapstructure:"sr_iso_name" cty:"sr_iso_name" hcl:"sr_iso_name"`
+	SrISOName                 *string           `mapstructure:"sr_iso_name" required:"false" cty:"sr_iso_name" hcl:"sr_iso_name"`
 	FloppyFiles               []string          `mapstructure:"floppy_files" cty:"floppy_files" hcl:"floppy_files"`
 	NetworkNames              []string          `mapstructure:"network_names" cty:"network_names" hcl:"network_names"`
 	ExportNetworkNames        []string          `mapstructure:"export_network_names" cty:"export_network_names" hcl:"export_network_names"`

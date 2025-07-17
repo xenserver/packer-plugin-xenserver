@@ -3,7 +3,6 @@ package xva
 import (
 	"testing"
 
-	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
@@ -17,7 +16,7 @@ func testConfig() map[string]interface{} {
 		"ssh_username":     "foo",
 		"source_path":      ".",
 
-		common.BuildNameConfigKey: "foo",
+		packer.BuildNameConfigKey: "foo",
 	}
 }
 
@@ -40,7 +39,7 @@ func TestBuilderPrepare_Defaults(t *testing.T) {
 		t.Fatalf("should not have error: %s", err)
 	}
 
-	if b.config.ToolsIsoName != "" {
+	if b.config.ToolsIsoName != "xs-tools.iso" {
 		t.Errorf("bad tools ISO name: %s", b.config.ToolsIsoName)
 	}
 
@@ -54,10 +53,6 @@ func TestBuilderPrepare_Defaults(t *testing.T) {
 
 	if b.config.KeepVM != "never" {
 		t.Errorf("bad keep instance: %s", b.config.KeepVM)
-	}
-
-	if b.config.HostSshPort != 22 {
-		t.Errorf("bad ssh port: %d", b.config.HostSshPort)
 	}
 }
 

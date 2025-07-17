@@ -35,11 +35,10 @@ func (self *StepForwardPortOverSSH) Run(ctx context.Context, state multistep.Sta
 	ui.Say(fmt.Sprintf("Creating a local port forward over SSH on local port %d", sshHostPort))
 
 	hostAddress, _ := state.Get("ssh_address").(string)
-	hostSshPort, _ := state.Get("ssh_port").(int)
 	remotePort, _ := self.RemotePort(state)
 	remoteDest, _ := self.RemoteDest(state)
 
-	go ssh_port_forward(l, remotePort, remoteDest, hostAddress, hostSshPort, config.Username, config.Password)
+	go ssh_port_forward(l, remotePort, remoteDest, hostAddress, config.Username, config.Password)
 	ui.Say(fmt.Sprintf("Port forward setup. %d ---> %s:%d on %s", sshHostPort, remoteDest, remotePort, hostAddress))
 
 	// Provide the local port to future steps.

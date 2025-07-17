@@ -11,6 +11,8 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
+
+	"xenapi"
 )
 
 type StepExport struct{}
@@ -88,28 +90,28 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 	suffix := ".vhd"
 	extrauri := "&format=vhd"
 
-	instance, err := c.client.VM.GetByUUID(c.session, instance_uuid)
+	instance, err := xenapi.VM.GetByUUID(c.session, instance_uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Could not get VM with UUID '%s': %s", instance_uuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
 	if len(config.ExportNetworkNames) > 0 {
-		vifs, err := c.client.VM.GetVIFs(c.session, instance)
+		vifs, err := xenapi.VM.GetVIFs(c.session, instance)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Error occured getting VIFs: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 
 		for _, vif := range vifs {
-			err := c.client.VIF.Destroy(c.session, vif)
+			err := xenapi.VIF.Destroy(c.session, vif)
 			if err != nil {
 				ui.Error(fmt.Sprintf("Destroy vif fail: '%s': %s", vif, err.Error()))
 				return multistep.ActionHalt
 			}
 		}
 		for i, networkNameLabel := range config.ExportNetworkNames {
-			networks, err := c.client.Network.GetByNameLabel(c.session, networkNameLabel)
+			networks, err := xenapi.Network.GetByNameLabel(c.session, networkNameLabel)
 
 			if err != nil {
 				ui.Error(fmt.Sprintf("Error occured getting Network by name-label: %s", err.Error()))
@@ -201,21 +203,21 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 			return multistep.ActionHalt
 		}
 		for _, disk := range disks {
-			disk_uuid, err := c.client.VDI.GetUUID(c.session, disk)
+			disk_uuid, err := xenapi.VDI.GetUUID(c.session, disk)
 			if err != nil {
 				ui.Error(fmt.Sprintf("Could not get disk with UUID '%s': %s", disk_uuid, err.Error()))
 				return multistep.ActionHalt
 			}
 
 			// Work out XenServer version
-			hosts, err := c.client.Host.GetAll(c.session)
+			hosts, err := xenapi.Host.GetAll(c.session)
 
 			if err != nil {
 				ui.Error(fmt.Sprintf("Could not retrieve hosts in the pool: %s", err.Error()))
 				return multistep.ActionHalt
 			}
 			host := hosts[0]
-			host_software_versions, err := c.client.Host.GetSoftwareVersion(c.session, host)
+			host_software_versions, err := xenapi.Host.GetSoftwareVersion(c.session, host)
 			xs_version := host_software_versions["product_version"]
 
 			if err != nil {

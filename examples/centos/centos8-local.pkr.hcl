@@ -1,8 +1,8 @@
 packer {
   required_plugins {
    xenserver= {
-      version = ">= v0.6.0"
-      source = "github.com/ddelnano/xenserver"
+      version = ">= v0.1.0"
+      source = "github.com/xenserver/xenserver"
     }
   }
 }
@@ -46,13 +46,13 @@ locals {
   timestamp = regex_replace(timestamp(), "[- TZ:]", "") 
 }
 
-source "xenserver-iso" "centos8-local" {
-  iso_checksum      = "sha1:aaf9d4b3071c16dbbda01dfe06085e5d0fdac76df323e3bbe87cce4318052247"
+source "citrixhypervisor-iso" "centos8-local" {
+  iso_checksum      = "aaf9d4b3071c16dbbda01dfe06085e5d0fdac76df323e3bbe87cce4318052247"
+  iso_checksum_type = "sha1"
   iso_url           = "http://mirrors.ocf.berkeley.edu/centos/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso"
 
   sr_iso_name    = var.sr_iso_name
   sr_name        = var.sr_name
-  tools_iso_name = "guest-tools.iso"
 
   remote_host     = var.remote_host
   remote_password = var.remote_password
@@ -76,5 +76,5 @@ source "xenserver-iso" "centos8-local" {
 }
 
 build {
-  sources = ["xenserver-iso.centos8-local"]
+  sources = ["citrixhypervisor-iso.centos8-local"]
 }

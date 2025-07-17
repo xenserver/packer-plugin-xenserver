@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
+
+	"xenapi"
 )
 
 type StepDetachVdi struct {
@@ -25,14 +27,14 @@ func (self *StepDetachVdi) Run(ctx context.Context, state multistep.StateBag) mu
 		return multistep.ActionContinue
 	}
 
-	vdi, err := c.client.VDI.GetByUUID(c.session, vdiUuid)
+	vdi, err := xenapi.VDI.GetByUUID(c.session, vdiUuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VDI from UUID '%s': %s", vdiUuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
 	uuid := state.Get("instance_uuid").(string)
-	instance, err := c.client.VM.GetByUUID(c.session, uuid)
+	instance, err := xenapi.VM.GetByUUID(c.session, uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
 		return multistep.ActionHalt

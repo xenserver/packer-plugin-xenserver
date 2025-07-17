@@ -6,6 +6,8 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
+
+	"xenapi"
 )
 
 type StepFindVdi struct {
@@ -23,7 +25,7 @@ func (self *StepFindVdi) Run(ctx context.Context, state multistep.StateBag) mult
 		return multistep.ActionContinue
 	}
 
-	vdis, err := c.client.VDI.GetByNameLabel(c.session, self.VdiName)
+	vdis, err := xenapi.VDI.GetByNameLabel(c.session, self.VdiName)
 
 	switch {
 	case len(vdis) == 0:
@@ -36,7 +38,7 @@ func (self *StepFindVdi) Run(ctx context.Context, state multistep.StateBag) mult
 
 	vdi := vdis[0]
 
-	vdiUuid, err := c.client.VDI.GetUUID(c.session, vdi)
+	vdiUuid, err := xenapi.VDI.GetUUID(c.session, vdi)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get UUID of VDI '%s': %s", self.VdiName, err.Error()))
 		return multistep.ActionHalt

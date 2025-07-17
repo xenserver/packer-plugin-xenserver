@@ -21,31 +21,29 @@ type FlatConfig struct {
 	Username                  *string           `mapstructure:"remote_username" cty:"remote_username" hcl:"remote_username"`
 	Password                  *string           `mapstructure:"remote_password" cty:"remote_password" hcl:"remote_password"`
 	HostIp                    *string           `mapstructure:"remote_host" cty:"remote_host" hcl:"remote_host"`
-	HostSshPort               *uint             `mapstructure:"remote_ssh_port" cty:"remote_ssh_port" hcl:"remote_ssh_port"`
 	VMName                    *string           `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
 	VMDescription             *string           `mapstructure:"vm_description" cty:"vm_description" hcl:"vm_description"`
 	SrName                    *string           `mapstructure:"sr_name" cty:"sr_name" hcl:"sr_name"`
-	SrISOName                 *string           `mapstructure:"sr_iso_name" required:"false" cty:"sr_iso_name" hcl:"sr_iso_name"`
+	SrISOName                 *string           `mapstructure:"sr_iso_name" cty:"sr_iso_name" hcl:"sr_iso_name"`
 	FloppyFiles               []string          `mapstructure:"floppy_files" cty:"floppy_files" hcl:"floppy_files"`
+	CDFiles                   []string          `mapstructure:"cd_files" cty:"cd_files" hcl:"cd_files"`
 	NetworkNames              []string          `mapstructure:"network_names" cty:"network_names" hcl:"network_names"`
 	ExportNetworkNames        []string          `mapstructure:"export_network_names" cty:"export_network_names" hcl:"export_network_names"`
-	VMTags                    []string          `mapstructure:"vm_tags" cty:"vm_tags" hcl:"vm_tags"`
 	HostPortMin               *uint             `mapstructure:"host_port_min" cty:"host_port_min" hcl:"host_port_min"`
 	HostPortMax               *uint             `mapstructure:"host_port_max" cty:"host_port_max" hcl:"host_port_max"`
 	BootCommand               []string          `mapstructure:"boot_command" cty:"boot_command" hcl:"boot_command"`
 	ShutdownCommand           *string           `mapstructure:"shutdown_command" cty:"shutdown_command" hcl:"shutdown_command"`
-	RawBootWait               *string           `mapstructure:"boot_wait" cty:"boot_wait" hcl:"boot_wait"`
+	BootWait                  *string           `mapstructure:"boot_wait" cty:"boot_wait" hcl:"boot_wait"`
 	ToolsIsoName              *string           `mapstructure:"tools_iso_name" cty:"tools_iso_name" hcl:"tools_iso_name"`
 	HTTPDir                   *string           `mapstructure:"http_directory" cty:"http_directory" hcl:"http_directory"`
 	HTTPPortMin               *uint             `mapstructure:"http_port_min" cty:"http_port_min" hcl:"http_port_min"`
 	HTTPPortMax               *uint             `mapstructure:"http_port_max" cty:"http_port_max" hcl:"http_port_max"`
-	SSHKeyPath                *string           `mapstructure:"ssh_key_path" cty:"ssh_key_path" hcl:"ssh_key_path"`
-	SSHPassword               *string           `mapstructure:"ssh_password" cty:"ssh_password" hcl:"ssh_password"`
-	SSHPort                   *uint             `mapstructure:"ssh_port" cty:"ssh_port" hcl:"ssh_port"`
-	SSHUser                   *string           `mapstructure:"ssh_username" cty:"ssh_username" hcl:"ssh_username"`
 	Type                      *string           `mapstructure:"communicator" cty:"communicator" hcl:"communicator"`
 	PauseBeforeConnect        *string           `mapstructure:"pause_before_connecting" cty:"pause_before_connecting" hcl:"pause_before_connecting"`
 	SSHHost                   *string           `mapstructure:"ssh_host" cty:"ssh_host" hcl:"ssh_host"`
+	SSHPort                   *int              `mapstructure:"ssh_port" cty:"ssh_port" hcl:"ssh_port"`
+	SSHUsername               *string           `mapstructure:"ssh_username" cty:"ssh_username" hcl:"ssh_username"`
+	SSHPassword               *string           `mapstructure:"ssh_password" cty:"ssh_password" hcl:"ssh_password"`
 	SSHKeyPairName            *string           `mapstructure:"ssh_keypair_name" undocumented:"true" cty:"ssh_keypair_name" hcl:"ssh_keypair_name"`
 	SSHTemporaryKeyPairName   *string           `mapstructure:"temporary_key_pair_name" undocumented:"true" cty:"temporary_key_pair_name" hcl:"temporary_key_pair_name"`
 	SSHTemporaryKeyPairType   *string           `mapstructure:"temporary_key_pair_type" cty:"temporary_key_pair_type" hcl:"temporary_key_pair_type"`
@@ -89,6 +87,7 @@ type FlatConfig struct {
 	WinRMUseSSL               *bool             `mapstructure:"winrm_use_ssl" cty:"winrm_use_ssl" hcl:"winrm_use_ssl"`
 	WinRMInsecure             *bool             `mapstructure:"winrm_insecure" cty:"winrm_insecure" hcl:"winrm_insecure"`
 	WinRMUseNTLM              *bool             `mapstructure:"winrm_use_ntlm" cty:"winrm_use_ntlm" hcl:"winrm_use_ntlm"`
+	SSHKeyPath                *string           `mapstructure:"ssh_key_path" cty:"ssh_key_path" hcl:"ssh_key_path"`
 	SSHHostPortMin            *uint             `mapstructure:"ssh_host_port_min" cty:"ssh_host_port_min" hcl:"ssh_host_port_min"`
 	SSHHostPortMax            *uint             `mapstructure:"ssh_host_port_max" cty:"ssh_host_port_max" hcl:"ssh_host_port_max"`
 	SSHSkipNatMapping         *bool             `mapstructure:"ssh_skip_nat_mapping" cty:"ssh_skip_nat_mapping" hcl:"ssh_skip_nat_mapping"`
@@ -96,22 +95,29 @@ type FlatConfig struct {
 	Format                    *string           `mapstructure:"format" cty:"format" hcl:"format"`
 	KeepVM                    *string           `mapstructure:"keep_vm" cty:"keep_vm" hcl:"keep_vm"`
 	IPGetter                  *string           `mapstructure:"ip_getter" cty:"ip_getter" hcl:"ip_getter"`
-	VCPUsMax                  *uint             `mapstructure:"vcpus_max" cty:"vcpus_max" hcl:"vcpus_max"`
-	VCPUsAtStartup            *uint             `mapstructure:"vcpus_atstartup" cty:"vcpus_atstartup" hcl:"vcpus_atstartup"`
+	VCPUs                     *uint             `mapstructure:"vcpus" cty:"vcpus" hcl:"vcpus"`
+	VCPUsMax                  *uint             `cty:"vcp_us_max" hcl:"vcp_us_max"`
+	VCPUsAtStartup            *uint             `cty:"vcp_us_at_startup" hcl:"vcp_us_at_startup"`
+	CorePerSocket             *uint             `mapstructure:"cores_per_socket" cty:"cores_per_socket" hcl:"cores_per_socket"`
 	VMMemory                  *uint             `mapstructure:"vm_memory" cty:"vm_memory" hcl:"vm_memory"`
-	DiskName                  *string           `mapstructure:"disk_name" cty:"disk_name" hcl:"disk_name"`
 	DiskSize                  *uint             `mapstructure:"disk_size" cty:"disk_size" hcl:"disk_size"`
 	CloneTemplate             *string           `mapstructure:"clone_template" cty:"clone_template" hcl:"clone_template"`
 	VMOtherConfig             map[string]string `mapstructure:"vm_other_config" cty:"vm_other_config" hcl:"vm_other_config"`
+	VGPUProfile               *string           `mapstructure:"vgpu_profile" cty:"vgpu_profile" hcl:"vgpu_profile"`
 	ISOChecksum               *string           `mapstructure:"iso_checksum" cty:"iso_checksum" hcl:"iso_checksum"`
+	ISOChecksumType           *string           `mapstructure:"iso_checksum_type" cty:"iso_checksum_type" hcl:"iso_checksum_type"`
 	ISOUrls                   []string          `mapstructure:"iso_urls" cty:"iso_urls" hcl:"iso_urls"`
 	ISOUrl                    *string           `mapstructure:"iso_url" cty:"iso_url" hcl:"iso_url"`
 	ISOName                   *string           `mapstructure:"iso_name" cty:"iso_name" hcl:"iso_name"`
 	PlatformArgs              map[string]string `mapstructure:"platform_args" cty:"platform_args" hcl:"platform_args"`
-	RawInstallTimeout         *string           `mapstructure:"install_timeout" cty:"install_timeout" hcl:"install_timeout"`
+	InstallTimeout            *string           `mapstructure:"install_timeout" cty:"install_timeout" hcl:"install_timeout"`
 	SourcePath                *string           `mapstructure:"source_path" cty:"source_path" hcl:"source_path"`
 	Firmware                  *string           `mapstructure:"firmware" cty:"firmware" hcl:"firmware"`
-	SkipSetTemplate           *bool             `mapstructure:"skip_set_template" cty:"skip_set_template" hcl:"skip_set_template"`
+	SecureBoot                *bool             `mapstructure:"secure_boot" cty:"secure_boot" hcl:"secure_boot"`
+	VTPMEnabled               *bool             `mapstructure:"vTPM" cty:"vTPM" hcl:"vTPM"`
+	ConvertToTemplate         *bool             `mapstructure:"convert_to_template" cty:"convert_to_template" hcl:"convert_to_template"`
+	CreateSnapshot            *bool             `mapstructure:"create_snapshot" cty:"create_snapshot" hcl:"create_snapshot"`
+	SnapshotName              *string           `mapstructure:"snapshot_name" cty:"snapshot_name" hcl:"snapshot_name"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -137,15 +143,14 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"remote_username":              &hcldec.AttrSpec{Name: "remote_username", Type: cty.String, Required: false},
 		"remote_password":              &hcldec.AttrSpec{Name: "remote_password", Type: cty.String, Required: false},
 		"remote_host":                  &hcldec.AttrSpec{Name: "remote_host", Type: cty.String, Required: false},
-		"remote_ssh_port":              &hcldec.AttrSpec{Name: "remote_ssh_port", Type: cty.Number, Required: false},
 		"vm_name":                      &hcldec.AttrSpec{Name: "vm_name", Type: cty.String, Required: false},
 		"vm_description":               &hcldec.AttrSpec{Name: "vm_description", Type: cty.String, Required: false},
 		"sr_name":                      &hcldec.AttrSpec{Name: "sr_name", Type: cty.String, Required: false},
 		"sr_iso_name":                  &hcldec.AttrSpec{Name: "sr_iso_name", Type: cty.String, Required: false},
 		"floppy_files":                 &hcldec.AttrSpec{Name: "floppy_files", Type: cty.List(cty.String), Required: false},
+		"cd_files":                     &hcldec.AttrSpec{Name: "cd_files", Type: cty.List(cty.String), Required: false},
 		"network_names":                &hcldec.AttrSpec{Name: "network_names", Type: cty.List(cty.String), Required: false},
 		"export_network_names":         &hcldec.AttrSpec{Name: "export_network_names", Type: cty.List(cty.String), Required: false},
-		"vm_tags":                      &hcldec.AttrSpec{Name: "vm_tags", Type: cty.List(cty.String), Required: false},
 		"host_port_min":                &hcldec.AttrSpec{Name: "host_port_min", Type: cty.Number, Required: false},
 		"host_port_max":                &hcldec.AttrSpec{Name: "host_port_max", Type: cty.Number, Required: false},
 		"boot_command":                 &hcldec.AttrSpec{Name: "boot_command", Type: cty.List(cty.String), Required: false},
@@ -155,13 +160,12 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"http_directory":               &hcldec.AttrSpec{Name: "http_directory", Type: cty.String, Required: false},
 		"http_port_min":                &hcldec.AttrSpec{Name: "http_port_min", Type: cty.Number, Required: false},
 		"http_port_max":                &hcldec.AttrSpec{Name: "http_port_max", Type: cty.Number, Required: false},
-		"ssh_key_path":                 &hcldec.AttrSpec{Name: "ssh_key_path", Type: cty.String, Required: false},
-		"ssh_password":                 &hcldec.AttrSpec{Name: "ssh_password", Type: cty.String, Required: false},
-		"ssh_port":                     &hcldec.AttrSpec{Name: "ssh_port", Type: cty.Number, Required: false},
-		"ssh_username":                 &hcldec.AttrSpec{Name: "ssh_username", Type: cty.String, Required: false},
 		"communicator":                 &hcldec.AttrSpec{Name: "communicator", Type: cty.String, Required: false},
 		"pause_before_connecting":      &hcldec.AttrSpec{Name: "pause_before_connecting", Type: cty.String, Required: false},
 		"ssh_host":                     &hcldec.AttrSpec{Name: "ssh_host", Type: cty.String, Required: false},
+		"ssh_port":                     &hcldec.AttrSpec{Name: "ssh_port", Type: cty.Number, Required: false},
+		"ssh_username":                 &hcldec.AttrSpec{Name: "ssh_username", Type: cty.String, Required: false},
+		"ssh_password":                 &hcldec.AttrSpec{Name: "ssh_password", Type: cty.String, Required: false},
 		"ssh_keypair_name":             &hcldec.AttrSpec{Name: "ssh_keypair_name", Type: cty.String, Required: false},
 		"temporary_key_pair_name":      &hcldec.AttrSpec{Name: "temporary_key_pair_name", Type: cty.String, Required: false},
 		"temporary_key_pair_type":      &hcldec.AttrSpec{Name: "temporary_key_pair_type", Type: cty.String, Required: false},
@@ -205,6 +209,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"winrm_use_ssl":                &hcldec.AttrSpec{Name: "winrm_use_ssl", Type: cty.Bool, Required: false},
 		"winrm_insecure":               &hcldec.AttrSpec{Name: "winrm_insecure", Type: cty.Bool, Required: false},
 		"winrm_use_ntlm":               &hcldec.AttrSpec{Name: "winrm_use_ntlm", Type: cty.Bool, Required: false},
+		"ssh_key_path":                 &hcldec.AttrSpec{Name: "ssh_key_path", Type: cty.String, Required: false},
 		"ssh_host_port_min":            &hcldec.AttrSpec{Name: "ssh_host_port_min", Type: cty.Number, Required: false},
 		"ssh_host_port_max":            &hcldec.AttrSpec{Name: "ssh_host_port_max", Type: cty.Number, Required: false},
 		"ssh_skip_nat_mapping":         &hcldec.AttrSpec{Name: "ssh_skip_nat_mapping", Type: cty.Bool, Required: false},
@@ -212,14 +217,17 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"format":                       &hcldec.AttrSpec{Name: "format", Type: cty.String, Required: false},
 		"keep_vm":                      &hcldec.AttrSpec{Name: "keep_vm", Type: cty.String, Required: false},
 		"ip_getter":                    &hcldec.AttrSpec{Name: "ip_getter", Type: cty.String, Required: false},
-		"vcpus_max":                    &hcldec.AttrSpec{Name: "vcpus_max", Type: cty.Number, Required: false},
-		"vcpus_atstartup":              &hcldec.AttrSpec{Name: "vcpus_atstartup", Type: cty.Number, Required: false},
+		"vcpus":                        &hcldec.AttrSpec{Name: "vcpus", Type: cty.Number, Required: false},
+		"vcp_us_max":                   &hcldec.AttrSpec{Name: "vcp_us_max", Type: cty.Number, Required: false},
+		"vcp_us_at_startup":            &hcldec.AttrSpec{Name: "vcp_us_at_startup", Type: cty.Number, Required: false},
+		"cores_per_socket":             &hcldec.AttrSpec{Name: "cores_per_socket", Type: cty.Number, Required: false},
 		"vm_memory":                    &hcldec.AttrSpec{Name: "vm_memory", Type: cty.Number, Required: false},
-		"disk_name":                    &hcldec.AttrSpec{Name: "disk_name", Type: cty.String, Required: false},
 		"disk_size":                    &hcldec.AttrSpec{Name: "disk_size", Type: cty.Number, Required: false},
 		"clone_template":               &hcldec.AttrSpec{Name: "clone_template", Type: cty.String, Required: false},
 		"vm_other_config":              &hcldec.AttrSpec{Name: "vm_other_config", Type: cty.Map(cty.String), Required: false},
+		"vgpu_profile":                 &hcldec.AttrSpec{Name: "vgpu_profile", Type: cty.String, Required: false},
 		"iso_checksum":                 &hcldec.AttrSpec{Name: "iso_checksum", Type: cty.String, Required: false},
+		"iso_checksum_type":            &hcldec.AttrSpec{Name: "iso_checksum_type", Type: cty.String, Required: false},
 		"iso_urls":                     &hcldec.AttrSpec{Name: "iso_urls", Type: cty.List(cty.String), Required: false},
 		"iso_url":                      &hcldec.AttrSpec{Name: "iso_url", Type: cty.String, Required: false},
 		"iso_name":                     &hcldec.AttrSpec{Name: "iso_name", Type: cty.String, Required: false},
@@ -227,7 +235,11 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"install_timeout":              &hcldec.AttrSpec{Name: "install_timeout", Type: cty.String, Required: false},
 		"source_path":                  &hcldec.AttrSpec{Name: "source_path", Type: cty.String, Required: false},
 		"firmware":                     &hcldec.AttrSpec{Name: "firmware", Type: cty.String, Required: false},
-		"skip_set_template":            &hcldec.AttrSpec{Name: "skip_set_template", Type: cty.Bool, Required: false},
+		"secure_boot":                  &hcldec.AttrSpec{Name: "secure_boot", Type: cty.Bool, Required: false},
+		"vTPM":                         &hcldec.AttrSpec{Name: "vTPM", Type: cty.Bool, Required: false},
+		"convert_to_template":          &hcldec.AttrSpec{Name: "convert_to_template", Type: cty.Bool, Required: false},
+		"create_snapshot":              &hcldec.AttrSpec{Name: "create_snapshot", Type: cty.Bool, Required: false},
+		"snapshot_name":                &hcldec.AttrSpec{Name: "snapshot_name", Type: cty.String, Required: false},
 	}
 	return s
 }

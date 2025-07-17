@@ -1,0 +1,41 @@
+---
+description: |
+  The Citrix XenServer Packer builder is able to create Citrix XenServer virtual machines for use
+  with any Citrix product.
+page_title: Citrix XenServer - Builders
+sidebar_title: Overview
+---
+
+# Citrix XenServer Builder
+
+The Citrix XenServer Packer builder is able to create Citrix XenServer virtual machines for use
+with any Citrix product.
+
+Packer actually comes with two builders able to create Citrix XenServer machines,
+depending on the strategy you want to use to build the image. Packer supports
+the following vSphere builders:
+
+- [xenserver-iso](/docs/builders/xenserver/vsphere-iso) - This builder starts from an
+  ISO file and utilizes the XenAPI to build on a remote Citrix XenServer instance.
+  This allows you to build vms even if you do not have SSH access to your Citrix XenServer environment.
+
+- [xenserver-clone](/docs/builders/xenserver/vsphere-clone) - This builder clones a
+  vm from an existing template, then modifies it and saves it as a new
+  template. It uses the XenAPI to build on a remote Citrix XenServer instance.
+  This allows you to build vms even if you do not have SSH access to your Citrix XenServer environment.
+
+## How to use this plugin
+
+From Packer v1.7.0, copy and paste this code into your Packer configuration to install this plugin.
+Then, run [`packer init`](/docs/commands/init).
+
+```hcl
+packer {
+  required_plugins {
+    xenserver = {
+      version = ">= 0.0.1"
+      source = "github.com/xenserver/xenserver"
+    }
+  }
+}
+```

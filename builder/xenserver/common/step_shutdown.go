@@ -7,7 +7,8 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	xenapi "github.com/terra-farm/go-xen-api-client"
+
+	"xenapi"
 )
 
 type StepShutdown struct{}
@@ -18,7 +19,7 @@ func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep
 	c := state.Get("client").(*Connection)
 	instance_uuid := state.Get("instance_uuid").(string)
 
-	instance, err := c.client.VM.GetByUUID(c.session, instance_uuid)
+	instance, err := xenapi.VM.GetByUUID(c.session, instance_uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Could not get VM with UUID '%s': %s", instance_uuid, err.Error()))
 		return multistep.ActionHalt
@@ -41,7 +42,7 @@ func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep
 
 			err = InterruptibleWait{
 				Predicate: func() (bool, error) {
-					power_state, err := c.client.VM.GetPowerState(c.session, instance)
+					power_state, err := xenapi.VM.GetPowerState(c.session, instance)
 					return power_state == xenapi.VMPowerStateHalted, err
 				},
 				PredicateInterval: 5 * time.Second,
@@ -56,7 +57,7 @@ func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep
 		} else {
 			ui.Message("Attempting to cleanly shutdown the VM...")
 
-			err = c.client.VM.CleanShutdown(c.session, instance)
+			err = xenapi.VM.CleanShutdown(c.session, instance)
 			if err != nil {
 				ui.Error(fmt.Sprintf("Could not shut down VM: %s", err.Error()))
 				return false
@@ -68,7 +69,7 @@ func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep
 
 	if !success {
 		ui.Say("WARNING: Forcing hard shutdown of the VM...")
-		err = c.client.VM.HardShutdown(c.session, instance)
+		err = xenapi.VM.HardShutdown(c.session, instance)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Could not hard shut down VM -- giving up: %s", err.Error()))
 			return multistep.ActionHalt

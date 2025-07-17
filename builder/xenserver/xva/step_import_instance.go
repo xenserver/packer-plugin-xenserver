@@ -3,18 +3,18 @@ package xva
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	xsclient "github.com/terra-farm/go-xen-api-client"
-	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
+	xscommon "github.com/xenserver/packer-plugin-xenserver/builder/xenserver/common"
+
+	"xenapi"
 )
 
 type stepImportInstance struct {
-	instance xsclient.VMRef
-	vdi      xsclient.VDIRef
+	instance *xenapi.VMRef
+	vdi      *xenapi.VDIRef
 }
 
 func (self *stepImportInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
@@ -25,13 +25,8 @@ func (self *stepImportInstance) Run(ctx context.Context, state multistep.StateBa
 
 	ui.Say("Step: Import Instance")
 
-	if config.SourcePath == "" {
-		log.Println("Skipping importing instance - no `source_path` configured.")
-		return multistep.ActionContinue
-	}
-
 	// find the SR
-	srs, err := c.GetClient().SR.GetAll(c.GetSessionRef())
+	srs, err := xenapi.SR.GetAll(c.GetSession())
 	sr := srs[0]
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
@@ -59,36 +54,30 @@ func (self *stepImportInstance) Run(ctx context.Context, state multistep.StateBa
 		return multistep.ActionHalt
 	}
 
-	instance := xsclient.VMRef(result)
+	instance := xenapi.VMRef(result)
 
-	instanceId, err := c.GetClient().VM.GetUUID(c.GetSessionRef(), instance)
+	instanceId, err := xenapi.VM.GetUUID(c.GetSession(), instance)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM UUID: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 	state.Put("instance_uuid", instanceId)
 
-	err = c.GetClient().VM.SetVCPUsMax(c.GetSessionRef(), instance, int(config.VCPUsMax))
+	err = xenapi.VM.SetVCPUsMax(c.GetSession(), instance, int(config.VCPUsMax))
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM VCPUs Max=%d: %s", config.VCPUsMax, err.Error()))
 		return multistep.ActionHalt
 	}
 
-	err = c.GetClient().VM.SetVCPUsAtStartup(c.GetSessionRef(), instance, int(config.VCPUsAtStartup))
+	err = xenapi.VM.SetVCPUsAtStartup(c.GetSession(), instance, int(config.VCPUsAtStartup))
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM VCPUs At Startup=%d: %s", config.VCPUsAtStartup, err.Error()))
 		return multistep.ActionHalt
 	}
 
-	err = c.GetClient().VM.SetNameDescription(c.GetSessionRef(), instance, config.VMDescription)
+	err = xenapi.VM.SetNameDescription(c.GetSession(), instance, config.VMDescription)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM description: %s", err.Error()))
-		return multistep.ActionHalt
-	}
-
-	err = xscommon.AddVMTags(c, instance, config.VMTags)
-	if err != nil {
-		ui.Error(fmt.Sprintf("Failed to add tags: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 

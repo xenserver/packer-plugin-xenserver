@@ -7,14 +7,15 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	xsclient "github.com/terra-farm/go-xen-api-client"
+	
+	"xenapi"
 )
 
 type StepAttachVdi struct {
 	VdiUuidKey string
-	VdiType    xsclient.VbdType
+	VdiType    xenapi.VbdType
 
-	vdi xsclient.VDIRef
+	vdi xenapi.VDIRef
 }
 
 func (self *StepAttachVdi) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
@@ -31,14 +32,14 @@ func (self *StepAttachVdi) Run(ctx context.Context, state multistep.StateBag) mu
 	}
 
 	var err error
-	self.vdi, err = c.client.VDI.GetByUUID(c.session, vdiUuid)
+	self.vdi, err = xenapi.VDI.GetByUUID(c.session, vdiUuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VDI from UUID '%s': %s", vdiUuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
 	uuid := state.Get("instance_uuid").(string)
-	instance, err := c.client.VM.GetByUUID(c.session, uuid)
+	instance, err := xenapi.VM.GetByUUID(c.session, uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
 		return multistep.ActionHalt
@@ -67,7 +68,7 @@ func (self *StepAttachVdi) Cleanup(state multistep.StateBag) {
 	}
 
 	uuid := state.Get("instance_uuid").(string)
-	vmRef, err := c.client.VM.GetByUUID(c.session, uuid)
+	vmRef, err := xenapi.VM.GetByUUID(c.session, uuid)
 	if err != nil {
 		log.Printf("Unable to get VM from UUID '%s': %s", uuid, err.Error())
 		return

@@ -10,16 +10,16 @@ import (
 	"xenapi"
 )
 
-type StepSetVmToTemplate struct{}
+type StepCreateSnapshot struct{}
 
-func (StepSetVmToTemplate) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+func (StepCreateSnapshot) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
 	instance_uuid := state.Get("instance_uuid").(string)
 
-	if config.ConvertToTemplate != true {
-		ui.Say("Skipping Convert to Template")
+	if config.CreateSnapshot != true {
+		ui.Say("Skipping Create Snapshot")
 		return multistep.ActionContinue
 	}
 
@@ -29,15 +29,17 @@ func (StepSetVmToTemplate) Run(ctx context.Context, state multistep.StateBag) mu
 		return multistep.ActionHalt
 	}
 
-	err = xenapi.VM.SetIsATemplate(c.session, instance, true)
+	instance, err = xenapi.VM.Snapshot(c.session, instance, config.SnapshotName,[]xenapi.VDIRef{})
 
 	if err != nil {
-		ui.Error(fmt.Sprintf("failed to set VM '%s' as a template with error: %v", instance_uuid, err))
+		ui.Error(fmt.Sprintf("failed to create a snapshot of VM '%s' with error: %v", instance_uuid, err))
 		return multistep.ActionHalt
 	}
 
-	ui.Message("Successfully set VM as a template")
+	ui.Message("Successfully created snapshot")
 	return multistep.ActionContinue
 }
 
-func (StepSetVmToTemplate) Cleanup(state multistep.StateBag) {}
+func (StepCreateSnapshot) Cleanup(state multistep.StateBag) {
+	// No cleanup needed as Snapshot is destroyed when VM is deleted. Function is necesarry though.
+}

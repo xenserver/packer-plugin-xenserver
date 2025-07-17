@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"strings"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
+
+	"xenapi"
 )
 
 type StepWaitForIP struct {
@@ -23,7 +26,7 @@ func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) mu
 	ui.Say("Step: Wait for VM's IP to become known to us.")
 
 	uuid := state.Get("instance_uuid").(string)
-	instance, err := c.client.VM.GetByUUID(c.session, uuid)
+	instance, err := xenapi.VM.GetByUUID(c.session, uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
 		return multistep.ActionHalt
@@ -50,12 +53,12 @@ func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) mu
 			if config.IPGetter == "auto" || config.IPGetter == "tools" {
 
 				// Look for PV IP
-				m, err := c.client.VM.GetGuestMetrics(c.session, instance)
+				m, err := xenapi.VM.GetGuestMetrics(c.session, instance)
 				if err != nil {
 					return false, err
 				}
 				if m != "" {
-					metrics, err := c.client.VMGuestMetrics.GetRecord(c.session, m)
+					metrics, err := xenapi.VMGuestMetrics.GetRecord(c.session, m)
 					if err != nil {
 						return false, err
 					}
@@ -63,8 +66,13 @@ func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) mu
 					var ok bool
 					if ip, ok = networks["0/ip"]; ok {
 						if ip != "" {
-							ui.Message(fmt.Sprintf("Got IP '%s' from XenServer tools", ip))
-							return true, nil
+							// Check if it is not a link-local address
+							if strings.HasPrefix(ip, "169.254."){
+								ui.Message(fmt.Sprintf("Got link-local IP '%s' from XenServer tools, which is not usable for SSH. Waiting for a valid IP address", ip))
+							} else {
+								ui.Message(fmt.Sprintf("Got IP '%s' from XenServer tools", ip))
+								return true, nil
+							}
 						}
 					}
 				}

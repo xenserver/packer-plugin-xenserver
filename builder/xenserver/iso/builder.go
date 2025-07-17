@@ -15,8 +15,10 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	hconfig "github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	xsclient "github.com/terra-farm/go-xen-api-client"
-	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
+	
+	"xenapi"
+	
+	xscommon "github.com/xenserver/packer-plugin-xenserver/builder/xenserver/common"
 )
 
 type Builder struct {
@@ -40,7 +42,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	}, raws...)
 
 	if err != nil {
-		errs = packer.MultiErrorAppend(errs, err)
+		packer.MultiErrorAppend(errs, err)
 	}
 
 	errs = packer.MultiErrorAppend(
@@ -48,29 +50,23 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	errs = packer.MultiErrorAppend(errs, self.config.SSHConfig.Prepare(self.config.GetInterpContext())...)
 
 	// Set default values
-
-	if self.config.RawInstallTimeout == "" {
-		self.config.RawInstallTimeout = "200m"
-	}
-
-	if self.config.DiskName == "" {
-		self.config.DiskName = "Packer-disk"
+	if self.config.InstallTimeout == 0 {
+		self.config.InstallTimeout = 200 * time.Minute
 	}
 
 	if self.config.DiskSize == 0 {
 		self.config.DiskSize = 40000
 	}
 
-	if self.config.VCPUsMax == 0 {
-		self.config.VCPUsMax = 1
+	if self.config.VCPUs== 0 {
+		self.config.VCPUs = 2
 	}
 
-	if self.config.VCPUsAtStartup == 0 {
-		self.config.VCPUsAtStartup = 1
-	}
+	self.config.VCPUsMax = self.config.VCPUs
+	self.config.VCPUsAtStartup = self.config.VCPUs
 
-	if self.config.VCPUsAtStartup > self.config.VCPUsMax {
-		self.config.VCPUsAtStartup = self.config.VCPUsMax
+	if self.config.CorePerSocket == 0 {
+		self.config.CorePerSocket = self.config.VCPUs
 	}
 
 	if self.config.VMMemory == 0 {
@@ -85,7 +81,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 		self.config.Firmware = "bios"
 	}
 
-	if len(self.config.PlatformArgs) == 0 {
+	if len(self.config.PlatformArgs) == 0 && self.config.CloneTemplate == "" {
 		pargs := make(map[string]string)
 		pargs["viridian"] = "false"
 		pargs["nx"] = "true"
@@ -99,27 +95,35 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	// Template substitution
 
 	templates := map[string]*string{
-		"clone_template":  &self.config.CloneTemplate,
-		"iso_checksum":    &self.config.ISOChecksum,
-		"iso_url":         &self.config.ISOUrl,
-		"iso_name":        &self.config.ISOName,
-		"install_timeout": &self.config.RawInstallTimeout,
+		"clone_template":    &self.config.CloneTemplate,
+		"iso_checksum":      &self.config.ISOChecksum,
+		"iso_checksum_type": &self.config.ISOChecksumType,
+		"iso_url":           &self.config.ISOUrl,
+		"iso_name":          &self.config.ISOName,
+		//"install_timeout":   &self.config.InstallTimeout,
 	}
 	for i := range self.config.ISOUrls {
 		templates[fmt.Sprintf("iso_urls[%d]", i)] = &self.config.ISOUrls[i]
 	}
 
 	// Validation
-
-	self.config.InstallTimeout, err = time.ParseDuration(self.config.RawInstallTimeout)
-	if err != nil {
-		errs = packer.MultiErrorAppend(
-			errs, fmt.Errorf("Failed to parse install_timeout: %s", err))
-	}
-
 	if self.config.ISOName == "" {
+
 		// If ISO name is not specified, assume a URL and checksum has been provided.
-		self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
+		if self.config.ISOChecksumType == "" {
+			errs = packer.MultiErrorAppend(
+				errs, errors.New("The iso_checksum_type must be specified."))
+		} else {
+			self.config.ISOChecksumType = strings.ToLower(self.config.ISOChecksumType)
+			if self.config.ISOChecksumType != "none" {
+				if self.config.ISOChecksum == "" {
+					errs = packer.MultiErrorAppend(
+						errs, errors.New("Due to the file size being large, an iso_checksum is required."))
+				} else {
+					self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
+				}
+			}
+		}
 
 		if len(self.config.ISOUrls) == 0 {
 			if self.config.ISOUrl == "" {
@@ -128,29 +132,18 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 			} else {
 				self.config.ISOUrls = []string{self.config.ISOUrl}
 			}
-
 		} else if self.config.ISOUrl != "" {
 			errs = packer.MultiErrorAppend(
 				errs, errors.New("Only one of iso_url or iso_urls may be specified."))
 		}
-
-		//The SDK can validate the ISO checksum and other sanity checks on the url.
-		iso_config := commonsteps.ISOConfig{
-			ISOChecksum: self.config.ISOChecksum,
-			ISOUrls:     self.config.ISOUrls,
-		}
-
-		_, iso_errs := iso_config.Prepare(nil)
-		if iso_errs != nil {
-			for _, this_err := range iso_errs {
-				errs = packer.MultiErrorAppend(errs, this_err)
-			}
-		}
-
 	} else {
 
 		// An ISO name has been provided. It should be attached from an available SR.
 
+	}
+
+	if self.config.VTPMEnabled && self.config.Firmware != "uefi" {
+		errs = packer.MultiErrorAppend(errs, errors.New("vTPM can only be enabled with UEFI firmware."))
 	}
 
 	if len(errs.Errors) > 0 {
@@ -169,7 +162,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 	}
 	ui.Say("XAPI client session established")
 
-	c.GetClient().Host.GetAll(c.GetSessionRef())
+	xenapi.Host.GetAll(c.GetSession())
 
 	//Share state between the other steps using a statebag
 	state := new(multistep.BasicStateBag)
@@ -190,6 +183,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			Url:         self.config.ISOUrls,
 		},
 	}
+
 	steps := []multistep.Step{
 		&xscommon.StepPrepareOutputDir{
 			Force: self.config.PackerForce,
@@ -198,6 +192,10 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		&commonsteps.StepCreateFloppy{
 			Files: self.config.FloppyFiles,
 			Label: "cidata",
+		},
+		&commonsteps.StepCreateCD{
+			Files: self.config.CDFiles,
+			Label: "cddata",
 		},
 		&xscommon.StepHTTPServer{
 			Chan: httpReqChan,
@@ -214,22 +212,32 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			},
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
-		&xscommon.StepFindOrUploadVdi{
-			xscommon.StepUploadVdi{
-				VdiNameFunc: func() string {
-					if len(self.config.ISOUrls) > 0 {
-						return path.Base(self.config.ISOUrls[0])
-					}
-					return ""
-				},
-				ImagePathFunc: func() string {
-					if isoPath, ok := state.GetOk("iso_path"); ok {
-						return isoPath.(string)
-					}
-					return ""
-				},
-				VdiUuidKey: "iso_vdi_uuid",
+		&xscommon.StepUploadVdi{
+			VdiNameFunc: func() string {
+				return "Packer-cd-disk"
 			},
+			ImagePathFunc: func() string {
+				if cdPath, ok := state.GetOk("cd_path"); ok {
+					return cdPath.(string)
+				}
+				return ""
+			},
+			VdiUuidKey: "cd_vdi_uuid",
+		},
+		&xscommon.StepUploadVdi{
+			VdiNameFunc: func() string {
+				if len(self.config.ISOUrls) > 0 {
+					return path.Base(self.config.ISOUrls[0])
+				}
+				return ""
+			},
+			ImagePathFunc: func() string {
+				if isoPath, ok := state.GetOk("iso_path"); ok {
+					return isoPath.(string)
+				}
+				return ""
+			},
+			VdiUuidKey: "iso_vdi_uuid",
 		},
 		&xscommon.StepFindVdi{
 			VdiName:    self.config.ToolsIsoName,
@@ -239,24 +247,32 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			VdiName:    self.config.ISOName,
 			VdiUuidKey: "isoname_vdi_uuid",
 		},
-		&xscommon.StepCreateInstance{
-			AssumePreInstalledOS: false,
+		new(stepCreateInstance),
+		&xscommon.StepAttachvTPM{
+			EnablevTPM: self.config.VTPMEnabled,
+		},
+		&xscommon.StepAttachvGPU{
+			VGPUName: self.config.VGPUProfile,
 		},
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
-			VdiType:    xsclient.VbdTypeFloppy,
+			VdiType:    xenapi.VbdTypeFloppy,
 		},
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "iso_vdi_uuid",
-			VdiType:    xsclient.VbdTypeCD,
+			VdiType:    xenapi.VbdTypeCD,
 		},
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "isoname_vdi_uuid",
-			VdiType:    xsclient.VbdTypeCD,
+			VdiType:    xenapi.VbdTypeCD,
+		},
+		&xscommon.StepAttachVdi{
+			VdiUuidKey: "cd_vdi_uuid",
+			VdiType:    xenapi.VbdTypeCD,
 		},
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
-			VdiType:    xsclient.VbdTypeCD,
+			VdiType:    xenapi.VbdTypeCD,
 		},
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepSetVmHostSshAddress),
@@ -290,14 +306,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		},
 		new(commonsteps.StepProvision),
 		new(xscommon.StepShutdown),
-	}
-
-	if !self.config.SkipSetTemplate {
-		steps = append(steps,
-			new(xscommon.StepSetVmToTemplate))
-	}
-
-	steps = append(steps,
+		new(xscommon.StepSetVmToTemplate),
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "iso_vdi_uuid",
 		},
@@ -310,7 +319,12 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
-		new(xscommon.StepExport))
+		&xscommon.StepDetachVdi{
+			VdiUuidKey: "cd_vdi_uuid",
+		},
+		new(xscommon.StepCreateSnapshot),
+		new(xscommon.StepExport),
+	}
 
 	if self.config.ISOName == "" {
 		steps = append(download_steps, steps...)

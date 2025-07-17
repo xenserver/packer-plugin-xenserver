@@ -6,6 +6,8 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
+
+	"xenapi"
 )
 
 type StepBootWait struct{}
@@ -15,7 +17,7 @@ func (self *StepBootWait) Run(ctx context.Context, state multistep.StateBag) mul
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 
-	instance, _ := c.client.VM.GetByUUID(c.session, state.Get("instance_uuid").(string))
+	instance, _ := xenapi.VM.GetByUUID(c.session, state.Get("instance_uuid").(string))
 	ui.Say("Unpausing VM " + state.Get("instance_uuid").(string))
 	Unpause(c, instance)
 

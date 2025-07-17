@@ -11,7 +11,8 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	xsclient "github.com/terra-farm/go-xen-api-client"
+
+	"xenapi"
 )
 
 func appendQuery(urlstring, k, v string) (string, error) {
@@ -29,12 +30,12 @@ func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (resul
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
 
-	task, err := c.client.Task.Create(c.session, "packer-task", "Packer task")
+	task, err := xenapi.Task.Create(c.session, "packer-task", "Packer task")
 	if err != nil {
 		err = fmt.Errorf("Unable to create task: %s", err.Error())
 		return
 	}
-	defer c.client.Task.Destroy(c.session, task)
+	defer xenapi.Task.Destroy(c.session, task)
 
 	import_task_url, err := appendQuery(import_url, "task_id", string(task))
 	if err != nil {
@@ -76,13 +77,13 @@ func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (resul
 	logIteration := 0
 	err = InterruptibleWait{
 		Predicate: func() (bool, error) {
-			status, err := c.client.Task.GetStatus(c.session, task)
+			status, err := xenapi.Task.GetStatus(c.session, task)
 			if err != nil {
 				return false, fmt.Errorf("Failed to get task status: %s", err.Error())
 			}
 			switch status {
-			case xsclient.TaskStatusTypePending:
-				progress, err := c.client.Task.GetProgress(c.session, task)
+			case xenapi.TaskStatusTypePending:
+				progress, err := xenapi.Task.GetProgress(c.session, task)
 				if err != nil {
 					return false, fmt.Errorf("Failed to get progress: %s", err.Error())
 				}
@@ -91,15 +92,15 @@ func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (resul
 					log.Printf("Upload %.0f%% complete", progress*100)
 				}
 				return false, nil
-			case xsclient.TaskStatusTypeSuccess:
+			case xenapi.TaskStatusTypeSuccess:
 				return true, nil
-			case xsclient.TaskStatusTypeFailure:
-				errorInfo, err := c.client.Task.GetErrorInfo(c.session, task)
+			case xenapi.TaskStatusTypeFailure:
+				errorInfo, err := xenapi.Task.GetErrorInfo(c.session, task)
 				if err != nil {
 					errorInfo = []string{fmt.Sprintf("furthermore, failed to get error info: %s", err.Error())}
 				}
 				return false, fmt.Errorf("Task failed: %s", errorInfo)
-			case xsclient.TaskStatusTypeCancelling, xsclient.TaskStatusTypeCancelled:
+			case xenapi.TaskStatusTypeCancelling, xenapi.TaskStatusTypeCancelled:
 				return false, fmt.Errorf("Task cancelled")
 			default:
 				return false, fmt.Errorf("Unknown task status %v", status)
@@ -116,7 +117,7 @@ func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (resul
 		return
 	}
 
-	result, err = c.client.Task.GetResult(c.session, task)
+	result, err = xenapi.Task.GetResult(c.session, task)
 	if err != nil {
 		err = fmt.Errorf("Error getting result: %s", err.Error())
 		return

@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	gossh "golang.org/x/crypto/ssh"
+
+	"xenapi"
 )
 
 type StepStartOnHIMN struct{}
@@ -28,14 +30,14 @@ func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	ui.Say("Step: Start VM on the Host Internal Mangement Network")
 
 	uuid := state.Get("instance_uuid").(string)
-	instance, err := c.client.VM.GetByUUID(c.session, uuid)
+	instance, err := xenapi.VM.GetByUUID(c.session, uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
 	// Find the HIMN Ref
-	networks, err := c.client.Network.GetByNameLabel(c.session, "Host internal management network")
+	networks, err := xenapi.Network.GetByNameLabel(c.session, "Host internal management network")
 	if err != nil || len(networks) == 0 {
 		ui.Error("Unable to find a host internal management network")
 		ui.Error(err.Error())
@@ -53,14 +55,14 @@ func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	}
 
 	// Start the VM
-	c.client.VM.Start(c.session, instance, false, false)
+	xenapi.VM.Start(c.session, instance, false, false)
 
 	var himn_iface_ip string = ""
 
 	// Obtain the allocated IP
 	err = InterruptibleWait{
 		Predicate: func() (found bool, err error) {
-			ips, err := c.client.Network.GetAssignedIps(c.session, himn)
+			ips, err := xenapi.Network.GetAssignedIps(c.session, himn)
 			if err != nil {
 				return false, fmt.Errorf("Can't get assigned IPs: %s", err.Error())
 			}
@@ -131,7 +133,7 @@ func HimnSSHIP(state multistep.StateBag) (string, error) {
 	return ip, nil
 }
 
-func HimnSSHPort(state multistep.StateBag) (uint, error) {
+func HimnSSHPort(state multistep.StateBag) (int, error) {
 	config := state.Get("commonconfig").(CommonConfig)
-	return config.SSHPort, nil
+	return config.SSHConfig.Comm.SSHPort, nil
 }

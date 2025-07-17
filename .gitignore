@@ -8,3 +8,9 @@ builder-*
 dist/*
 vendor/*
 packer-plugin-xenserver
+
+# VSCode
+.vscode/
+
+# SDK folder
+goSDK

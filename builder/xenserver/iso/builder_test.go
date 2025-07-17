@@ -4,22 +4,22 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 func testConfig() map[string]interface{} {
 	return map[string]interface{}{
-		"remote_host":      "localhost",
-		"remote_username":  "admin",
-		"remote_password":  "admin",
-		"vm_name":          "foo",
-		"iso_checksum":     "md5:A221725EE181A44C67E25BD6A2516742",
-		"iso_url":          "http://www.google.com/",
-		"shutdown_command": "yes",
-		"ssh_username":     "foo",
+		"remote_host":       "localhost",
+		"remote_username":   "admin",
+		"remote_password":   "admin",
+		"vm_name":           "foo",
+		"iso_checksum":      "foo",
+		"iso_checksum_type": "md5",
+		"iso_url":           "http://www.google.com/",
+		"shutdown_command":  "yes",
+		"ssh_username":      "foo",
 
-		common.BuildNameConfigKey: "foo",
+		packer.BuildNameConfigKey: "foo",
 	}
 }
 
@@ -42,7 +42,7 @@ func TestBuilderPrepare_Defaults(t *testing.T) {
 		t.Fatalf("should not have error: %s", err)
 	}
 
-	if b.config.ToolsIsoName != "" {
+	if b.config.ToolsIsoName != "xs-tools.iso" {
 		t.Errorf("bad tools ISO name: %s", b.config.ToolsIsoName)
 	}
 
@@ -60,10 +60,6 @@ func TestBuilderPrepare_Defaults(t *testing.T) {
 
 	if b.config.KeepVM != "never" {
 		t.Errorf("bad keep instance: %s", b.config.KeepVM)
-	}
-
-	if b.config.HostSshPort != 22 {
-		t.Errorf("bad ssh port: %d", b.config.HostSshPort)
 	}
 }
 
@@ -183,10 +179,20 @@ func TestBuilderPrepare_ISOChecksum(t *testing.T) {
 	var b Builder
 	config := testConfig()
 
-	// Test good
-
-	b = Builder{}
+	// Test bad
+	config["iso_checksum"] = ""
 	_, warns, err := b.Prepare(config)
+	if len(warns) > 0 {
+		t.Fatalf("bad: %#v", warns)
+	}
+	if err == nil {
+		t.Fatal("should have error")
+	}
+
+	// Test good
+	config["iso_checksum"] = "FOo"
+	b = Builder{}
+	_, warns, err = b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
 	}
@@ -194,8 +200,43 @@ func TestBuilderPrepare_ISOChecksum(t *testing.T) {
 		t.Fatalf("should not have error: %s", err)
 	}
 
+	if b.config.ISOChecksum != "foo" {
+		t.Fatalf("should've lowercased: %s", b.config.ISOChecksum)
+	}
+}
+
+func TestBuilderPrepare_ISOChecksumType(t *testing.T) {
+	var b Builder
+	config := testConfig()
+
 	// Test bad
-	config["iso_checksum"] = ""
+	config["iso_checksum_type"] = ""
+	_, warns, err := b.Prepare(config)
+	if len(warns) > 0 {
+		t.Fatalf("bad: %#v", warns)
+	}
+	if err == nil {
+		t.Fatal("should have error")
+	}
+
+	// Test good
+	config["iso_checksum_type"] = "mD5"
+	b = Builder{}
+	_, warns, err = b.Prepare(config)
+	if len(warns) > 0 {
+		t.Fatalf("bad: %#v", warns)
+	}
+	if err != nil {
+		t.Fatalf("should not have error: %s", err)
+	}
+
+	if b.config.ISOChecksumType != "md5" {
+		t.Fatalf("should've lowercased: %s", b.config.ISOChecksumType)
+	}
+
+	// Test unknown
+	config["iso_checksum_type"] = "fake"
+	b = Builder{}
 	_, warns, err = b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
@@ -204,6 +245,23 @@ func TestBuilderPrepare_ISOChecksum(t *testing.T) {
 		t.Fatal("should have error")
 	}
 
+	// Test none
+	config["iso_checksum_type"] = "none"
+	b = Builder{}
+	_, warns, err = b.Prepare(config)
+	// @todo: give warning in this case?
+	/*
+		if len(warns) == 0 {
+			t.Fatalf("bad: %#v", warns)
+		}
+	*/
+	if err != nil {
+		t.Fatalf("should not have error: %s", err)
+	}
+
+	if b.config.ISOChecksumType != "none" {
+		t.Fatalf("should've lowercased: %s", b.config.ISOChecksumType)
+	}
 }
 
 func TestBuilderPrepare_ISOUrl(t *testing.T) {

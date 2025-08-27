@@ -7,6 +7,7 @@ import (
 	"log"
 	
 	"xenapi"
+	version "github.com/xenserver/packer-plugin-xenserver/version"
 )
 
 type VDIType int
@@ -285,10 +286,12 @@ func (c Connection) GetSession() *xenapi.Session {
 }
 
 func NewXenAPIClient(host, username, password string) (*Connection, error) {
+	log.Printf("XenServer Packer Plugin Version: %s", version.PluginVersion.FormattedVersion())
+
 	session := xenapi.NewSession(&xenapi.ClientOpts{
 		URL: "http://" + host,
 		Headers: map[string]string{
-			"User-Agent": "XenPacker",
+			"User-Agent": fmt.Sprintf("XenServerPacker/%s", version.PluginVersion.FormattedVersion()),
 		},
 	})
 

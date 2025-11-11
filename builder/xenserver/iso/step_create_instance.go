@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 
 	"xenapi"
-	
+
 	xscommon "github.com/xenserver/packer-plugin-xenserver/builder/xenserver/common"
 )
 
@@ -27,6 +27,13 @@ func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Create Instance")
+
+	// Run Pre-Cleanup to check if VM not already exists
+	err := xscommon.PreCleanup(state, config.PackerForce)
+	if err != nil {
+		state.Put("error", err)
+		return multistep.ActionHalt
+	}
 
 	// Get the template to clone from
 
@@ -236,7 +243,7 @@ func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 			}
 			// If network Name label starts with "Network ", we assume it is a default network
 			if len(networks) == 0 && strings.HasPrefix(networkNameLabel, "Network ") {
-				
+
 				tmpNetworkNo := strings.TrimPrefix(networkNameLabel, "Network ")
 				tmpLabel := "Pool-wide network associated with eth" + tmpNetworkNo
 				ui.Say(fmt.Sprintf("No network found with name-label '%s'. This might be a default built-in network '%s'", networkNameLabel, tmpLabel))
@@ -248,12 +255,12 @@ func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 			}
 
 			switch {
-				case len(networks) == 0:
-					ui.Error(fmt.Sprintf("Couldn't find a network with the specified name-label '%s'. Aborting.", networkNameLabel))
-					return multistep.ActionHalt
-				case len(networks) > 1:
-					ui.Error(fmt.Sprintf("Found more than one network with the name '%s'. The name must be unique. Aborting.", networkNameLabel))
-					return multistep.ActionHalt
+			case len(networks) == 0:
+				ui.Error(fmt.Sprintf("Couldn't find a network with the specified name-label '%s'. Aborting.", networkNameLabel))
+				return multistep.ActionHalt
+			case len(networks) > 1:
+				ui.Error(fmt.Sprintf("Found more than one network with the name '%s'. The name must be unique. Aborting.", networkNameLabel))
+				return multistep.ActionHalt
 			}
 
 			//we need the VIF index string

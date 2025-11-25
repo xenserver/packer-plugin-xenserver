@@ -6,24 +6,27 @@ import (
 	"os"
 	"time"
 
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/common"
-	commonssh "github.com/mitchellh/packer/common/ssh"
-	"github.com/mitchellh/packer/template/interpolate"
-	xsclient "github.com/xenserver/go-xenserver-client"
+	"github.com/hashicorp/packer-plugin-sdk/common"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
+	xenapi "github.com/terra-farm/go-xen-api-client"
 )
 
 type CommonConfig struct {
-	Username string `mapstructure:"remote_username"`
-	Password string `mapstructure:"remote_password"`
-	HostIp   string `mapstructure:"remote_host"`
+	Username    string `mapstructure:"remote_username"`
+	Password    string `mapstructure:"remote_password"`
+	HostIp      string `mapstructure:"remote_host"`
+	HostSshPort uint   `mapstructure:"remote_ssh_port"`
 
 	VMName             string   `mapstructure:"vm_name"`
 	VMDescription      string   `mapstructure:"vm_description"`
 	SrName             string   `mapstructure:"sr_name"`
+	SrISOName          string   `mapstructure:"sr_iso_name" required:"false"`
+	CDFiles            []string `mapstructure:"cd_files"`
 	FloppyFiles        []string `mapstructure:"floppy_files"`
 	NetworkNames       []string `mapstructure:"network_names"`
 	ExportNetworkNames []string `mapstructure:"export_network_names"`
+	VMTags             []string `mapstructure:"vm_tags"`
 
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`
@@ -63,6 +66,10 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 
 	// Set default values
 
+	if c.HostSshPort == 0 {
+		c.HostSshPort = 22
+	}
+
 	if c.HostPortMin == 0 {
 		c.HostPortMin = 5900
 	}
@@ -73,10 +80,6 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 
 	if c.RawBootWait == "" {
 		c.RawBootWait = "5s"
-	}
-
-	if c.ToolsIsoName == "" {
-		c.ToolsIsoName = "xs-tools.iso"
 	}
 
 	if c.HTTPPortMin == 0 {
@@ -163,7 +166,7 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	if c.SSHKeyPath != "" {
 		if _, err := os.Stat(c.SSHKeyPath); err != nil {
 			errs = append(errs, fmt.Errorf("ssh_key_path is invalid: %s", err))
-		} else if _, err := commonssh.FileSigner(c.SSHKeyPath); err != nil {
+		} else if _, err := FileSigner(c.SSHKeyPath); err != nil {
 			errs = append(errs, fmt.Errorf("ssh_key_path is invalid: %s", err))
 		}
 	}
@@ -222,26 +225,81 @@ func (c CommonConfig) ShouldKeepVM(state multistep.StateBag) bool {
 	}
 }
 
-func (config CommonConfig) GetSR(client xsclient.XenAPIClient) (*xsclient.SR, error) {
+func (config CommonConfig) GetSR(c *Connection) (xenapi.SRRef, error) {
 	if config.SrName == "" {
-		// Find the default SR
-		return client.GetDefaultSR()
-
+		return getDefaultSR(c)
 	} else {
+		var srRef xenapi.SRRef
+
 		// Use the provided name label to find the SR to use
-		srs, err := client.GetSRByNameLabel(config.SrName)
+		srs, err := c.GetClient().SR.GetByNameLabel(c.session, config.SrName)
 
 		if err != nil {
-			return nil, err
+			return srRef, err
 		}
 
 		switch {
 		case len(srs) == 0:
-			return nil, fmt.Errorf("Couldn't find a SR with the specified name-label '%s'", config.SrName)
+			return srRef, fmt.Errorf("Couldn't find a SR with the specified name-label '%s'", config.SrName)
 		case len(srs) > 1:
-			return nil, fmt.Errorf("Found more than one SR with the name '%s'. The name must be unique", config.SrName)
+			return srRef, fmt.Errorf("Found more than one SR with the name '%s'. The name must be unique", config.SrName)
 		}
 
 		return srs[0], nil
 	}
+}
+
+func (config CommonConfig) GetISOSR(c *Connection) (xenapi.SRRef, error) {
+	var srRef xenapi.SRRef
+	if config.SrISOName == "" {
+		return getDefaultSR(c)
+
+	} else {
+		// Use the provided name label to find the SR to use
+		srs, err := c.GetClient().SR.GetByNameLabel(c.session, config.SrISOName)
+
+		if err != nil {
+			return srRef, err
+		}
+
+		switch {
+		case len(srs) == 0:
+			return srRef, fmt.Errorf("Couldn't find a SR with the specified name-label '%s'", config.SrISOName)
+		case len(srs) > 1:
+			return srRef, fmt.Errorf("Found more than one SR with the name '%s'. The name must be unique", config.SrISOName)
+		}
+
+		return srs[0], nil
+	}
+}
+
+func getDefaultSR(c *Connection) (xenapi.SRRef, error) {
+	var srRef xenapi.SRRef
+	client := c.GetClient()
+	hostRef, err := client.Session.GetThisHost(c.session, c.session)
+
+	if err != nil {
+		return srRef, err
+	}
+
+	// The current version of the go-xen-api-client does not fully support XenAPI version 8.2
+	// In particular, some values for the pool `allowed_operations` are not recognised, resulting
+	// in a parse error when retrieving pool records. As a workaround, we only fetch pool refs.
+	pool_refs, err := client.Pool.GetAll(c.session)
+
+	if err != nil {
+		return srRef, err
+	}
+
+	for _, pool_ref := range pool_refs {
+		pool_master, err := client.Pool.GetMaster(c.session, pool_ref)
+		if err != nil {
+			return srRef, err
+		}
+		if pool_master == hostRef {
+			return client.Pool.GetDefaultSR(c.session, pool_ref)
+		}
+	}
+
+	return srRef, errors.New(fmt.Sprintf("failed to find default SR on host '%s'", hostRef))
 }

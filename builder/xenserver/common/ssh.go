@@ -2,20 +2,22 @@ package common
 
 import (
 	"bytes"
+	"encoding/pem"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	commonssh "github.com/mitchellh/packer/common/ssh"
-	"github.com/mitchellh/packer/communicator/ssh"
-	gossh "golang.org/x/crypto/ssh"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
+	"os"
 	"strings"
+
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	gossh "golang.org/x/crypto/ssh"
 )
 
 func SSHAddress(state multistep.StateBag) (string, error) {
 	sshIP := state.Get("ssh_address").(string)
-	sshHostPort := 22
+	sshHostPort := state.Get("ssh_port").(uint)
 	return fmt.Sprintf("%s:%d", sshIP, sshHostPort), nil
 }
 
@@ -42,12 +44,10 @@ func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConf
 		config := state.Get("commonconfig").(CommonConfig)
 		auth := []gossh.AuthMethod{
 			gossh.Password(config.SSHPassword),
-			gossh.KeyboardInteractive(
-				ssh.PasswordKeyboardInteractive(config.SSHPassword)),
 		}
 
 		if config.SSHKeyPath != "" {
-			signer, err := commonssh.FileSigner(config.SSHKeyPath)
+			signer, err := FileSigner(config.SSHKeyPath)
 			if err != nil {
 				return nil, err
 			}
@@ -56,8 +56,9 @@ func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConf
 		}
 
 		return &gossh.ClientConfig{
-			User: config.SSHUser,
-			Auth: auth,
+			User:            config.SSHUser,
+			Auth:            auth,
+			HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 		}, nil
 	}
 }
@@ -94,6 +95,7 @@ func ExecuteHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err
 		Auth: []gossh.AuthMethod{
 			gossh.Password(config.Password),
 		},
+		HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 	}
 	return doExecuteSSHCmd(cmd, sshAddress, sshConfig)
 }
@@ -112,10 +114,10 @@ func ExecuteGuestSSHCmd(state multistep.StateBag, cmd string) (stdout string, er
 	return doExecuteSSHCmd(cmd, localAddress, sshConfig)
 }
 
-func forward(local_conn net.Conn, config *gossh.ClientConfig, server, remote_dest string, remote_port uint) error {
+func forward(local_conn net.Conn, config *gossh.ClientConfig, server string, server_ssh_port int, remote_dest string, remote_port uint) error {
 	defer local_conn.Close()
 
-	ssh_client_conn, err := gossh.Dial("tcp", server+":22", config)
+	ssh_client_conn, err := gossh.Dial("tcp", fmt.Sprintf("%s:%d", server, server_ssh_port), config)
 	if err != nil {
 		log.Printf("local ssh.Dial error: %s", err)
 		return err
@@ -155,13 +157,14 @@ func forward(local_conn net.Conn, config *gossh.ClientConfig, server, remote_des
 	return nil
 }
 
-func ssh_port_forward(local_listener net.Listener, remote_port uint, remote_dest, host, username, password string) error {
+func ssh_port_forward(local_listener net.Listener, remote_port int, remote_dest, host string, host_ssh_port int, username, password string) error {
 
 	config := &gossh.ClientConfig{
 		User: username,
 		Auth: []gossh.AuthMethod{
 			gossh.Password(password),
 		},
+		HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 	}
 
 	for {
@@ -173,8 +176,42 @@ func ssh_port_forward(local_listener net.Listener, remote_port uint, remote_dest
 		}
 
 		// Forward to a remote port
-		go forward(local_connection, config, host, remote_dest, remote_port)
+		go forward(local_connection, config, host, host_ssh_port, remote_dest, uint(remote_port))
 	}
 
 	return nil
+}
+
+// FileSigner returns an gossh.Signer for a key file.
+func FileSigner(path string) (gossh.Signer, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	keyBytes, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	// We parse the private key on our own first so that we can
+	// show a nicer error if the private key has a password.
+	block, _ := pem.Decode(keyBytes)
+	if block == nil {
+		return nil, fmt.Errorf(
+			"Failed to read key '%s': no key found", path)
+	}
+	if block.Headers["Proc-Type"] == "4,ENCRYPTED" {
+		return nil, fmt.Errorf(
+			"Failed to read key '%s': password protected keys are\n"+
+				"not supported. Please decrypt the key prior to use.", path)
+	}
+
+	signer, err := gossh.ParsePrivateKey(keyBytes)
+	if err != nil {
+		return nil, fmt.Errorf("Error setting up SSH config: %s", err)
+	}
+
+	return signer, nil
 }

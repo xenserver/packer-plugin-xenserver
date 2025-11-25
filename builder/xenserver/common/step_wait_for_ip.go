@@ -1,29 +1,29 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	"github.com/nilshell/xmlrpc"
-	xsclient "github.com/xenserver/go-xenserver-client"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 type StepWaitForIP struct {
+	VmCleanup
 	Chan    <-chan string
 	Timeout time.Duration
 }
 
-func (self *StepWaitForIP) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(xsclient.XenAPIClient)
+	c := state.Get("client").(*Connection)
 	config := state.Get("commonconfig").(CommonConfig)
 
 	ui.Say("Step: Wait for VM's IP to become known to us.")
 
 	uuid := state.Get("instance_uuid").(string)
-	instance, err := client.GetVMByUuid(uuid)
+	instance, err := c.client.VM.GetByUUID(c.session, uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
 		return multistep.ActionHalt
@@ -50,14 +50,19 @@ func (self *StepWaitForIP) Run(state multistep.StateBag) multistep.StepAction {
 			if config.IPGetter == "auto" || config.IPGetter == "tools" {
 
 				// Look for PV IP
-				metrics, err := instance.GetGuestMetrics()
+				m, err := c.client.VM.GetGuestMetrics(c.session, instance)
 				if err != nil {
 					return false, err
 				}
-				if metrics != nil {
-					networks := metrics["networks"].(xmlrpc.Struct)
-					if ipRaw, ok := networks["0/ip"]; ok {
-						if ip = ipRaw.(string); ip != "" {
+				if m != "" {
+					metrics, err := c.client.VMGuestMetrics.GetRecord(c.session, m)
+					if err != nil {
+						return false, err
+					}
+					networks := metrics.Networks
+					var ok bool
+					if ip, ok = networks["0/ip"]; ok {
+						if ip != "" {
 							ui.Message(fmt.Sprintf("Got IP '%s' from XenServer tools", ip))
 							return true, nil
 						}
@@ -81,13 +86,11 @@ func (self *StepWaitForIP) Run(state multistep.StateBag) multistep.StepAction {
 	return multistep.ActionContinue
 }
 
-func (self *StepWaitForIP) Cleanup(state multistep.StateBag) {}
-
 func InstanceSSHIP(state multistep.StateBag) (string, error) {
 	ip := state.Get("instance_ssh_address").(string)
 	return ip, nil
 }
 
-func InstanceSSHPort(state multistep.StateBag) (uint, error) {
+func InstanceSSHPort(state multistep.StateBag) (int, error) {
 	return 22, nil
 }

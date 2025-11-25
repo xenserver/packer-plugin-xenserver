@@ -1,0 +1,22 @@
+#cloud-config
+
+# hack for cloud-init per:
+# https://github.com/leakespeake/packer/blob/3f3e361751b4be9326b66771d96f2519bc8f885e/builders/vmware/vsphere-iso/ubuntu-server-20-04/hcl2/http/ubuntu-server-subiquity/user-data
+runcmd:
+  # to enable true auto-install for Ubuntu 20.04 with cloud-init nocloud (eliminates "Continue with autoinstall?" prompt)
+  - [eval, 'echo $(cat /proc/cmdline) "autoinstall" > /root/cmdline']
+  - [eval, 'mount -n --bind -o ro /root/cmdline /proc/cmdline']
+  - [eval, 'snap restart subiquity.subiquity-service']
+
+autoinstall:
+  version: 1
+  identity:
+    hostname: ubuntu-server
+    # This is the crypted pass of 'ubuntu'
+    password: "$6$exDY1mhS4KUYCE/2$zmn9ToZwTKLhCw.b4/b.ZRTIZM30JZ4QrOQ2aOXJ8yk96xpcCof0kxKwuX1kqLG/ygbJ1f8wxED22bTL4F46P0"
+    username: testuser
+  packages:
+    - xe-guest-utilities
+  ssh:
+    install-server: yes
+    allow-pw: yes

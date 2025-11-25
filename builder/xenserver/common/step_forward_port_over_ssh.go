@@ -1,13 +1,15 @@
 package common
 
 import (
+	"context"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
+
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 type StepForwardPortOverSSH struct {
-	RemotePort func(state multistep.StateBag) (uint, error)
+	RemotePort func(state multistep.StateBag) (int, error)
 	RemoteDest func(state multistep.StateBag) (string, error)
 
 	HostPortMin uint
@@ -16,7 +18,7 @@ type StepForwardPortOverSSH struct {
 	ResultKey string
 }
 
-func (self *StepForwardPortOverSSH) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepForwardPortOverSSH) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
@@ -33,10 +35,11 @@ func (self *StepForwardPortOverSSH) Run(state multistep.StateBag) multistep.Step
 	ui.Say(fmt.Sprintf("Creating a local port forward over SSH on local port %d", sshHostPort))
 
 	hostAddress, _ := state.Get("ssh_address").(string)
+	hostSshPort, _ := state.Get("ssh_port").(int)
 	remotePort, _ := self.RemotePort(state)
 	remoteDest, _ := self.RemoteDest(state)
 
-	go ssh_port_forward(l, remotePort, remoteDest, hostAddress, config.Username, config.Password)
+	go ssh_port_forward(l, remotePort, remoteDest, hostAddress, hostSshPort, config.Username, config.Password)
 	ui.Say(fmt.Sprintf("Port forward setup. %d ---> %s:%d on %s", sshHostPort, remoteDest, remotePort, hostAddress))
 
 	// Provide the local port to future steps.

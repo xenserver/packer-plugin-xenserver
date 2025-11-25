@@ -1,10 +1,11 @@
 package common
 
 import (
+	"context"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
+
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 type StepFindVdi struct {
@@ -13,16 +14,16 @@ type StepFindVdi struct {
 	VdiUuidKey    string
 }
 
-func (self *StepFindVdi) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepFindVdi) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(xsclient.XenAPIClient)
+	c := state.Get("client").(*Connection)
 
 	// Ignore if VdiName is not specified
 	if self.VdiName == "" {
 		return multistep.ActionContinue
 	}
 
-	vdis, err := client.GetVdiByNameLabel(self.VdiName)
+	vdis, err := c.client.VDI.GetByNameLabel(c.session, self.VdiName)
 
 	switch {
 	case len(vdis) == 0:
@@ -35,7 +36,7 @@ func (self *StepFindVdi) Run(state multistep.StateBag) multistep.StepAction {
 
 	vdi := vdis[0]
 
-	vdiUuid, err := vdi.GetUuid()
+	vdiUuid, err := c.client.VDI.GetUUID(c.session, vdi)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get UUID of VDI '%s': %s", self.VdiName, err.Error()))
 		return multistep.ActionHalt

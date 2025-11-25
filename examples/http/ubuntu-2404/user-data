@@ -1,0 +1,49 @@
+#cloud-config
+autoinstall:
+  version: 1
+  identity:
+    hostname: ubuntu-server
+    # This is the crypted pass of 'ubuntu'
+    password: "$6$exDY1mhS4KUYCE/2$zmn9ToZwTKLhCw.b4/b.ZRTIZM30JZ4QrOQ2aOXJ8yk96xpcCof0kxKwuX1kqLG/ygbJ1f8wxED22bTL4F46P0"
+    username: testuser
+  ssh:
+    install-server: true
+    allow-pw: true
+
+  packages:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+  package_upgrade: false
+
+  # late-commands are run at the very end of the *installer*, before the first
+  # reboot. However users are actually created by cloud-init after the first
+  # reboot. So these commands can't affect anything that requires a user to
+  # actually exist.
+  late-commands:
+    # Add xen-guest-agent - this is impossible (!) on Ubuntu 24.04 using
+    # the normal apt/packages autoinstall configuration, because (a) the
+    # xen-guest-agent apt repository does not use the "components" field
+    # (odd, but legal); (b) curtin's apt-config process hard requires
+    # deb822 .sources to have a "Components:" key, and (c) even if we
+    # try to configure it with a .list entry rather than .source entry
+    # under "apt:", on Ubuntu 24 curtin force-converts "deb" lines to
+    # deb822 format. I wasted days on this. Have to just do it the
+    # old-fashioned way here.
+    - 'echo "deb [trusted=yes] https://gitlab.com/api/v4/projects/xen-project%252Fxen-guest-agent/packages/generic/deb-amd64/ release/" > /target/etc/apt/sources.list.d/xen.list'
+    - curtin in-target --target /target -- apt-get update
+    - curtin in-target --target /target -- apt-get install -y xen-guest-agent
+
+    # If you want to do anything custom with files from "cd_files",
+    # uncomment these lines
+    #- mount /dev/sr1 /mnt
+    #- cp /mnt/my-cool.conf /target/etc/path/cool.conf
+    #- umount /mnt
+
+  # User-data is passed to the "real" cloud-init, which runs after the first
+  # reboot after the installer has finished. So you can run commands which
+  # modify users here, such as added 'testuser' to a new group.
+  #user-data:
+  #  runcmd:
+  #    - [ 'usermod', '-a', '-G', 'backup', 'testuser' ]

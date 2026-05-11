@@ -3,12 +3,13 @@ package common
 import (
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	
+
 	"xenapi"
 )
 
@@ -40,12 +41,15 @@ type CommonConfig struct {
 	HTTPPortMin uint   `mapstructure:"http_port_min"`
 	HTTPPortMax uint   `mapstructure:"http_port_max"`
 
-	SSHConfig   `mapstructure:",squash"`
-	
+	SSHConfig `mapstructure:",squash"`
+
 	OutputDir string `mapstructure:"output_directory"`
 	Format    string `mapstructure:"format"`
 	KeepVM    string `mapstructure:"keep_vm"`
 	IPGetter  string `mapstructure:"ip_getter"`
+
+	SkipCertVerification bool   `mapstructure:"skip_cert_verification"`
+	ServerCert           string `mapstructure:"server_cert"`
 }
 
 func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig) []error {
@@ -111,6 +115,16 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 
 	if c.HostIp == "" {
 		errs = append(errs, errors.New("remote_host must be specified."))
+	}
+
+	if !c.SkipCertVerification && c.ServerCert == "" {
+		errs = append(errs, errors.New("server_cert must be specified when skip_cert_verification is false."))
+	}
+
+	for _, f := range c.CDFiles {
+		if _, err := os.Stat(f); os.IsNotExist(err) {
+			errs = append(errs, fmt.Errorf("cd_files: '%s' does not exist", f))
+		}
 	}
 
 	if c.HostPortMin > c.HostPortMax {

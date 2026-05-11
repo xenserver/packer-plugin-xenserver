@@ -155,7 +155,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 }
 
 func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
-	c, err := xscommon.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
+	c, err := xscommon.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password, self.config.SkipCertVerification, self.config.ServerCert)
 
 	if err != nil {
 		return nil, err

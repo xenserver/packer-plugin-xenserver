@@ -118,6 +118,8 @@ type FlatConfig struct {
 	ConvertToTemplate         *bool             `mapstructure:"convert_to_template" cty:"convert_to_template" hcl:"convert_to_template"`
 	CreateSnapshot            *bool             `mapstructure:"create_snapshot" cty:"create_snapshot" hcl:"create_snapshot"`
 	SnapshotName              *string           `mapstructure:"snapshot_name" cty:"snapshot_name" hcl:"snapshot_name"`
+	SkipCertVerification      *bool             `mapstructure:"skip_cert_verification" cty:"skip_cert_verification" hcl:"skip_cert_verification"`
+	ServerCert                *string           `mapstructure:"server_cert" cty:"server_cert" hcl:"server_cert"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -240,6 +242,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"convert_to_template":          &hcldec.AttrSpec{Name: "convert_to_template", Type: cty.Bool, Required: false},
 		"create_snapshot":              &hcldec.AttrSpec{Name: "create_snapshot", Type: cty.Bool, Required: false},
 		"snapshot_name":                &hcldec.AttrSpec{Name: "snapshot_name", Type: cty.String, Required: false},
+		"skip_cert_verification":       &hcldec.AttrSpec{Name: "skip_cert_verification", Type: cty.Bool, Required: false},
+		"server_cert":                  &hcldec.AttrSpec{Name: "server_cert", Type: cty.String, Required: false},
 	}
 	return s
 }

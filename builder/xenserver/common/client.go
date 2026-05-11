@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	
+	"strings"
+
 	"xenapi"
+
 	version "github.com/xenserver/packer-plugin-xenserver/version"
 )
 
@@ -63,8 +65,6 @@ func GetDisks(c *Connection, vmRef xenapi.VMRef) (vdis []xenapi.VDIRef, err erro
 	}
 	return vdis, nil
 }
-
-
 
 func ConnectVdi(c *Connection, vmRef xenapi.VMRef, vdiRef xenapi.VDIRef, vbdType xenapi.VbdType) (err error) {
 
@@ -154,7 +154,6 @@ func DisconnectVdi(c *Connection, vmRef xenapi.VMRef, vdi xenapi.VDIRef) error {
 	return fmt.Errorf("Could not find VBD for VDI '%s'", vdi)
 }
 
-
 func ConnectNetwork(c *Connection, networkRef xenapi.NetworkRef, vmRef xenapi.VMRef, device string) (*xenapi.VIFRef, error) {
 	vif, err := xenapi.VIF.Create(c.session, xenapi.VIFRecord{
 		Network:     networkRef,
@@ -170,9 +169,6 @@ func ConnectNetwork(c *Connection, networkRef xenapi.NetworkRef, vmRef xenapi.VM
 
 	return &vif, nil
 }
-
-
-
 
 // Expose a VDI using the Transfer VM
 // (Legacy VHD export)
@@ -270,12 +266,10 @@ func Unexpose(c *Connection, vdiRef xenapi.VDIRef) (err error) {
 	return nil
 }
 
-
-
 // Client Initiator
 type Connection struct {
 	session  *xenapi.Session
-	ref	 	 xenapi.SessionRef
+	ref      xenapi.SessionRef
 	Host     string
 	Username string
 	Password string
@@ -285,23 +279,36 @@ func (c Connection) GetSession() *xenapi.Session {
 	return c.session
 }
 
-func NewXenAPIClient(host, username, password string) (*Connection, error) {
+func NewXenAPIClient(host, username, password string, skipCertVerification bool, serverCert string) (*Connection, error) {
 	log.Printf("XenServer Packer Plugin Version: %s", version.PluginVersion.FormattedVersion())
 
-	session := xenapi.NewSession(&xenapi.ClientOpts{
-		URL: "http://" + host,
+	if !strings.HasPrefix(host, "http") {
+		host = "https://" + host
+	}
+
+	opts := &xenapi.ClientOpts{
+		URL: host,
 		Headers: map[string]string{
 			"User-Agent": fmt.Sprintf("XenServerPacker/%s", version.PluginVersion.FormattedVersion()),
 		},
-	})
-
+	}
+	if !skipCertVerification {
+		opts.SecureOpts = &xenapi.SecureOpts{
+			ServerCert: serverCert,
+		}
+	}
+	session := xenapi.NewSession(opts)
 
 	ref, err := session.LoginWithPassword(username, password, "1.0", "packer")
 	if err != nil {
 		return nil, err
 	}
 
-	return &Connection{session,ref, host, username, password}, nil
+	// Strip the scheme from host before storing — callers that build HTTP URLs
+	// (step_upload_vdi, step_export, …) already prepend "https://".
+	bareHost := strings.TrimPrefix(strings.TrimPrefix(host, "https://"), "http://")
+
+	return &Connection{session, ref, bareHost, username, password}, nil
 }
 
 func (c *Connection) GetSessionRef() xenapi.SessionRef {

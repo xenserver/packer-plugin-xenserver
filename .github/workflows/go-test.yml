@@ -13,12 +13,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Unshallow
         run: git fetch --prune --unshallow
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: "1.24.1"
+      - name: Set up XenServer Go SDK
+        run: |
+          url=${{ vars.XENSERVER_SDK_URL }}
+          if [ -z "$url" ]; then
+            version=$(curl -s 'https://www.xenserver.com/downloads' | \
+              grep -oE 'Software Development Kit \(SDK\) [0-9]+\.[0-9]+\.[0-9]+' | \
+              grep -oE '[0-9]+\.[0-9]+\.[0-9]+$')
+            url="https://github.com/xapi-project/xen-api/releases/download/v${version}/Go-SDK-prerelease-unsigned.zip"
+          fi
+          curl -L "$url" -o xenserver-sdk.zip
+          unzip xenserver-sdk.zip -d sdk_temp
+          mkdir -p goSDK
+          mv sdk_temp/sdk_go/src/* goSDK/
+          rm -rf sdk_temp xenserver-sdk.zip
       - name: Run go tests
         run: go test -race -count 1 ./... -timeout=3m

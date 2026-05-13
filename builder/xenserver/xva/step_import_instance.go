@@ -40,7 +40,7 @@ func (self *stepImportInstance) Run(ctx context.Context, state multistep.StateBa
 		return multistep.ActionHalt
 	}
 
-	result, err := xscommon.HTTPUpload(fmt.Sprintf("https://%s/import?session_id=%s&sr_id=%s",
+	result, err := xscommon.HTTPUpload(fmt.Sprintf("https://%s/import?session_id=%v&sr_id=%s",
 		c.Host,
 		c.GetSession(),
 		sr,

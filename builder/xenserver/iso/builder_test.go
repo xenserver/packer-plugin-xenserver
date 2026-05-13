@@ -19,7 +19,8 @@ func testConfig() map[string]interface{} {
 		"shutdown_command":  "yes",
 		"ssh_username":      "foo",
 
-		"packer_build_name": "foo",
+		"packer_build_name":        "foo",
+		"skip_cert_verification": true,
 	}
 }
 

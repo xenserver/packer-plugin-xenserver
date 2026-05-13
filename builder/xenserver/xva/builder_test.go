@@ -16,7 +16,8 @@ func testConfig() map[string]interface{} {
 		"ssh_username":     "foo",
 		"source_path":      ".",
 
-		"packer_build_name": "foo",
+		"packer_build_name":        "foo",
+		"skip_cert_verification": true,
 	}
 }
 

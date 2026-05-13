@@ -66,7 +66,7 @@ func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 			if err != nil {
 				return false, fmt.Errorf("Can't get assigned IPs: %s", err.Error())
 			}
-			log.Printf("IPs: %s", ips)
+			log.Printf("IPs: %v", ips)
 			log.Printf("Ref: %s", instance)
 
 			//Check for instance.Ref in map

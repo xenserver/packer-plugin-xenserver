@@ -174,7 +174,7 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 
 			err = cmd.Run()
 		} else {
-			export_url := fmt.Sprintf("https://%s/export?%suuid=%s&session_id=%s",
+			export_url := fmt.Sprintf("https://%s/export?%suuid=%s&session_id=%v",
 				c.Host,
 				compress_option_url,
 				instance_uuid,

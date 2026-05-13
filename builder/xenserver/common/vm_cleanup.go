@@ -24,14 +24,14 @@ func (self *VmCleanup) Cleanup(state multistep.StateBag) {
 	uuid := state.Get("instance_uuid").(string)
 	instance, err := xenapi.VM.GetByUUID(c.session, uuid)
 	if err != nil {
-		log.Printf(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
+		log.Printf("Unable to get VM from UUID '%s': %s", uuid, err.Error())
 		return
 	}
 
 	// Get all VBDs (Virtual Block Devices) attached to the VM
 	vbds, err := xenapi.VM.GetVBDs(c.session, instance)
 	if err != nil {
-		log.Printf(fmt.Sprintf("Unable to get VBDs for VM '%s': %s", uuid, err.Error()))
+		log.Printf("Unable to get VBDs for VM '%s': %s", uuid, err.Error())
 		vbds = []xenapi.VBDRef{}
 	}
 
@@ -40,7 +40,7 @@ func (self *VmCleanup) Cleanup(state multistep.StateBag) {
 	for _, vbd := range vbds {
 		rec, err := xenapi.VBD.GetRecord(c.session, vbd)
 		if err != nil {
-			log.Printf(fmt.Sprintf("Unable to get VBD record: %s", err.Error()))
+			log.Printf("Unable to get VBD record: %s", err.Error())
 			continue
 		}
 		// Skip empty VBDs (like CD drives)
@@ -54,18 +54,18 @@ func (self *VmCleanup) Cleanup(state multistep.StateBag) {
 	// Shutdown the VM if it's running
 	vmstate, err := xenapi.VM.GetPowerState(c.session, instance)
 	if err != nil {
-		log.Printf(fmt.Sprintf("Unable to get VM power state '%s': %s", uuid, err.Error()))
+		log.Printf("Unable to get VM power state '%s': %s", uuid, err.Error())
 	}
 
 	if vmstate == xenapi.VMPowerStateRunning {
 		ui.Say(fmt.Sprintf("Shutting down VM on cleanup: %s", uuid))
 		err = xenapi.VM.Shutdown(c.session, instance)
 		if err != nil {
-			log.Printf(fmt.Sprintf("Unable to shutdown VM '%s': %s", uuid, err.Error()))
+			log.Printf("Unable to shutdown VM '%s': %s", uuid, err.Error())
 			// Try hard shutdown if normal shutdown fails
 			err = xenapi.VM.HardShutdown(c.session, instance)
 			if err != nil {
-				log.Printf(fmt.Sprintf("Unable to hard shutdown VM '%s': %s", uuid, err.Error()))
+				log.Printf("Unable to hard shutdown VM '%s': %s", uuid, err.Error())
 			}
 		}
 	}
@@ -74,7 +74,7 @@ func (self *VmCleanup) Cleanup(state multistep.StateBag) {
 	ui.Say(fmt.Sprintf("Destroying VM on cleanup: %s", uuid))
 	err = xenapi.VM.Destroy(c.session, instance)
 	if err != nil {
-		log.Printf(fmt.Sprintf("Unable to destroy VM '%s': %s", uuid, err.Error()))
+		log.Printf("Unable to destroy VM '%s': %s", uuid, err.Error())
 	}
 
 	// Destroy all VDIs (disks) attached to the VM
@@ -83,7 +83,7 @@ func (self *VmCleanup) Cleanup(state multistep.StateBag) {
 	for i, vdi := range vdis {
 		vdiUuid, err := xenapi.VDI.GetUUID(c.session, vdi)
 		if err != nil {
-			log.Printf(fmt.Sprintf("Unable to get VDI UUID: %s", err.Error()))
+			log.Printf("Unable to get VDI UUID: %s", err.Error())
 			continue
 		}
 
@@ -105,11 +105,11 @@ func (self *VmCleanup) Cleanup(state multistep.StateBag) {
 			}
 			lastErr = err
 			if attempt < 3 {
-				log.Printf(fmt.Sprintf("Attempt %d to destroy VDI '%s' failed: %s. Retrying...", attempt, vdiUuid, err.Error()))
+				log.Printf("Attempt %d to destroy VDI '%s' failed: %s. Retrying...", attempt, vdiUuid, err.Error())
 			}
 		}
 		if lastErr != nil {
-			log.Printf(fmt.Sprintf("Unable to destroy VDI '%s' after 3 attempts: %s", vdiUuid, lastErr.Error()))
+			log.Printf("Unable to destroy VDI '%s' after 3 attempts: %s", vdiUuid, lastErr.Error())
 		}
 	}
 	ui.Say("VM and disk cleanup completed")
@@ -125,7 +125,7 @@ func PreCleanup(state multistep.StateBag, force bool) error {
 	// Let's find existing VMs with the same name
 	vms, err := xenapi.VM.GetByNameLabel(c.session, config.VMName)
 	if err != nil {
-		log.Printf(fmt.Sprintf("Unable to get VM from Name '%s': %s", config.VMName, err.Error()))
+		log.Printf("Unable to get VM from Name '%s': %s", config.VMName, err.Error())
 		return err
 	}
 
@@ -150,7 +150,7 @@ func PreCleanup(state multistep.StateBag, force bool) error {
 			// Get all VBDs (Virtual Block Devices) attached to the VM
 			vbds, err := xenapi.VM.GetVBDs(c.session, vm)
 			if err != nil {
-				log.Printf(fmt.Sprintf("Unable to get VBDs for VM '%s': %s", config.VMName, err.Error()))
+				log.Printf("Unable to get VBDs for VM '%s': %s", config.VMName, err.Error())
 				vbds = []xenapi.VBDRef{}
 			}
 
@@ -159,7 +159,7 @@ func PreCleanup(state multistep.StateBag, force bool) error {
 			for _, vbd := range vbds {
 				rec, err := xenapi.VBD.GetRecord(c.session, vbd)
 				if err != nil {
-					log.Printf(fmt.Sprintf("Unable to get VBD record: %s", err.Error()))
+					log.Printf("Unable to get VBD record: %s", err.Error())
 					continue
 				}
 				// Skip empty VBDs (like CD drives)
@@ -197,7 +197,7 @@ func PreCleanup(state multistep.StateBag, force bool) error {
 			for i, vdi := range vdis {
 				vdiUuid, err := xenapi.VDI.GetUUID(c.session, vdi)
 				if err != nil {
-					log.Printf(fmt.Sprintf("Unable to get VDI UUID: %s", err.Error()))
+					log.Printf("Unable to get VDI UUID: %s", err.Error())
 					continue
 				}
 
@@ -219,11 +219,11 @@ func PreCleanup(state multistep.StateBag, force bool) error {
 					}
 					lastErr = err
 					if attempt < 3 {
-						log.Printf(fmt.Sprintf("Attempt %d to destroy VDI '%s' failed: %s. Retrying...", attempt, vdiUuid, err.Error()))
+						log.Printf("Attempt %d to destroy VDI '%s' failed: %s. Retrying...", attempt, vdiUuid, err.Error())
 					}
 				}
 				if lastErr != nil {
-					log.Printf(fmt.Sprintf("Unable to destroy VDI '%s' after 3 attempts: %s", vdiUuid, lastErr.Error()))
+					log.Printf("Unable to destroy VDI '%s' after 3 attempts: %s", vdiUuid, lastErr.Error())
 				}
 			}
 		}

@@ -19,7 +19,7 @@ func testConfig() map[string]interface{} {
 		"shutdown_command":  "yes",
 		"ssh_username":      "foo",
 
-		packer.BuildNameConfigKey: "foo",
+		"packer_build_name": "foo",
 	}
 }
 

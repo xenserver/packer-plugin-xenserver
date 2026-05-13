@@ -16,7 +16,7 @@ func testConfig() map[string]interface{} {
 		"ssh_username":     "foo",
 		"source_path":      ".",
 
-		packer.BuildNameConfigKey: "foo",
+		"packer_build_name": "foo",
 	}
 }
 

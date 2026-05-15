@@ -1,30 +1,33 @@
 package xva
 
 import (
+	"context"
 	"fmt"
 	"os"
 
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
-	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
+	xscommon "github.com/xenserver/packer-plugin-xenserver/builder/xenserver/common"
+
+	"xenapi"
 )
 
 type stepImportInstance struct {
-	instance *xsclient.VM
-	vdi      *xsclient.VDI
+	instance *xenapi.VMRef
+	vdi      *xenapi.VDIRef
 }
 
-func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepAction {
+func (self *stepImportInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
-	client := state.Get("client").(xsclient.XenAPIClient)
-	config := state.Get("config").(config)
+	c := state.Get("client").(*xscommon.Connection)
+	config := state.Get("config").(xscommon.Config)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Import Instance")
 
 	// find the SR
-	sr, err := config.GetSR(client)
+	srs, err := xenapi.SR.GetAll(c.GetSession())
+	sr := srs[0]
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
 		return multistep.ActionHalt
@@ -37,42 +40,42 @@ func (self *stepImportInstance) Run(state multistep.StateBag) multistep.StepActi
 		return multistep.ActionHalt
 	}
 
-	result, err := xscommon.HTTPUpload(fmt.Sprintf("https://%s/import?session_id=%s&sr_id=%s",
-		client.Host,
-		client.Session.(string),
-		sr.Ref,
+	result, err := xscommon.HTTPUpload(fmt.Sprintf("https://%s/import?session_id=%v&sr_id=%s",
+		c.Host,
+		c.GetSession(),
+		sr,
 	), fh, state)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to upload VDI: %s", err.Error()))
 		return multistep.ActionHalt
 	}
-	if result == nil {
+	if result == "" {
 		ui.Error("XAPI did not reply with an instance reference")
 		return multistep.ActionHalt
 	}
 
-	instance := xsclient.VM(*result)
+	instance := xenapi.VMRef(result)
 
-	instanceId, err := instance.GetUuid()
+	instanceId, err := xenapi.VM.GetUUID(c.GetSession(), instance)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM UUID: %s", err.Error()))
 		return multistep.ActionHalt
 	}
 	state.Put("instance_uuid", instanceId)
 
-	err = instance.SetVCPUsMax(config.VCPUsMax)
+	err = xenapi.VM.SetVCPUsMax(c.GetSession(), instance, int(config.VCPUsMax))
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM VCPUs Max=%d: %s", config.VCPUsMax, err.Error()))
 		return multistep.ActionHalt
 	}
 
-	err = instance.SetVCPUsAtStartup(config.VCPUsAtStartup)
+	err = xenapi.VM.SetVCPUsAtStartup(c.GetSession(), instance, int(config.VCPUsAtStartup))
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM VCPUs At Startup=%d: %s", config.VCPUsAtStartup, err.Error()))
 		return multistep.ActionHalt
 	}
 
-	instance.SetDescription(config.VMDescription)
+	err = xenapi.VM.SetNameDescription(c.GetSession(), instance, config.VMDescription)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM description: %s", err.Error()))
 		return multistep.ActionHalt

@@ -1,13 +1,16 @@
 package common
 
 import (
+	"context"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
 	"log"
 	"os"
 	"time"
+
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
+	
+	"xenapi"
 )
 
 type StepUploadVdi struct {
@@ -16,10 +19,10 @@ type StepUploadVdi struct {
 	VdiUuidKey    string
 }
 
-func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepUploadVdi) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(xsclient.XenAPIClient)
+	c := state.Get("client").(*Connection)
 
 	imagePath := self.ImagePathFunc()
 	vdiName := self.VdiNameFunc()
@@ -31,9 +34,13 @@ func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 	ui.Say(fmt.Sprintf("Step: Upload VDI '%s'", vdiName))
 
 	// Create VDI for the image
-	sr, err := config.GetSR(client)
+	srs, err := xenapi.SR.GetAll(c.session)
+	ui.Say(fmt.Sprintf("Step: Found SRs '%v'", srs))
+
+	sr, err := config.GetISOSR(c)
+
 	if err != nil {
-		ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
+		ui.Error(fmt.Sprintf("Unable to get SR: %v", err))
 		return multistep.ActionHalt
 	}
 
@@ -53,13 +60,24 @@ func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 	fileLength := fstat.Size()
 
 	// Create the VDI
-	vdi, err := sr.CreateVdi(vdiName, fileLength)
+	// vdi, err := sr.CreateVdi(vdiName, fileLength)
+	vdi, err := xenapi.VDI.Create(c.session, xenapi.VDIRecord{
+		NameLabel:   vdiName,
+		VirtualSize: int(fileLength),
+		Type:        "user",
+		Sharable:    false,
+		ReadOnly:    false,
+		SR:          sr,
+		OtherConfig: map[string]string{
+			"temp": "temp",
+		},
+	})
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to create VDI '%s': %s", vdiName, err.Error()))
 		return multistep.ActionHalt
 	}
 
-	vdiUuid, err := vdi.GetUuid()
+	vdiUuid, err := xenapi.VDI.GetUUID(c.session, vdi)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get UUID of VDI '%s': %s", vdiName, err.Error()))
 		return multistep.ActionHalt
@@ -67,9 +85,9 @@ func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 	state.Put(self.VdiUuidKey, vdiUuid)
 
 	_, err = HTTPUpload(fmt.Sprintf("https://%s/import_raw_vdi?vdi=%s&session_id=%s",
-		client.Host,
-		vdi.Ref,
-		client.Session.(string),
+		c.Host,
+		vdi,
+		c.GetSessionRef(),
 	), fh, state)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to upload VDI: %s", err.Error()))
@@ -82,7 +100,7 @@ func (self *StepUploadVdi) Run(state multistep.StateBag) multistep.StepAction {
 func (self *StepUploadVdi) Cleanup(state multistep.StateBag) {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(xsclient.XenAPIClient)
+	c := state.Get("client").(*Connection)
 
 	vdiName := self.VdiNameFunc()
 
@@ -102,7 +120,7 @@ func (self *StepUploadVdi) Cleanup(state multistep.StateBag) {
 		return
 	}
 
-	vdi, err := client.GetVdiByUuid(vdiUuid)
+	vdi, err := xenapi.VDI.GetByUUID(c.session, vdiUuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Can't get VDI '%s': %s", vdiUuid, err.Error()))
 		return
@@ -112,7 +130,7 @@ func (self *StepUploadVdi) Cleanup(state multistep.StateBag) {
 	// so try several times
 	for i := 0; i < 3; i++ {
 		log.Printf("Trying to destroy VDI...")
-		err = vdi.Destroy()
+		err = xenapi.VDI.Destroy(c.session, vdi)
 		if err == nil {
 			break
 		}

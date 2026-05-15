@@ -1,32 +1,49 @@
-[![Build Status](https://travis-ci.org/xenserver/packer-builder-xenserver.svg?branch=master)](https://travis-ci.org/xenserver/packer-builder-xenserver)
+# XenServer Packer.io builder
 
-# XenServer packer.io builder
+This builder plugin extends packer.io to support building images for XenServer.
 
-This builder plugin extends packer.io to support building images for XenServer. 
+It contains 3 different builders:
+- ISO -> With the ISO builder you can create a VM from scratch by auto-installing the OS.
+- Clone -> With the Clone builder you can clone an existing Template / VM for further customization.
+- XVA -> With the XVA builder you can import an existing Template / VM for further customization.
 
-You can check out packer [here](https://packer.io).
+## Status
 
+At the time of this writing the packer builder has been verified to work with XenServer 8.4.
 
-## Dependencies
-* Packer >= 0.7.2 (https://packer.io)
-* XenServer > 6.2 (http://xenserver.org)
-* Golang (tested with 1.2.1) 
+The following list contains things that are incomplete but will be worked on soon:
+- The documentation is still an on-going process
+- XVA builder is untested
+- Lots of dead code to remove from upstream
 
+## Using the builder
 
-## Install Go
-
-Follow these instructions and install golang on your system:
-* https://golang.org/doc/install
-
-## Install Packer
-
-Clone the Packer repository:
-
-```shell
-git clone https://github.com/mitchellh/packer.git
+The packer builder can be installed via `packer init` as long as the packer template includes the following in it's `pkr.hcl` file
+```
+packer {
+  required_plugins {
+   xenserver= {
+      version = ">= v0.1.0"
+      source = "github.com/xenserver/xenserver"
+    }
+  }
+}
 ```
 
-Then follow the [instructions to build and install a development version of Packer](https://github.com/mitchellh/packer#developing-packer).
+The following command will install the packer plugin using the Ubuntu example provided in this repository.
+
+```
+packer init examples/ubuntu/ubuntu-2004.pkr.hcl
+```
+
+If you are using an older version of packer or are still using json templates you will need to download the relevant release from the project's [releases page](https://github.com/ddelnano/packer-builder-xenserver/releases) and copy the binary to `~/.packer.d/plugins/packer-builder-xenserver-iso`.
+
+## Developing the builder
+
+### Dependencies
+* Packer >= v1.7.1 (https://packer.io)
+* XenServer > 8.4
+* Golang 1.24.1
 
 ## Compile the plugin
 
@@ -34,74 +51,24 @@ Once you have installed Packer, you must compile this plugin and install the
 resulting binary.
 
 ```shell
-cd $GOROOT
-mkdir -p src/github.com/xenserver/
-cd src/github.com/xenserver
-git clone https://github.com/xenserver/packer-builder-xenserver.git
-cd packer-builder-xenserver
-./build.sh
-```
+# Just build the Plugin
+$ make
+# Build the plugin and copy it to ~/.packer.d/plugins/
+$ make dev
 
-If the build is successful, you should now have `packer-builder-xenserver-iso` and
-`packer-builder-xenserver-xva` binaries in your `$GOPATH/bin` directory and you are
-ready to get going with packer; skip to the CentOS 6.6 example below.
+#Manual steps:
+$ go build -o packer-plugin-xenserver
 
-In order to do a cross-compile, run instead:
-```shell
-XC_OS="windows linux" XC_ARCH="386 amd64" ./build.sh
-```
-This builds 32 and 64 bit binaries for both Windows and Linux. Native binaries will
-be installed in `$GOPATH/bin` as above, and cross-compiled ones in the `pkg/` directory.
-
-Don't forget to also cross compile Packer, by running
-```shell
-XC_OS="windows linux" XC_ARCH="386 amd64" make bin
-```
-(instead of `make dev`) in the directory where you checked out Packer.
-
-## CentOS 6.6 Example
-
-Once you've setup the above, you are good to go with an example. 
-
-To get you started, there is an example config file which you can use:
-[`examples/centos-6.6.json`](https://github.com/xenserver/packer-builder-xenserver/blob/master/examples/centos-6.6.json)
-
-The example is functional, once suitable `remote_host`, `remote_username` and
-`remote_password` configurations have been substituted.
-
-A brief explanation of what the config parameters mean:
- * `type` - specifies the builder type. This is 'xenserver-iso', for installing
-   a VM from scratch, or 'xenserver-xva' to import existing XVA as a starting
-   point.
- * `remote_username` - the username for the XenServer host being used.
- * `remote_password` - the password for the XenServer host being used.
- * `remote_host` - the IP for the XenServer host being used.
- * `vm_name` - the name that should be given to the created VM.
- * `vcpus_max` - the maximum number of VCPUs for the VM.
- * `vcpus_atstartup` - the number of startup VCPUs for the VM.
- * `vm_memory` - the static memory configuration for the VM, in MB.
- * `disk_size` - the size of the disk the VM should be created with, in MB.
- * `iso_name` - the name of the ISO visible on a ISO SR connected to the XenServer host.
- * `http_directory` - the path to a local directory to serve up over http.
- * `ssh_username` - the username set by the installer for the instance.
- * `ssh_password` - the password set by the installer for the instance.
- * `boot_command` - a list of commands to be sent to the instance over VNC.
- * `vm_other_config` - a map of string to string for setting vm's other-config.
- * `network_names` - a list of network name for the VIFs to connect with.
-
-Note, the `http_directory` parameter is only required if you
-want Packer to serve up files over HTTP. In this example, the templated variables
-`{{ .HTTPIP }}` and `{{ .HTTPPort }}` will be substituted for the local IP and
-the port that Packer starts its HTTP service on.
-
-Once you've updated the config file with your own parameters, you can use packer
-to build this VM with the following command:
-
-```
-packer build centos-6.6.json
+# Add the builder to the location packer expects it to be installed in
+$ mkdir -p ~/.packer.d/plugins/
+$ cp packer-builder-xenserver-iso  ~/.packer.d/plugins/packer-builder-xenserver-iso
 ```
 
 # Documentation
 
-For complete documentation on configuration commands, see either [the
-xenserver-iso docs](https://github.com/rdobson/packer-builder-xenserver/blob/master/docs/builders/xenserver-iso.html.markdown) or [the xenserver-xva docs](https://github.com/rdobson/packer-builder-xenserver/blob/master/docs/builders/xenserver-xva.html.markdown).
+For complete documentation on configuration commands, see [the
+xenserver-iso docs](docs/builders/xenserver-iso.mdx)
+
+## Special thanks
+
+Thanks @ddelnano for the the community support.

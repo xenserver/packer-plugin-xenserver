@@ -1,20 +1,23 @@
 package common
 
 import (
+	"context"
 	"fmt"
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/packer"
-	xsclient "github.com/xenserver/go-xenserver-client"
 	"log"
+
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
+
+	"xenapi"
 )
 
 type StepDetachVdi struct {
 	VdiUuidKey string
 }
 
-func (self *StepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
+func (self *StepDetachVdi) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
-	client := state.Get("client").(xsclient.XenAPIClient)
+	c := state.Get("client").(*Connection)
 
 	var vdiUuid string
 	if vdiUuidRaw, ok := state.GetOk(self.VdiUuidKey); ok {
@@ -24,20 +27,20 @@ func (self *StepDetachVdi) Run(state multistep.StateBag) multistep.StepAction {
 		return multistep.ActionContinue
 	}
 
-	vdi, err := client.GetVdiByUuid(vdiUuid)
+	vdi, err := xenapi.VDI.GetByUUID(c.session, vdiUuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VDI from UUID '%s': %s", vdiUuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
 	uuid := state.Get("instance_uuid").(string)
-	instance, err := client.GetVMByUuid(uuid)
+	instance, err := xenapi.VM.GetByUUID(c.session, uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
-	err = instance.DisconnectVdi(vdi)
+	err = DisconnectVdi(c, instance, vdi)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to detach VDI '%s': %s", vdiUuid, err.Error()))
 		//return multistep.ActionHalt

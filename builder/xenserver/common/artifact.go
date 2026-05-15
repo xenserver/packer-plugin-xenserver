@@ -2,9 +2,10 @@ package common
 
 import (
 	"fmt"
-	"github.com/mitchellh/packer/packer"
 	"os"
 	"path/filepath"
+
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 // This is the common builder ID to all of these artifacts.

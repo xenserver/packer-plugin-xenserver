@@ -1,54 +1,34 @@
 package iso
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"log"
 	"path"
 	"strings"
 	"time"
 
-	"github.com/mitchellh/multistep"
-	"github.com/mitchellh/packer/common"
-	"github.com/mitchellh/packer/helper/communicator"
-	hconfig "github.com/mitchellh/packer/helper/config"
-	"github.com/mitchellh/packer/packer"
-	"github.com/mitchellh/packer/template/interpolate"
-	xsclient "github.com/xenserver/go-xenserver-client"
-	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
+	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	commonsteps "github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
+	hconfig "github.com/hashicorp/packer-plugin-sdk/template/config"
+	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
+	
+	"xenapi"
+	
+	xscommon "github.com/xenserver/packer-plugin-xenserver/builder/xenserver/common"
 )
 
-type config struct {
-	common.PackerConfig   `mapstructure:",squash"`
-	xscommon.CommonConfig `mapstructure:",squash"`
-
-	VCPUsMax       uint              `mapstructure:"vcpus_max"`
-	VCPUsAtStartup uint              `mapstructure:"vcpus_atstartup"`
-	VMMemory       uint              `mapstructure:"vm_memory"`
-	DiskSize       uint              `mapstructure:"disk_size"`
-	CloneTemplate  string            `mapstructure:"clone_template"`
-	VMOtherConfig  map[string]string `mapstructure:"vm_other_config"`
-
-	ISOChecksum     string   `mapstructure:"iso_checksum"`
-	ISOChecksumType string   `mapstructure:"iso_checksum_type"`
-	ISOUrls         []string `mapstructure:"iso_urls"`
-	ISOUrl          string   `mapstructure:"iso_url"`
-	ISOName         string   `mapstructure:"iso_name"`
-
-	PlatformArgs map[string]string `mapstructure:"platform_args"`
-
-	RawInstallTimeout string        `mapstructure:"install_timeout"`
-	InstallTimeout    time.Duration ``
-
-	ctx interpolate.Context
-}
-
 type Builder struct {
-	config config
+	config xscommon.Config
 	runner multistep.Runner
 }
 
-func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error) {
+func (self *Builder) ConfigSpec() hcldec.ObjectSpec { return self.config.FlatMapstructure().HCL2Spec() }
+
+func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []string, retErr error) {
 
 	var errs *packer.MultiError
 
@@ -66,29 +46,27 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 	}
 
 	errs = packer.MultiErrorAppend(
-		errs, self.config.CommonConfig.Prepare(&self.config.ctx, &self.config.PackerConfig)...)
-	errs = packer.MultiErrorAppend(errs, self.config.SSHConfig.Prepare(&self.config.ctx)...)
+		errs, self.config.CommonConfig.Prepare(self.config.GetInterpContext(), &self.config.PackerConfig)...)
+	errs = packer.MultiErrorAppend(errs, self.config.SSHConfig.Prepare(self.config.GetInterpContext())...)
 
 	// Set default values
-
-	if self.config.RawInstallTimeout == "" {
-		self.config.RawInstallTimeout = "200m"
+	if self.config.InstallTimeout == 0 {
+		self.config.InstallTimeout = 200 * time.Minute
 	}
 
 	if self.config.DiskSize == 0 {
 		self.config.DiskSize = 40000
 	}
 
-	if self.config.VCPUsMax == 0 {
-		self.config.VCPUsMax = 1
+	if self.config.VCPUs== 0 {
+		self.config.VCPUs = 2
 	}
 
-	if self.config.VCPUsAtStartup == 0 {
-		self.config.VCPUsAtStartup = 1
-	}
+	self.config.VCPUsMax = self.config.VCPUs
+	self.config.VCPUsAtStartup = self.config.VCPUs
 
-	if self.config.VCPUsAtStartup > self.config.VCPUsMax {
-		self.config.VCPUsAtStartup = self.config.VCPUsMax
+	if self.config.CorePerSocket == 0 {
+		self.config.CorePerSocket = self.config.VCPUs
 	}
 
 	if self.config.VMMemory == 0 {
@@ -99,7 +77,11 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		self.config.CloneTemplate = "Other install media"
 	}
 
-	if len(self.config.PlatformArgs) == 0 {
+	if self.config.Firmware == "" {
+		self.config.Firmware = "bios"
+	}
+
+	if len(self.config.PlatformArgs) == 0 && self.config.CloneTemplate == "" {
 		pargs := make(map[string]string)
 		pargs["viridian"] = "false"
 		pargs["nx"] = "true"
@@ -118,24 +100,16 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 		"iso_checksum_type": &self.config.ISOChecksumType,
 		"iso_url":           &self.config.ISOUrl,
 		"iso_name":          &self.config.ISOName,
-		"install_timeout":   &self.config.RawInstallTimeout,
+		//"install_timeout":   &self.config.InstallTimeout,
 	}
 	for i := range self.config.ISOUrls {
 		templates[fmt.Sprintf("iso_urls[%d]", i)] = &self.config.ISOUrls[i]
 	}
 
 	// Validation
-
-	self.config.InstallTimeout, err = time.ParseDuration(self.config.RawInstallTimeout)
-	if err != nil {
-		errs = packer.MultiErrorAppend(
-			errs, fmt.Errorf("Failed to parse install_timeout: %s", err))
-	}
-
 	if self.config.ISOName == "" {
 
 		// If ISO name is not specified, assume a URL and checksum has been provided.
-
 		if self.config.ISOChecksumType == "" {
 			errs = packer.MultiErrorAppend(
 				errs, errors.New("The iso_checksum_type must be specified."))
@@ -148,12 +122,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 				} else {
 					self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
 				}
-
-				if hash := common.HashForType(self.config.ISOChecksumType); hash == nil {
-					errs = packer.MultiErrorAppend(
-						errs, fmt.Errorf("Unsupported checksum type: %s", self.config.ISOChecksumType))
-				}
-
 			}
 		}
 
@@ -168,44 +136,37 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, retErr error
 			errs = packer.MultiErrorAppend(
 				errs, errors.New("Only one of iso_url or iso_urls may be specified."))
 		}
-
-		for i, url := range self.config.ISOUrls {
-			self.config.ISOUrls[i], err = common.DownloadableURL(url)
-			if err != nil {
-				errs = packer.MultiErrorAppend(
-					errs, fmt.Errorf("Failed to parse iso_urls[%d]: %s", i, err))
-			}
-		}
 	} else {
 
 		// An ISO name has been provided. It should be attached from an available SR.
 
 	}
 
+	if self.config.VTPMEnabled && self.config.Firmware != "uefi" {
+		errs = packer.MultiErrorAppend(errs, errors.New("vTPM can only be enabled with UEFI firmware."))
+	}
+
 	if len(errs.Errors) > 0 {
 		retErr = errors.New(errs.Error())
 	}
 
-	return nil, retErr
+	return nil, nil, retErr
 
 }
 
-func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packer.Artifact, error) {
-	//Setup XAPI client
-	client := xsclient.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
+func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
+	c, err := xscommon.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password, self.config.SkipCertVerification, self.config.ServerCert)
 
-	err := client.Login()
 	if err != nil {
-		return nil, err.(error)
+		return nil, err
 	}
 	ui.Say("XAPI client session established")
 
-	client.GetHosts()
+	xenapi.Host.GetAll(c.GetSession())
 
 	//Share state between the other steps using a statebag
 	state := new(multistep.BasicStateBag)
-	state.Put("cache", cache)
-	state.Put("client", client)
+	state.Put("client", c)
 	state.Put("config", self.config)
 	state.Put("commonconfig", self.config.CommonConfig)
 	state.Put("hook", hook)
@@ -215,12 +176,11 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 
 	//Build the steps
 	download_steps := []multistep.Step{
-		&common.StepDownload{
-			Checksum:     self.config.ISOChecksum,
-			ChecksumType: self.config.ISOChecksumType,
-			Description:  "ISO",
-			ResultKey:    "iso_path",
-			Url:          self.config.ISOUrls,
+		&commonsteps.StepDownload{
+			Checksum:    self.config.ISOChecksum,
+			Description: "ISO",
+			ResultKey:   "iso_path",
+			Url:         self.config.ISOUrls,
 		},
 	}
 
@@ -229,8 +189,13 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			Force: self.config.PackerForce,
 			Path:  self.config.OutputDir,
 		},
-		&common.StepCreateFloppy{
+		&commonsteps.StepCreateFloppy{
 			Files: self.config.FloppyFiles,
+			Label: "cidata",
+		},
+		&commonsteps.StepCreateCD{
+			Files: self.config.CDFiles,
+			Label: "cddata",
 		},
 		&xscommon.StepHTTPServer{
 			Chan: httpReqChan,
@@ -246,6 +211,18 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 				return ""
 			},
 			VdiUuidKey: "floppy_vdi_uuid",
+		},
+		&xscommon.StepUploadVdi{
+			VdiNameFunc: func() string {
+				return "Packer-cd-disk"
+			},
+			ImagePathFunc: func() string {
+				if cdPath, ok := state.GetOk("cd_path"); ok {
+					return cdPath.(string)
+				}
+				return ""
+			},
+			VdiUuidKey: "cd_vdi_uuid",
 		},
 		&xscommon.StepUploadVdi{
 			VdiNameFunc: func() string {
@@ -271,35 +248,44 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 			VdiUuidKey: "isoname_vdi_uuid",
 		},
 		new(stepCreateInstance),
+		&xscommon.StepAttachvTPM{
+			EnablevTPM: self.config.VTPMEnabled,
+		},
+		&xscommon.StepAttachvGPU{
+			VGPUName: self.config.VGPUProfile,
+		},
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
-			VdiType:    xsclient.Floppy,
+			VdiType:    xenapi.VbdTypeFloppy,
 		},
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "iso_vdi_uuid",
-			VdiType:    xsclient.CD,
+			VdiType:    xenapi.VbdTypeCD,
 		},
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "isoname_vdi_uuid",
-			VdiType:    xsclient.CD,
+			VdiType:    xenapi.VbdTypeCD,
+		},
+		&xscommon.StepAttachVdi{
+			VdiUuidKey: "cd_vdi_uuid",
+			VdiType:    xenapi.VbdTypeCD,
 		},
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
-			VdiType:    xsclient.CD,
+			VdiType:    xenapi.VbdTypeCD,
 		},
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepSetVmHostSshAddress),
-		new(xscommon.StepGetVNCPort),
-		&xscommon.StepForwardPortOverSSH{
-			RemotePort:  xscommon.InstanceVNCPort,
-			RemoteDest:  xscommon.InstanceVNCIP,
-			HostPortMin: self.config.HostPortMin,
-			HostPortMax: self.config.HostPortMax,
-			ResultKey:   "local_vnc_port",
-		},
+		// &xscommon.StepForwardPortOverSSH{
+		// 	RemotePort:  xscommon.InstanceVNCPort,
+		// 	RemoteDest:  xscommon.InstanceVNCIP,
+		// 	HostPortMin: self.config.HostPortMin,
+		// 	HostPortMax: self.config.HostPortMax,
+		// 	ResultKey:   "local_vnc_port",
+		// },
 		new(xscommon.StepBootWait),
 		&xscommon.StepTypeBootCommand{
-			Ctx: self.config.ctx,
+			Ctx: *self.config.GetInterpContext(),
 		},
 		&xscommon.StepWaitForIP{
 			Chan:    httpReqChan,
@@ -314,12 +300,13 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		},
 		&communicator.StepConnect{
 			Config:    &self.config.SSHConfig.Comm,
-			Host:      xscommon.CommHost,
-			SSHConfig: xscommon.SSHConfigFunc(self.config.CommonConfig.SSHConfig),
-			SSHPort:   xscommon.SSHPort,
+			Host:      xscommon.InstanceSSHIP,
+			SSHConfig: self.config.Comm.SSHConfigFunc(),
+			SSHPort:   xscommon.InstanceSSHPort,
 		},
-		new(common.StepProvision),
+		new(commonsteps.StepProvision),
 		new(xscommon.StepShutdown),
+		new(xscommon.StepSetVmToTemplate),
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "iso_vdi_uuid",
 		},
@@ -332,6 +319,10 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
+		&xscommon.StepDetachVdi{
+			VdiUuidKey: "cd_vdi_uuid",
+		},
+		new(xscommon.StepCreateSnapshot),
 		new(xscommon.StepExport),
 	}
 
@@ -340,7 +331,7 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	}
 
 	self.runner = &multistep.BasicRunner{Steps: steps}
-	self.runner.Run(state)
+	self.runner.Run(ctx, state)
 
 	if rawErr, ok := state.GetOk("error"); ok {
 		return nil, rawErr.(error)
@@ -357,12 +348,4 @@ func (self *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (pa
 	artifact, _ := xscommon.NewArtifact(self.config.OutputDir)
 
 	return artifact, nil
-}
-
-func (self *Builder) Cancel() {
-	if self.runner != nil {
-		log.Println("Cancelling the step runner...")
-		self.runner.Cancel()
-	}
-	fmt.Println("Cancelling the builder")
 }

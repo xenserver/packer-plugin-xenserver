@@ -1,0 +1,30 @@
+os_iso_path = "Win10Pro.ISO"
+sr_iso_name = "SMB ISO library"
+iso_url = ""
+iso_checksum_type = "None"
+sr_name = "localstorage"
+
+# XenCenter
+remote_host     = "10.1.1.1"
+remote_password = ""
+remote_username = "root"
+
+#VM Settings
+vm_name_prefix = "packer-windows10"
+vm_description = "Created by packer"
+virtual_network_name = "MyNetwork"
+firmware = "uefi"
+clone_template = "Windows 10 (64-bit)"
+cpu = 4
+memory = 8192
+secure_boot = false
+vgpu_profile = "T4-2Q"
+
+#ssh settings
+ssh_username = "administrator"
+ssh_password = ""
+
+#Winrm settings
+winrm_timeout = "5m"
+winrm_username = "Administrator"
+winrm_password = ""

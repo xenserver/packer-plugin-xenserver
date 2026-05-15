@@ -1,8 +1,9 @@
 package xva
 
 import (
-	"github.com/mitchellh/packer/packer"
 	"testing"
+
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 func testConfig() map[string]interface{} {
@@ -15,7 +16,8 @@ func testConfig() map[string]interface{} {
 		"ssh_username":     "foo",
 		"source_path":      ".",
 
-		packer.BuildNameConfigKey: "foo",
+		"packer_build_name":        "foo",
+		"skip_cert_verification": true,
 	}
 }
 
@@ -30,7 +32,7 @@ func TestBuilder_ImplementsBuilder(t *testing.T) {
 func TestBuilderPrepare_Defaults(t *testing.T) {
 	var b Builder
 	config := testConfig()
-	warns, err := b.Prepare(config)
+	_, warns, err := b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
 	}
@@ -61,7 +63,7 @@ func TestBuilderPrepare_Format(t *testing.T) {
 
 	// Bad
 	config["format"] = "foo"
-	warns, err := b.Prepare(config)
+	_, warns, err := b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
 	}
@@ -72,7 +74,7 @@ func TestBuilderPrepare_Format(t *testing.T) {
 	// Good
 	config["format"] = "vdi_raw"
 	b = Builder{}
-	warns, err = b.Prepare(config)
+	_, warns, err = b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
 	}
@@ -88,7 +90,7 @@ func TestBuilderPrepare_HTTPPort(t *testing.T) {
 	// Bad
 	config["http_port_min"] = 1000
 	config["http_port_max"] = 500
-	warns, err := b.Prepare(config)
+	_, warns, err := b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
 	}
@@ -99,7 +101,7 @@ func TestBuilderPrepare_HTTPPort(t *testing.T) {
 	// Bad
 	config["http_port_min"] = -500
 	b = Builder{}
-	warns, err = b.Prepare(config)
+	_, warns, err = b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
 	}
@@ -111,7 +113,7 @@ func TestBuilderPrepare_HTTPPort(t *testing.T) {
 	config["http_port_min"] = 500
 	config["http_port_max"] = 1000
 	b = Builder{}
-	warns, err = b.Prepare(config)
+	_, warns, err = b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
 	}
@@ -126,7 +128,7 @@ func TestBuilderPrepare_InvalidKey(t *testing.T) {
 
 	// Add a random key
 	config["i_should_not_be_valid"] = true
-	warns, err := b.Prepare(config)
+	_, warns, err := b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
 	}
@@ -141,7 +143,7 @@ func TestBuilderPrepare_KeepVM(t *testing.T) {
 
 	// Bad
 	config["keep_vm"] = "foo"
-	warns, err := b.Prepare(config)
+	_, warns, err := b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
 	}
@@ -152,7 +154,7 @@ func TestBuilderPrepare_KeepVM(t *testing.T) {
 	// Good
 	config["keep_vm"] = "always"
 	b = Builder{}
-	warns, err = b.Prepare(config)
+	_, warns, err = b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
 	}
@@ -167,7 +169,7 @@ func TestBuilderPrepare_SourcePath(t *testing.T) {
 
 	// Bad
 	config["source_path"] = ""
-	warns, err := b.Prepare(config)
+	_, warns, err := b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
 	}
@@ -178,7 +180,7 @@ func TestBuilderPrepare_SourcePath(t *testing.T) {
 	// Good
 	config["source_path"] = "."
 	b = Builder{}
-	warns, err = b.Prepare(config)
+	_, warns, err = b.Prepare(config)
 	if len(warns) > 0 {
 		t.Fatalf("bad: %#v", warns)
 	}

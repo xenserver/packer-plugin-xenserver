@@ -2,26 +2,25 @@ package common
 
 import (
 	"errors"
-	"time"
-
-	"github.com/mitchellh/packer/helper/communicator"
-	"github.com/mitchellh/packer/template/interpolate"
+	"os"
+	"fmt"
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
+	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 )
 
 type SSHConfig struct {
-	Comm communicator.Config `mapstructure:",squash"`
+	Comm                communicator.Config `mapstructure:",squash"`
 
-	SSHHostPortMin    uint `mapstructure:"ssh_host_port_min"`
-	SSHHostPortMax    uint `mapstructure:"ssh_host_port_max"`
-	SSHSkipNatMapping bool `mapstructure:"ssh_skip_nat_mapping"`
-
-	// These are deprecated, but we keep them around for BC
-	// TODO(@mitchellh): remove
-	SSHKeyPath     string        `mapstructure:"ssh_key_path"`
-	SSHWaitTimeout time.Duration `mapstructure:"ssh_wait_timeout"`
+	SSHKeyPath  		string `mapstructure:"ssh_key_path"`
+	SSHHostPortMin    	uint `mapstructure:"ssh_host_port_min"`
+	SSHHostPortMax    	uint `mapstructure:"ssh_host_port_max"`
+	SSHSkipNatMapping 	bool `mapstructure:"ssh_skip_nat_mapping"`
 }
 
 func (c *SSHConfig) Prepare(ctx *interpolate.Context) []error {
+	var errs []error
+
+	errs = append(errs, c.Comm.Prepare(ctx)...)
 	if c.SSHHostPortMin == 0 {
 		c.SSHHostPortMin = 2222
 	}
@@ -30,15 +29,21 @@ func (c *SSHConfig) Prepare(ctx *interpolate.Context) []error {
 		c.SSHHostPortMax = 4444
 	}
 
-	// TODO: backwards compatibility, write fixer instead
 	if c.SSHKeyPath != "" {
-		c.Comm.SSHPrivateKey = c.SSHKeyPath
-	}
-	if c.SSHWaitTimeout != 0 {
-		c.Comm.SSHTimeout = c.SSHWaitTimeout
+		if _, err := os.Stat(c.SSHKeyPath); err != nil {
+			errs = append(errs, fmt.Errorf("ssh_key_path is invalid: %s", err))
+		} else if _, err := FileSigner(c.SSHKeyPath); err != nil {
+			errs = append(errs, fmt.Errorf("ssh_key_path is invalid: %s", err))
+		}
+		// TODO: backwards compatibility, write fixer instead
+		c.Comm.SSHPrivateKeyFile = c.SSHKeyPath
 	}
 
-	errs := c.Comm.Prepare(ctx)
+	if c.Comm.SSHUsername == "" {
+		errs = append(errs, errors.New("An ssh_username must be specified."))
+	}
+
+	
 	if c.SSHHostPortMin > c.SSHHostPortMax {
 		errs = append(errs,
 			errors.New("ssh_host_port_min must be less than ssh_host_port_max"))

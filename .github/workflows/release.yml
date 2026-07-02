@@ -14,32 +14,40 @@ on:
   push:
     tags:
       - 'v*'
+permissions:
+  contents: write
+  packages: read
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v7.0.0
       - name: Unshallow
         run: git fetch --prune --unshallow
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v6.5.0
         with:
-          go-version: "1.24.1"
+          go-version-file: .go-version
+          cache: false
+      - name: Set up XenServer Go SDK
+        uses: ./.github/actions/setup-xenserver-sdk
+        with:
+          sdk-url: ${{ vars.XENSERVER_SDK_URL }}
       - name: Describe plugin
         id: plugin_describe
-        run: echo "::set-output name=api_version::$(go run . describe | jq -r '.api_version')"
+        run: echo "api_version=$(go run . describe | jq -r '.api_version')" >> $GITHUB_OUTPUT
       - name: Import GPG key
         id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v5.0.0
+        uses: crazy-max/ghaction-import-gpg@v7.0.0
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v4.2.0
+        uses: goreleaser/goreleaser-action@v7.2.3
         with:
           version: latest
-          args: release --clean
+          args: release --clean --timeout 120m
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

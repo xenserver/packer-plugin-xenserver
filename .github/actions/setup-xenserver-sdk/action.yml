@@ -1,0 +1,30 @@
+name: Set up XenServer Go SDK
+description: >-
+  Download the XenServer Go SDK into ./goSDK so the `replace xenapi => ./goSDK`
+  directive in go.mod resolves. Required by any step that builds this module.
+inputs:
+  sdk-url:
+    description: >-
+      Explicit SDK zip URL. When empty, the latest version is auto-detected
+      from xenserver.com.
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        SDK_URL: ${{ inputs.sdk-url }}
+      run: |
+        url="$SDK_URL"
+        if [ -z "$url" ]; then
+          version=$(curl -s 'https://www.xenserver.com/downloads' | \
+            grep -oE 'Software Development Kit \(SDK\) [0-9]+\.[0-9]+\.[0-9]+' | \
+            grep -oE '[0-9]+\.[0-9]+\.[0-9]+$')
+          url="https://github.com/xapi-project/xen-api/releases/download/v${version}/Go-SDK-prerelease-unsigned.zip"
+        fi
+        curl -L "$url" -o xenserver-sdk.zip
+        unzip xenserver-sdk.zip -d sdk_temp
+        mkdir -p goSDK
+        mv sdk_temp/sdk_go/src/* goSDK/
+        rm -rf sdk_temp xenserver-sdk.zip

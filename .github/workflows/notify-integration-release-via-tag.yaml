@@ -1,0 +1,59 @@
+name: Notify Integration Release (Tag)
+on:
+  push:
+    tags:
+      - 'v*'   # Proper releases
+jobs:
+  strip-version:
+    runs-on: ubuntu-latest
+    outputs:
+      packer-version: ${{ steps.strip.outputs.packer-version }}
+    steps:
+      - name: Strip leading v from version tag
+        id: strip
+        env:
+          REF: ${{ github.ref_name }}
+        run: |
+          echo "packer-version=$(echo "$REF" | sed -E 's/v?([0-9]+\.[0-9]+\.[0-9]+)/\1/')" >> "$GITHUB_OUTPUT"
+  notify-release:
+    needs:
+      - strip-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ github.ref }}
+      # Ensure that Docs are Compiled
+      - uses: actions/setup-go@v6.5.0
+        with:
+          go-version-file: .go-version
+          cache: false
+      - name: Set up XenServer Go SDK
+        uses: ./.github/actions/setup-xenserver-sdk
+        with:
+          sdk-url: ${{ vars.XENSERVER_SDK_URL }}
+      - shell: bash
+        run: make generate
+      - shell: bash
+        run: |
+          if [[ -z "$(git status -s)" ]]; then
+            echo "OK"
+          else
+            echo "Docs have been updated, but the compiled docs have not been committed."
+            echo "Run 'make generate', and commit the result to resolve this error."
+            exit 1
+          fi
+      # Perform the Release
+      - name: Checkout integration-release-action
+        uses: actions/checkout@v7.0.0
+        with:
+          repository: hashicorp/integration-release-action
+          path: ./integration-release-action
+      - name: Notify Release
+        uses: ./integration-release-action
+        with:
+          integration_identifier: "packer/xenserver/xenserver"
+          release_version: ${{ needs.strip-version.outputs.packer-version }}
+          release_sha: ${{ github.ref }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}

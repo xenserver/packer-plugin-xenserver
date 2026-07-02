@@ -13,27 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.0
       - name: Unshallow
         run: git fetch --prune --unshallow
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6.5.0
         with:
-          go-version: "1.24.1"
+          go-version-file: .go-version
       - name: Set up XenServer Go SDK
-        run: |
-          url=${{ vars.XENSERVER_SDK_URL }}
-          if [ -z "$url" ]; then
-            version=$(curl -s 'https://www.xenserver.com/downloads' | \
-              grep -oE 'Software Development Kit \(SDK\) [0-9]+\.[0-9]+\.[0-9]+' | \
-              grep -oE '[0-9]+\.[0-9]+\.[0-9]+$')
-            url="https://github.com/xapi-project/xen-api/releases/download/v${version}/Go-SDK-prerelease-unsigned.zip"
-          fi
-          curl -L "$url" -o xenserver-sdk.zip
-          unzip xenserver-sdk.zip -d sdk_temp
-          mkdir -p goSDK
-          mv sdk_temp/sdk_go/src/* goSDK/
-          rm -rf sdk_temp xenserver-sdk.zip
+        uses: ./.github/actions/setup-xenserver-sdk
+        with:
+          sdk-url: ${{ vars.XENSERVER_SDK_URL }}
       # UT requires a live XenServer host (un-mocked XenAPI), so skip in CI
       - name: Build
         run: go build ./...

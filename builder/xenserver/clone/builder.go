@@ -40,7 +40,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	}, raws...)
 
 	if err != nil {
-		packer.MultiErrorAppend(errs, err)
+		errs = packer.MultiErrorAppend(errs, err)
 	}
 
 	errs = packer.MultiErrorAppend(
@@ -54,21 +54,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 
 	if self.config.CloneTemplate == "" {
 		errs = packer.MultiErrorAppend(
-			nil, fmt.Errorf("Source Template / VM not specified"))
-	}
-
-	// Template substitution
-
-	templates := map[string]*string{
-		"clone_template":    &self.config.CloneTemplate,
-		"iso_checksum":      &self.config.ISOChecksum,
-		"iso_checksum_type": &self.config.ISOChecksumType,
-		"iso_url":           &self.config.ISOUrl,
-		"iso_name":          &self.config.ISOName,
-		//"install_timeout":   &self.config.InstallTimeout,
-	}
-	for i := range self.config.ISOUrls {
-		templates[fmt.Sprintf("iso_urls[%d]", i)] = &self.config.ISOUrls[i]
+			errs, fmt.Errorf("Source Template / VM not specified"))
 	}
 
 	if len(errs.Errors) > 0 {

@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	hconfig "github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	
+
 	"xenapi"
-	
+
 	xscommon "github.com/xenserver/packer-plugin-xenserver/builder/xenserver/common"
 )
 
@@ -42,7 +42,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	}, raws...)
 
 	if err != nil {
-		packer.MultiErrorAppend(errs, err)
+		errs = packer.MultiErrorAppend(errs, err)
 	}
 
 	errs = packer.MultiErrorAppend(
@@ -58,7 +58,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 		self.config.DiskSize = 40000
 	}
 
-	if self.config.VCPUs== 0 {
+	if self.config.VCPUs == 0 {
 		self.config.VCPUs = 2
 	}
 

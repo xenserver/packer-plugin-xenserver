@@ -1,15 +1,14 @@
-version: 2
 # This is an example goreleaser.yaml file with some sane defaults.
 # Make sure to check the documentation at http://goreleaser.com
 env:
   - CGO_ENABLED=0
 before:
   hooks:
-    # TODO: Add tests
-    # - go test ./...
-    # As part of the release doc files are included as a separate deliverable for
-    # consumption by Packer.io. To include a separate docs.zip uncomment the following command.
-    - make ci-release-docs
+    # We strongly recommend running tests to catch any regression before release.
+    # Even though, this an optional step.
+    - go test ./...
+    # Integration docs are generated and committed in-repo via `make generate`.
+    # No separate docs archive is published with releases in the current setup.
     # Check plugin compatibility with required version of the Packer SDK
     - make plugin-check
 builds:
@@ -33,6 +32,9 @@ builds:
     ldflags:
       - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
     goos:
+      - netbsd
+      - solaris
+      - openbsd
       - freebsd
       - windows
       - linux
@@ -43,6 +45,8 @@ builds:
       - arm
       - arm64
     ignore:
+      - goos: openbsd
+        goarch: arm64
       - goos: darwin
         goarch: '386'
       - goos: linux
@@ -69,9 +73,10 @@ signs:
       - "--detach-sign"
       - "${artifact}"
 release:
-  draft: true
-  extra_files:
-  - glob: ./docs.zip
+  # If you want to manually examine the release before its live, uncomment this line:
+  # draft: true
+  # Integration docs are generated and committed in-repo via `make generate`.
+  # No extra release files are attached in the current setup.
 
 changelog:
-  disable: true
+  skip: true

@@ -1,29 +1,15 @@
----
-modeline: |
-  vim: set ft=pandoc:
-description: >
+Type: `xenserver-clone`
 
-  The Packer builder uses the XenAPI to create a new XenServer virtual machine remotely.
-  It starts from an ISO and creates a new VM from scratch.
-
-page_title: XenServer ISO - Builders
-sidebar_title: ISO
----
-
-# XenServer ISO Builder
-
-Type: `xenserver-iso`
-
-This builder creates new VMs and starts them from ISO.
+This builder clones VMs from existing XenServer templates or VMs.
 
 - XenCenter is not needed
 - It uses the official XenServer GoSDK
-- This builder is supported for XenServer 8.4 or later.
+- This builder is supported for XenServer 8.4 and later.
   Builds on lower versions are not supported and may not work.
 
 ## Examples
 
-See complete Windows, Ubuntu, and CentOS templates in the [examples folder](https://github.com/xenserver/packer-plugin-xenserver/tree/main/examples)
+See complete templates in the [examples folder](https://github.com/xenserver/packer-plugin-xenserver/tree/main/examples)
 
 ## Configuration Reference
 
@@ -33,28 +19,9 @@ each category, the available options are alphabetized and described.
 
 ### Required:
 
-- `sr_iso_name` (string) - The name of the ISO Library used to store & load ISO files.
+- `clone_template` (string) - The name of the template or VM to clone.
 
-- `iso_name` (string) - The name of the ISO to use. By using iso_name, it will search the specified ISO SR (`sr_iso_name`) for the given ISO name.
-  When iso_name is set, you do not need to use `iso_checksum_type`,`iso_checksum` and `iso_url`.
-
-- `iso_checksum` (string) - The checksum for the OS ISO file. Because ISO
-  files are so large, this is required and Packer will verify it prior
-  to booting a virtual machine with the ISO attached. The type of the
-  checksum is specified with `iso_checksum_type`, documented below.
-
-- `iso_checksum_type` (string) - The type of the checksum specified in
-  `iso_checksum`. Valid values are "none", "md5", "sha1", "sha256", or
-  "sha512" currently. While "none" will skip checksumming, this is not
-  recommended since ISO files are generally large and corruption does happen
-  from time to time.
-
-- `iso_url` (string) - A URL to the ISO containing the installation image.
-  This URL can be either an HTTP URL or a file URL (or path to a file).
-  If this is an HTTP URL, Packer will download it and cache it between
-  runs.
-
-- `remote_host` (string) - The host of the XenServer / XCP-ng pool primary. Typically these will be specified through environment variables as shown in the [examples](https://github.com/xenserver/packer-plugin-xenserver/tree/main/examples).
+- `remote_host` (string) - The host of the XenServer pool primary. Typically these will be specified through environment variables as shown in the [examples](https://github.com/xenserver/packer-plugin-xenserver/tree/main/examples).
 
 - `remote_username` (string) - The XenServer username used to access the remote machine.
 
@@ -62,6 +29,14 @@ each category, the available options are alphabetized and described.
 
 - `ssh_username` (string) - The username to use to SSH into the machine
   once the OS is installed.
+
+- `keep_vm` (string) - Determine when to keep the VM and when to clean it up. This
+  can be "always", "never" or "on_success". By default this is "never", and Packer
+  always deletes the VM regardless of whether the process succeeded and an artifact
+  was produced. "always" asks Packer to leave the VM at the end of the process
+  regardless of success. "on_success" requests that the VM only be cleaned up if an
+  artifact was produced. The latter is useful for debugging templates that fail.
+
 
 ### Optional:
 
@@ -77,37 +52,30 @@ each category, the available options are alphabetized and described.
 - `disk_size` (integer) - The size, in megabytes, of the hard disk for the VM. 
   By default, it is using the same size as the source VM.
 
-- `vcpus` (integer) - The number of VCPUs for the VM.
-  By default, it is set to 2 vCPU.
+- `vcpus - The number of VCPUs for the VM.
+  By default, it is using the same amount as the source VM.
 
-- `cores_per_socket` (integer) - The number of cores (vCPU) per socket for the VM.
-  By default, it is using all the cores on 1 socket.
+- `cores_per_socket - The number of Cores per Socket for the VM.
+  By default, it is using the same value as the source VM.
 
 - `vm_memory` (integer) - The size, in megabytes, of the amount of memory to
   allocate for the VM. By default, it is using the same amount as the source VM.
 
 - `firmware` (string) - Sets the firmware of the virtual machine.
-  The available options for this setting are: 'bios' and 'uefi'. Defaults to bios.
+  If not set, it will use the value of the source VM / template.
 
 - `secure_boot` (boolean) - Indicates if Secure Boot needs to be enabled on the VM, this can only be used in combination with EFI firmware.
-  By default this is false. 
+  If not set, it will use the value of the source VM / template.
 
 - `vTPM` (boolean) - Enables the virtual trusted platform module (TPM) for the virtual machine. 
-  By default this is false.
+  If not set, it will use the value of the source VM / template.
 
-- `vgpu_profile` (string) - vGPU profile for accelerated graphics. See [NVIDIA vGPU documentation](https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html#configure-citrix-xenserver-vm-with-vgpu)
+- `vgpu_profile` (string) - vGPU profile for accelerated graphics. See [NVIDIA GRID vGPU documentation](https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/index.html#configure-citrix-xenserver-vm-with-vgpu)
   for examples of profile names. Defaults to none.
 
 - `network_names` (array of strings) - A list of networks identified by their name label which 
   will be used for the VM during creation. The first network will correspond to the VM's
-  first network interface (VIF), the second will corespond to the second VIF and so on.
-
-- `clone_template` (string) - The template to clone. Defaults to "Other install
-  media", this is "other", but you can get _dramatic_ performance improvements
-  by setting this to the proper value. To view all available values for this
-  run `xe template-list` or use XenCenter. 
-  Setting the correct value hints to XenServer how to optimize the virtual hardware to work best with that operating system.
-  For example, if you want to deploy a Windows 10 VM with EFI use the: `Windows 10 (64-bit)` template.
+  first network interface (VIF), the second will correspond to the second VIF and so on.
 
 #### Boot Options
 
@@ -161,12 +129,6 @@ each category, the available options are alphabetized and described.
   server to be on one port, make this minimum and maximum port the same.
   By default the values are 8000 and 9000, respectively.
 
-- `iso_urls` (array of strings) - Multiple URLs for the ISO to download.
-  Packer will try these in order. If anything goes wrong attempting to download
-  or while downloading a single URL, it will move on to the next. All URLs
-  must point to the same file (same checksum). By default this is empty
-  and `iso_url` is used. Only one of `iso_url` or `iso_urls` can be specified.
-
 #### Export Options
 
 - `format` (string) - Output format of the exported virtual machine. Valid values are `xva`, `xva_compressed`, `vdi_raw`, `vdi_vhd`, and `none`. Defaults to `xva`.
@@ -178,6 +140,7 @@ each category, the available options are alphabetized and described.
   By default this is "output-BUILDNAME" where "BUILDNAME" is the name
   of the build.
 
+
 #### Advanced Options
 
 - `install_timeout` (string) - The amount of time to wait after booting the VM
@@ -185,17 +148,9 @@ each category, the available options are alphabetized and described.
   If it doesn't shut down in this time, it is an error. By default, the timeout
   is "200m", or over three hours.
 
-- `keep_vm` (string) - Determine when to keep the VM and when to clean it up. This
-  can be "always", "never" or "on_success". By default this is "never", and Packer
-  always deletes the VM regardless of whether the process succeeded and an artifact
-  was produced. "always" asks Packer to leave the VM at the end of the process
-  regardless of success. "on_success" requests that the VM only be cleaned up if an
-  artifact was produced. The latter is useful for debugging templates that fail.
-
 - `platform_args` (object of key/value strings) - The platform args.
   This is ONLY used when no Template is selected. Please be carefull to use this as misconfiguration can have unintended behavior.
-  Use a (Pre-defined) Template instead whenever you can.
-  The default value, when not setting a template, is:
+  Defaults to 
 ```javascript
 {
     "viridian": "false",
@@ -233,10 +188,6 @@ each category, the available options are alphabetized and described.
 - `ssh_wait_timeout` (string) - The duration to wait for SSH to become
   available. By default this is "20m", or 20 minutes. Note that this should
   be quite long since the timer begins as soon as the virtual machine is booted.
-
-- `tools_iso_name` (string) - The name of the XenServer Tools ISO. Defaults to
-  "xs-tools.iso". 
-  Warning: There is no pre-installed xs-tools.iso with XenServer 8.2.
 
 ## Boot Command
 

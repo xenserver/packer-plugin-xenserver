@@ -1,17 +1,3 @@
----
-modeline: |
-  vim: set ft=pandoc:
-description: >
-
-  The Packer builder uses the XenAPI to create a new XenServer virtual machine remotely.
-  It starts from an ISO and creates a new VM from scratch.
-
-page_title: XenServer ISO - Builders
-sidebar_title: ISO
----
-
-# XenServer ISO Builder
-
 Type: `xenserver-iso`
 
 This builder creates new VMs and starts them from ISO.

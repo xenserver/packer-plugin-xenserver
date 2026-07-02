@@ -1,0 +1,112 @@
+---
+modeline: |
+  vim: set ft=pandoc:
+description: >
+
+  The Packer builder imports an existing XVA appliance into XenServer,
+  provisions it remotely, and exports the resulting image.
+page_title: XenServer XVA - Builders
+sidebar_title: XVA
+---
+
+# XenServer XVA Builder
+
+Type: `xenserver-xva`
+
+This builder imports an existing XVA appliance into XenServer, boots it,
+optionally provisions it over SSH, and exports the resulting image.
+
+- XenCenter is not needed
+- It uses the official XenServer Go SDK
+- This builder is supported for XenServer 8.4 and later.
+  Builds on lower versions are not supported and may not work.
+
+## Examples
+
+See complete templates in the [examples folder](https://github.com/xenserver/packer-plugin-xenserver/tree/main/examples)
+
+## Configuration Reference
+
+There are many configuration options available for the XenServer builder.
+They are organized below into two categories: required and optional. Within
+each category, the available options are alphabetized and described.
+
+### Required:
+
+- `source_path` (string) - Path to the local XVA appliance file that will be imported into XenServer.
+
+- `remote_host` (string) - The host of the XenServer pool primary. Typically these will be specified through environment variables as shown in the [examples](https://github.com/xenserver/packer-plugin-xenserver/tree/main/examples).
+
+- `remote_username` (string) - The XenServer username used to access the remote machine.
+
+- `remote_password` (string) - The XenServer password for access to the remote machine.
+
+- `ssh_username` (string) - The username to use to SSH into the imported machine once it is booted.
+
+### Optional:
+
+#### VM Configuration
+
+- `vm_name` (string) - Name to assign to the imported virtual machine. By default this is `packer-BUILDNAME-TIMESTAMP`, where `BUILDNAME` is the name of the build.
+
+- `vm_description` (string) - Description to assign to the imported virtual machine.
+
+- `sr_name` (string) - Name-label of the XenServer storage repository to use for the imported VM. When unset, XenServer's default SR is used.
+
+- `network_names` (array of strings) - List of XenServer network name-labels attached to the imported VM in order.
+
+- `vcpus` (integer) - Number of VCPUs to assign to the imported VM.
+
+- `vm_memory` (integer) - Memory, in megabytes, to assign to the imported VM.
+
+- `platform_args` (object of key/value strings) - XenServer platform arguments applied to the imported VM.
+
+- `tools_iso_name` (string) - Name of the XenServer tools ISO to attach for guest tooling.
+
+#### Boot and Provisioning
+
+- `boot_command` (array of strings) - Commands to type over the VM console after boot. Use this to point the guest at any HTTP-served provisioner assets or to drive first-boot installers.
+
+- `boot_wait` (string) - Time to wait after booting the imported VM before sending the `boot_command`.
+
+- `floppy_files` (array of strings) - Files to place on a floppy image attached to the guest during boot.
+
+- `http_directory` (string) - Directory to serve over HTTP during the build.
+
+- `http_port_min` and `http_port_max` (integer) - Port range used for the temporary HTTP server.
+
+- `host_port_min` and `host_port_max` (integer) - Port range used for the local SSH forward to the guest.
+
+- `ip_getter` (string) - How to detect the guest IP address. Valid values are `auto`, `tools`, and `http`.
+
+- `shutdown_command` (string) - Command to use to gracefully shut down the guest after provisioning. If omitted, the builder shuts the VM down through XenAPI.
+
+- `ssh_password` (string) - Password to use for SSH authentication.
+
+- `ssh_key_path` (string) - Path to the SSH private key to use for authentication.
+
+- `ssh_port` (integer) - SSH port inside the guest. Defaults to `22`.
+
+- `ssh_wait_timeout` (string) - Duration to wait for SSH to become available.
+
+#### Export and Cleanup
+
+- `format` (string) - Output format for the exported artifact. Valid values are `xva`, `xva_compressed`, `vdi_raw`, `vdi_vhd`, and `none`.
+
+- `output_directory` (string) - Directory where the exported artifact is written.
+
+- `export_network_names` (array of strings) - Network name-labels to apply to VIFs before export.
+
+- `keep_vm` (string) - Determines when the imported VM is kept instead of deleted. Valid values are `always`, `never`, and `on_success`.
+
+- `convert_to_template` (boolean) - Convert the imported VM to a XenServer template before export.
+
+- `create_snapshot` (boolean) - Create a XenServer snapshot before export.
+
+- `snapshot_name` (string) - Name to use when `create_snapshot` is enabled.
+
+#### Security
+
+- `skip_cert_verification` (boolean) - Skip TLS certificate verification when connecting to XenServer.
+
+- `server_cert` (string) - PEM-encoded XenServer server certificate to trust when certificate verification is enabled.

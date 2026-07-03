@@ -64,9 +64,13 @@ checksum:
 signs:
   - artifacts: checksum
     args:
-      # if you are using this is in a GitHub action or some other automated pipeline, you
-      # need to pass the batch flag to indicate its not interactive.
+      # In CI the key is passphrase-protected and there is no interactive
+      # pinentry, so sign non-interactively via loopback with the passphrase.
       - "--batch"
+      - "--pinentry-mode"
+      - "loopback"
+      - "--passphrase"
+      - "{{ .Env.GPG_PASSPHRASE }}"
       - "--local-user"
       - "{{ .Env.GPG_FINGERPRINT }}"
       - "--output"

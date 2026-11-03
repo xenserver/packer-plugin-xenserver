@@ -1,0 +1,31 @@
+# Example variables for windows-clone-winrm.pkr.hcl
+# Copy to windows-clone-winrm.pkrvars.hcl and fill in — DO NOT commit real secrets.
+# Packer only auto-loads var files named *.auto.pkrvars.hcl, so either name the copy
+# windows-clone-winrm.auto.pkrvars.hcl or pass it explicitly:
+#   packer build -var-file=examples/windows-clone-winrm/windows-clone-winrm.pkrvars.hcl \
+#     examples/windows-clone-winrm/windows-clone-winrm.pkr.hcl
+# Passwords are best supplied via environment instead:
+#   export PKR_VAR_xenserver_password='...'
+#   export PKR_VAR_winrm_password='...'
+
+# --- Connection (pool coordinator) ---
+xenserver_host     = "10.1.1.1"
+xenserver_username = "root"
+ca_cert_path       = "pool-ca.pem"
+# xenserver_password  -> set via PKR_VAR_xenserver_password
+
+# --- Source and placement ---
+clone_template       = "Windows 11 (64-bit) golden"
+# vm_sr: leave unset to clone in place. Naming an SR the template is not
+# already on copies its disks in full, which takes as long as writing them.
+# vm_sr              = "Local storage"
+virtual_network_name = "Pool-wide network associated with eth0"
+
+# --- Hardware ---
+vm_name   = "packer-win11-golden"
+memory_gb = 8
+cpu       = 4
+
+# --- Communicator ---
+winrm_username = "Administrator"
+# winrm_password  -> set via PKR_VAR_winrm_password

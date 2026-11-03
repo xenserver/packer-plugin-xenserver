@@ -1,3 +1,5 @@
+// Copyright (c) 2026. Citrix Systems, Inc.
+
 package common
 
 import (
@@ -17,9 +19,18 @@ func (self *StepBootWait) Run(ctx context.Context, state multistep.StateBag) mul
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 
-	instance, _ := xenapi.VM.GetByUUID(c.session, state.Get("instance_uuid").(string))
-	ui.Say("Unpausing VM " + state.Get("instance_uuid").(string))
-	Unpause(c, instance)
+	uuid := state.Get("instance_uuid").(string)
+	instance, err := xenapi.VM.GetByUUID(c.session, uuid)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
+		return multistep.ActionHalt
+	}
+
+	ui.Say("Unpausing VM " + uuid)
+	if err := xenapi.VM.Unpause(c.session, instance); err != nil {
+		ui.Error(fmt.Sprintf("Unable to unpause VM with UUID '%s': %s", uuid, err.Error()))
+		return multistep.ActionHalt
+	}
 
 	if int64(config.BootWait) > 0 {
 		ui.Say(fmt.Sprintf("Waiting %s for boot...", config.BootWait))

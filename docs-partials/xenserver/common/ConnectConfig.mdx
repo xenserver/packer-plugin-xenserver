@@ -1,0 +1,84 @@
+<!-- Hand-written shared partial: connection / credentials, included by every
+     XenServer builder page. -->
+
+The builder connects to the **pool coordinator** (master) over the XenAPI.
+
+- `xenserver_host` (string, **required**) - Address of the pool coordinator. An `https://`
+  prefix is optional; `http://` is rejected.
+
+- `xenserver_username` (string, **required**) - The XenServer account to log in with.
+
+- `xenserver_password` (string, **required**) - The password for `xenserver_username`.
+
+- `insecure` (bool) - Defaults to `false`. When `true`, the builder does not verify the
+  XenServer TLS certificate at all (chain, name and expiry), so the connection can be
+  intercepted. Use only in a trusted lab. For a host with a self-signed certificate, set
+  `ca_cert_path` to its certificate instead.
+
+- `ca_cert_path` (string) - PEM file with the certificate (or CA chain) to verify the pool
+  against. **Required unless `insecure` is `true`.**
+
+### Supplying credentials from the environment
+
+Each of these options falls back to an environment variable when the template does not
+set it; a value in the template wins.
+
+| Option               | Environment variable      |
+| -------------------- | ------------------------- |
+| `xenserver_host`     | `XENSERVER_HOST`          |
+| `xenserver_username` | `XENSERVER_USERNAME`      |
+| `xenserver_password` | `XENSERVER_PASSWORD`      |
+| `ca_cert_path`       | `XENSERVER_CA_CERT_PATH`  |
+| `insecure`           | `XENSERVER_INSECURE`      |
+
+~> **Do not hardcode credentials.** Never commit passwords to a `.pkr.hcl` or
+`.pkrvars.hcl` file.
+
+The guest login works the same way, through `XENSERVER_WINRM_USERNAME` and
+`XENSERVER_WINRM_PASSWORD`; see Communicator Configuration.
+
+### Trusting the pool's certificate
+
+`ca_cert_path` is the only trust root the builder uses; the machine's own trust store is
+not consulted. XenServer hosts ship with a self-signed certificate, so in practice the file
+holds the host's own certificate. Write it out with:
+
+```shell-session
+$ xe host-get-server-certificate host=<host-uuid> > pool-ca.pem
+```
+
+HCL Example (shown for `xenserver-vm-clone`; the connection options are identical on `xenserver-vm-iso`):
+
+```hcl
+variable "xenserver_host" {
+  type    = string
+}
+
+variable "xenserver_username" {
+  type    = string
+  default = "root"
+}
+
+variable "xenserver_password" {
+  type      = string
+  sensitive = true
+}
+
+source "xenserver-vm-clone" "example" {
+  xenserver_host     = var.xenserver_host
+  xenserver_username = var.xenserver_username
+  xenserver_password = var.xenserver_password
+  ca_cert_path       = "pool-ca.pem"
+  # ... other configuration ...
+}
+```
+
+Or with nothing about the connection in the template at all:
+
+```shell-session
+$ export XENSERVER_HOST=pool-coordinator.example.com
+$ export XENSERVER_USERNAME=root
+$ export XENSERVER_PASSWORD=...
+$ export XENSERVER_CA_CERT_PATH=pool-ca.pem
+$ packer build .
+```

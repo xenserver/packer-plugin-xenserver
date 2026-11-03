@@ -1,24 +1,23 @@
 version: 2
-# This is an example goreleaser.yaml file with some sane defaults.
-# Make sure to check the documentation at http://goreleaser.com
+
+# Packer needs the binary named packer-plugin-<name>; without this, GoReleaser
+# derives the name from the git remote.
+project_name: packer-plugin-xenserver
 env:
   - CGO_ENABLED=0
 before:
   hooks:
-    # TODO: Add tests
-    # - go test ./...
-    # As part of the release doc files are included as a separate deliverable for
-    # consumption by Packer.io. To include a separate docs.zip uncomment the following command.
+    # Render docs/ into docs.zip, which is attached to the release for Packer.io.
     - make ci-release-docs
-    # Check plugin compatibility with required version of the Packer SDK
+    # Check compatibility with the required Packer SDK version.
     - make plugin-check
 builds:
-  # A separated build to run the packer-plugins-check only once for a linux_amd64 binary
+  # Kept from upstream; the SDK check runs in the before hook, not on this artifact.
   -
     id: plugin-check
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
-      - -trimpath #removes all file system paths from the compiled executable
+      - -trimpath
     ldflags:
       - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
     goos:
@@ -29,7 +28,7 @@ builds:
   -
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
-      - -trimpath #removes all file system paths from the compiled executable
+      - -trimpath
     ldflags:
       - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
     goos:
@@ -37,19 +36,17 @@ builds:
       - windows
       - linux
       - darwin
+    # No 386 or arm: the SDK's VirtualSize is a Go int, which is 32-bit there and
+    # truncates disk sizes over 2 GiB.
     goarch:
       - amd64
-      - '386'
-      - arm
       - arm64
     ignore:
-      - goos: darwin
-        goarch: '386'
       - goos: linux
         goarch: amd64
     binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
 archives:
-- format: zip
+- formats: [ zip ]
   files:
     - none*
   name_template: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
@@ -59,8 +56,7 @@ checksum:
 signs:
   - artifacts: checksum
     args:
-      # if you are using this is in a GitHub action or some other automated pipeline, you
-      # need to pass the batch flag to indicate its not interactive.
+      # No tty in CI, so gpg must not prompt.
       - "--batch"
       - "--local-user"
       - "{{ .Env.GPG_FINGERPRINT }}"
@@ -72,6 +68,12 @@ release:
   draft: true
   extra_files:
   - glob: ./docs.zip
+  # Packer does not check the signature, so ship the public key for checking it by hand.
+  - glob: ./KEYS
+
+# Snapshot builds are untagged, so they take their version from PLUGIN_VERSION.
+snapshot:
+  version_template: '{{ .Env.PLUGIN_VERSION }}'
 
 changelog:
   disable: true

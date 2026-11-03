@@ -1,0 +1,19 @@
+<!-- Hand-written shared partial: build provenance, included by every XenServer builder page. -->
+
+Every VM the plugin creates is stamped with these keys in its `other-config`, and a
+template left by `format = "none"` carries them too:
+
+| Key | Value | Meaning |
+| --- | --- | --- |
+| `xs_packer_plugin` | `true` | created by the XenServer Packer plugin, or cloned from something that was |
+| `xs_packer_plugin_version` | e.g. `1.0.0` | the plugin release that produced it |
+
+Find plugin-built VMs and templates, and read the version, with:
+
+```shell-session
+$ xe vm-list other-config:xs_packer_plugin=true params=name-label,uuid
+$ xe template-list other-config:xs_packer_plugin=true params=name-label,uuid
+$ xe vm-param-get uuid=<uuid> param-name=other-config param-key=xs_packer_plugin_version
+```
+
+The two keys are reserved: a `vm_other_config` entry with either name is overwritten.

@@ -1,3 +1,5 @@
+// Copyright (c) 2026. Citrix Systems, Inc.
+
 package common
 
 import (
@@ -13,12 +15,12 @@ import (
 type StepCreateSnapshot struct{}
 
 func (StepCreateSnapshot) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get("config").(Config)
+	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
 	instance_uuid := state.Get("instance_uuid").(string)
 
-	if config.CreateSnapshot != true {
+	if !config.CreateSnapshot {
 		ui.Say("Skipping Create Snapshot")
 		return multistep.ActionContinue
 	}
@@ -29,7 +31,7 @@ func (StepCreateSnapshot) Run(ctx context.Context, state multistep.StateBag) mul
 		return multistep.ActionHalt
 	}
 
-	instance, err = xenapi.VM.Snapshot(c.session, instance, config.SnapshotName,[]xenapi.VDIRef{})
+	_, err = xenapi.VM.Snapshot(c.session, instance, config.SnapshotName, []xenapi.VDIRef{})
 
 	if err != nil {
 		ui.Error(fmt.Sprintf("failed to create a snapshot of VM '%s' with error: %v", instance_uuid, err))
@@ -41,5 +43,5 @@ func (StepCreateSnapshot) Run(ctx context.Context, state multistep.StateBag) mul
 }
 
 func (StepCreateSnapshot) Cleanup(state multistep.StateBag) {
-	// No cleanup needed as Snapshot is destroyed when VM is deleted. Function is necesarry though.
+	// Nothing to undo: the snapshot is a requested artifact, and VM.destroy leaves it.
 }

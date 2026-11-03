@@ -1,3 +1,5 @@
+// Copyright (c) 2026. Citrix Systems, Inc.
+
 package common
 
 import (
@@ -6,14 +8,19 @@ import (
 	"net"
 )
 
-// FindPort finds and starts listening on a port in the range [portMin, portMax]
-// returns the listener and the port number on success, or nil, 0 on failure
-func FindPort(portMin uint, portMax uint) (net.Listener, uint) {
-	log.Printf("Looking for an available port between %d and %d", portMin, portMax)
+// HTTPPortMin/HTTPPortMax bound the HTTP server port; the guest must reach the whole range.
+const (
+	HTTPPortMin uint = 8000
+	HTTPPortMax uint = 9000
+)
+
+// FindPort listens on a free port in [portMin, portMax]; address "" means all interfaces.
+func FindPort(address string, portMin uint, portMax uint) (net.Listener, uint) {
+	log.Printf("Looking for an available port between %d and %d on '%s'", portMin, portMax, address)
 
 	for port := portMin; port <= portMax; port++ {
 		log.Printf("Trying port: %d", port)
-		l, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+		l, err := net.Listen("tcp", net.JoinHostPort(address, fmt.Sprint(port)))
 		if err == nil {
 			return l, port
 		} else {

@@ -1,0 +1,40 @@
+# Example variables for windows-iso-winrm.pkr.hcl
+# Copy to windows-iso-winrm.pkrvars.hcl and fill in — DO NOT commit real secrets.
+# Packer only auto-loads var files named *.auto.pkrvars.hcl, so either name the copy
+# windows-iso-winrm.auto.pkrvars.hcl or pass it explicitly:
+#   packer build -var-file=examples/windows-iso/windows-iso-winrm.pkrvars.hcl \
+#     examples/windows-iso/windows-iso-winrm.pkr.hcl
+# Passwords are best supplied via environment instead:
+#   export PKR_VAR_xenserver_password='...'
+#   export PKR_VAR_winrm_password='...'
+
+# --- Connection (pool coordinator) ---
+xenserver_host     = "10.1.1.1"
+xenserver_username = "root"
+ca_cert_path       = "pool-ca.pem"
+# xenserver_password  -> set via PKR_VAR_xenserver_password
+
+# --- Install media and placement ---
+iso_name             = "Win11.iso"
+iso_sr               = "SMB ISO library"
+# Empty uses the pool's default SR. A named SR is looked up by name-label and
+# must match exactly one SR on the pool.
+vm_sr                = ""
+clone_template       = "Windows 11"
+virtual_network_name = "MyNetwork"
+
+# --- Hardware ---
+vm_name        = "packer-windows11"
+vm_description = "Created by Packer"
+memory_gb      = 8
+disk_size_gb   = 64
+cpu            = 4
+# Windows 11 needs UEFI and a vTPM. secure_boot = true and vtpm = true both
+# require firmware = "uefi", set explicitly.
+firmware       = "uefi"
+secure_boot    = true
+vtpm           = true
+
+# --- Communicator ---
+winrm_username = "Administrator"
+# winrm_password  -> set via PKR_VAR_winrm_password

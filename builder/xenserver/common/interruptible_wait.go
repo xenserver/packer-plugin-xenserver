@@ -1,14 +1,17 @@
+// Copyright (c) 2026. Citrix Systems, Inc.
+
 package common
 
 import (
-	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"time"
+
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
 )
 
 type InterruptibleWait struct {
 	Timeout time.Duration
 
-	// optional:
+	// Predicate is optional; when set, PredicateInterval must be too, or the poll never pauses.
 	Predicate         func() (result bool, err error)
 	PredicateInterval time.Duration
 }
@@ -25,19 +28,9 @@ func (err InterruptedError) Error() string {
 	return "Interrupted"
 }
 
-type PredicateResult struct {
-	complete bool
-	err      error
-}
-
-/* Wait waits for up to Timeout duration, checking an optional Predicate every PredicateInterval duration.
-   The first run of Predicate is immediately after Wait is called.
-   If the command is interrupted by the user, then an InterruptedError is returned.
-   If Predicate is not nil, a timeout leads to TimeoutError being returned, and a successful Predicate run leads to nil being returned.
-   If Predicate is nil, a timeout is not an error, and nil is returned.
-*/
+// Wait polls Predicate until it holds or fails; with no Predicate it is an interruptible sleep.
 func (wait InterruptibleWait) Wait(state multistep.StateBag) error {
-	predicateResult := make(chan PredicateResult, 1)
+	predicateResult := make(chan error, 1)
 	stopWaiting := make(chan struct{})
 	defer close(stopWaiting)
 
@@ -45,7 +38,7 @@ func (wait InterruptibleWait) Wait(state multistep.StateBag) error {
 		go func() {
 			for {
 				if complete, err := wait.Predicate(); err != nil || complete {
-					predicateResult <- PredicateResult{complete, err}
+					predicateResult <- err
 					return
 				}
 
@@ -61,16 +54,13 @@ func (wait InterruptibleWait) Wait(state multistep.StateBag) error {
 
 	timeout := time.After(wait.Timeout)
 	for {
-		// wait for either install to complete/error,
-		// an interrupt to come through, or a timeout to occur
-
 		if _, ok := state.GetOk(multistep.StateCancelled); ok {
 			return InterruptedError{}
 		}
 
 		select {
-		case result := <-predicateResult:
-			return result.err
+		case err := <-predicateResult:
+			return err
 
 		case <-time.After(1 * time.Second):
 			continue

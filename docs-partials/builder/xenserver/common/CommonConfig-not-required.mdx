@@ -1,0 +1,115 @@
+<!-- Code generated from the comments of the CommonConfig struct in builder/xenserver/common/common_config.go; DO NOT EDIT MANUALLY -->
+
+- `vm_name` (\*string) - Name of the new VM. Defaults to `packer-BUILDNAME-TIMESTAMP`.
+
+- `vm_description` (string) - Description of the new VM. Defaults to empty.
+
+- `vm_sr` (string) - Name label of the SR for the VM's disks. On the iso builder it defaults to
+  the pool's default SR, and also holds the `cd_files` CD and a downloaded
+  ISO, so it must be writable. On the clone builder it defaults to the
+  source's SR, and naming another SR copies the disks in full.
+
+- `iso_sr` (string) - Name label of the SR that holds the ISO named by `iso_name`. It is only
+  read, so a read-only ISO library works.
+
+- `cd_files` ([]string) - Files and directories to put on a CD attached at boot, such as
+  `Autounattend.xml`. Works under BIOS and UEFI. Wildcards are not expanded.
+
+- `network_names` ([]string) - Networks to attach, by name label, in order. They replace the source's
+  networks. Defaults to the source's networks, or the management network if it
+  has none.
+
+- `vcpus` (\*uint) - Number of virtual CPUs. Defaults to the source's. On the iso builder it is
+  required with the generic `Other install media` template, which has none.
+
+- `cores_per_socket` (\*uint) - Cores per socket. Must divide `vcpus`, giving at most 16 sockets. Defaults
+  to the source's, and is ignored unless `vcpus` is set too.
+
+- `vm_memory_gb` (\*uint) - Memory in GiB, as a fixed allocation with no ballooning. Defaults to the
+  source's. On the iso builder it is required with `Other install media`.
+
+- `disk_size_gb` (\*uint) - Size of the primary disk in GiB. The iso builder creates the disk at this
+  size; the clone builder can only grow the source's disk, so a smaller size
+  fails the build. Defaults to the source's. On the iso builder it is required
+  with `Other install media`.
+
+- `vm_other_config` (map[string]string) - Key/value pairs added to the VM's `other-config`. `xs_packer_plugin` and
+  `xs_packer_plugin_version` are reserved: an entry with either name is
+  overwritten.
+
+- `vgpu_profile` (string) - vGPU profile to attach, matched as a case-insensitive substring of the
+  pool's vGPU type names. The build fails if no type matches.
+
+- `firmware` (string) - `bios` or `uefi`. Defaults to the source's firmware. The build fails early
+  if the source cannot boot that way, for example `bios` with a source that
+  has a vTPM.
+
+- `secure_boot` (\*bool) - Enable UEFI Secure Boot. `true` requires `firmware = "uefi"`, set
+  explicitly; `false` turns Secure Boot off. Defaults to the source's setting.
+  On a pool with no UEFI certificates installed, the VM starts with Secure
+  Boot off.
+
+- `has_vendor_device` (\*bool) - Give the VM the device through which Windows Update offers the XenServer PV
+  drivers. Windows needs it for a clean shutdown, reboot and suspend. Defaults
+  to `true` on the iso builder, and to the source's setting on the clone
+  builder, where changing it on an installed Windows guest is likely to stop
+  it booting.
+
+- `boot_command` ([]string) - Keys typed over VNC to start the installer. See the Boot Command section.
+
+- `shutdown_command` (string) - Command run inside the guest over WinRM to shut it down after provisioning.
+  Without it, the VM is shut down through the XenAPI.
+
+- `boot_wait` (duration string | ex: "1h5m2s") - How long to wait after power-on before typing `boot_command`. Defaults to
+  5s.
+
+- `boot_key_groups` (int) - How many times to send `boot_command`, `boot_key_group_interval` apart.
+  Defaults to 20 on a UEFI iso build whose `boot_command` is a single
+  `<enter>`, `<return>` or `<spacebar>`, and to 1 otherwise.
+
+- `boot_key_group_interval` (duration string | ex: "1h5m2s") - Time between `boot_command` repetitions. Required when `boot_key_groups` is
+  above 1. Defaults to 1s with the UEFI default above.
+
+- `install_timeout` (duration string | ex: "1h5m2s") - How long to wait for the guest: with `communicator = "winrm"`, until it
+  reports an address; with `communicator = "none"`, until it shuts down.
+  Defaults to 200m.
+
+- `http_directory` (string) - Directory served over HTTP to the VM. Defaults to none.
+
+- `http_bind_address` (string) - IP address the HTTP server binds to, also handed to the guest as `.HTTPIP`.
+  Defaults to every interface, with `.HTTPIP` taken from the route to
+  `xenserver_host`.
+
+- `http_interface` (string) - Network interface whose IPv4 address is handed to the guest as `.HTTPIP`.
+  Use it instead of `http_bind_address`, not with it.
+
+- `output_directory` (string) - Directory for the exported files. Defaults to `output-BUILDNAME`. It must be
+  missing or empty; `-force` empties it first, and also destroys any VM or
+  template on the pool named `vm_name`.
+
+- `format` (string) - What the build produces: `xva` (the default), `vdi_raw`, `vdi_vhd`, or
+  `none`, which converts the finished VM into a template instead of exporting
+  a file. `xva_compressed` is a deprecated alias of `xva`.
+
+- `keep_vm` (string) - When to keep the VM on the pool: `never`, `always` or `on_success`. Defaults
+  to `on_success` with `format = "none"`, and to `never` otherwise.
+
+- `create_snapshot` (bool) - Snapshot the VM after it shuts down, before it is exported. Defaults to
+  false. The build never deletes the snapshot.
+
+- `snapshot_name` (string) - Name label of that snapshot. Only valid with `create_snapshot = true`.
+
+- `insecure` (\*bool) - Defaults to false. When true, the builder does not verify the XenServer TLS
+  certificate at all (chain, name and expiry), so the connection can be
+  intercepted. Use only in a trusted lab. For a host with a self-signed
+  certificate, set `ca_cert_path` to its certificate instead.
+  
+  Falls back to the `XENSERVER_INSECURE` environment variable, with a warning
+  when that turns verification off. An explicit `insecure = false` in the
+  template is not overridden by the environment.
+
+- `ca_cert_path` (string) - Path to the PEM-encoded CA certificate used to verify the XenServer TLS
+  connection. Required unless `insecure` is true. Falls back to the
+  `XENSERVER_CA_CERT_PATH` environment variable.
+
+<!-- End of code generated from the comments of the CommonConfig struct in builder/xenserver/common/common_config.go; -->

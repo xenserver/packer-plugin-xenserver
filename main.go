@@ -1,3 +1,5 @@
+// Copyright (c) 2026. Citrix Systems, Inc.
+
 package main
 
 import (
@@ -6,23 +8,23 @@ import (
 
 	"github.com/xenserver/packer-plugin-xenserver/builder/xenserver/clone"
 	"github.com/xenserver/packer-plugin-xenserver/builder/xenserver/iso"
-	"github.com/xenserver/packer-plugin-xenserver/builder/xenserver/xva"
 	"github.com/xenserver/packer-plugin-xenserver/version"
 
 	"github.com/hashicorp/packer-plugin-sdk/plugin"
 )
 
-func main() {
+func pluginSet() *plugin.Set {
 	pps := plugin.NewSet()
 
-	// Add builders to the plugin set
-	pps.RegisterBuilder("xva", new(xva.Builder))
-	pps.RegisterBuilder("iso", new(iso.Builder))
-	pps.RegisterBuilder("clone", new(clone.Builder))
+	pps.RegisterBuilder("vm-iso", new(iso.Builder))
+	pps.RegisterBuilder("vm-clone", new(clone.Builder))
 
-	// Set the plugin version
 	pps.SetVersion(version.PluginVersion)
-	err := pps.Run()
+	return pps
+}
+
+func main() {
+	err := pluginSet().Run()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)

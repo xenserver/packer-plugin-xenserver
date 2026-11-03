@@ -1,0 +1,10 @@
+| Removed | Use instead |
+| ------- | ----------- |
+| `convert_to_template` | `format = "none"`, which also turns the export off. |
+| `floppy_files` | `cd_files` |
+| `ssh_key_path` | Not supported in this release, which connects to Windows guests over WinRM only |
+| `vcpus_max`, `vcpus_atstartup` (`vcp_us_max`, `vcp_us_at_startup` in HCL2) | `vcpus`, which sets both |
+| `iso_checksum_type` | the algorithm as a prefix on `iso_checksum`, for example `"sha256:<hash>"` |
+| `source_path` | Nothing — it belonged to the removed `xenserver-xva` builder. |
+| `export_network_names`, `ip_getter`, `platform_args`, `ssh_skip_nat_mapping` | Nothing — these are gone with no replacement. |
+| `host_port_min`, `host_port_max`, `http_port_min`, `http_port_max`, `ssh_host_port_min`, `ssh_host_port_max` | Nothing — the plugin picks its own local ports. |

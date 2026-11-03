@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	
+
 	"xenapi"
 )
 
@@ -78,7 +78,8 @@ func (self *StepAttachVdi) Cleanup(state multistep.StateBag) {
 
 	err = DisconnectVdi(c, vmRef, self.vdi)
 	if err != nil {
-		log.Printf("Unable to disconnect VDI '%s': %s", vdiUuid, err.Error())
+		// StepDetachVdi has usually removed the VBD already, so a miss here is expected.
+		log.Printf("Could not disconnect VDI '%s' during cleanup: %s", vdiUuid, err.Error())
 		return
 	}
 	log.Printf("Detached VDI '%s'", vdiUuid)

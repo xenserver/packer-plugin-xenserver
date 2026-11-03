@@ -1,74 +1,192 @@
 # XenServer Packer.io builder
 
-This builder plugin extends packer.io to support building images for XenServer.
+> **This repository is a read-only release mirror.**
+> Development and review happen in an internal repository; every commit on
+> `main` here is a snapshot copied from it, and the published releases are built
+> and signed there. Pull requests are not accepted, and any change committed
+> directly to this repository is overwritten by the next snapshot. Please open an
+> issue instead.
 
-It contains 3 different builders:
-- ISO -> With the ISO builder you can create a VM from scratch by auto-installing the OS.
-- Clone -> With the Clone builder you can clone an existing Template / VM for further customization.
-- XVA -> With the XVA builder you can import an existing Template / VM for further customization.
+This plugin lets [Packer](https://www.packer.io) build images for XenServer.
+
+It contains two builders:
+- `xenserver-vm-iso` creates a VM from scratch by installing the OS unattended.
+- `xenserver-vm-clone` clones an existing template or VM for further customization.
+
+Both builders can export the finished VM as an XVA (`format = "xva"`); there is no
+separate XVA builder.
 
 ## Status
 
-At the time of this writing the packer builder has been verified to work with XenServer 8.4.
-
-The following list contains things that are incomplete but will be worked on soon:
-- The documentation is still an on-going process
-- XVA builder is untested
-- Lots of dead code to remove from upstream
+The builders are verified with XenServer 9.
 
 ## Using the builder
 
-The packer builder can be installed via `packer init` as long as the packer template includes the following in it's `pkr.hcl` file
+Install the plugin with `packer init` by adding this to your template:
+
 ```
 packer {
   required_plugins {
-   xenserver= {
-      version = ">= v0.1.0"
-      source = "github.com/xenserver/xenserver"
+    xenserver = {
+      version = ">= 1.0.0"
+      source  = "github.com/xenserver/xenserver"
     }
   }
 }
 ```
 
-The following command will install the packer plugin using the Ubuntu example provided in this repository.
+For example, with the Windows ISO example in this repository:
 
 ```
-packer init examples/ubuntu/ubuntu-2004.pkr.hcl
+packer init examples/windows-iso/windows-iso-winrm.pkr.hcl
 ```
 
-If you are using an older version of packer or are still using json templates you will need to download the relevant release from the project's [releases page](https://github.com/ddelnano/packer-builder-xenserver/releases) and copy the binary to `~/.packer.d/plugins/packer-builder-xenserver-iso`.
+If you cannot use `packer init`, download the archive for your platform from the
+[releases page](https://github.com/xenserver/packer-plugin-xenserver/releases) and
+install it by hand:
+
+```shell
+$ unzip packer-plugin-xenserver_v1.0.0_x5.0_linux_amd64.zip
+$ packer plugins install --path packer-plugin-xenserver_v1.0.0_x5.0_linux_amd64 \
+    github.com/xenserver/xenserver
+$ packer plugins installed
+```
+
+## Verifying a release
+
+Every release ships a SHA-256 checksum file and a detached OpenPGP signature
+over it, made with the XenServer Packer plugin signing key:
+
+```
+packer-plugin-xenserver_v<version>_SHA256SUMS
+packer-plugin-xenserver_v<version>_SHA256SUMS.sig
+```
+
+Packer does not check that signature. `packer init` and `packer plugins install`
+verify the SHA-256 checksums and nothing else, so the steps below are a
+deliberate extra check rather than something the tooling does for you.
+
+The public key is in [`KEYS`](KEYS) in this repository, and is attached to every
+release.
+
+1. Import the key and confirm its fingerprint:
+
+   ```shell
+   $ gpg --import KEYS
+   $ gpg --fingerprint security@xenserver.com
+   ```
+
+   The fingerprint must be:
+
+   ```
+   FFC5 D9E4 BA7A F786 2C48  3480 4489 5E74 8988 4299
+   ```
+
+   Record that fingerprint the first time you verify a release. The key ships
+   alongside the releases it signs, so reading the fingerprint only from here
+   does not by itself establish that a release is genuine — anyone able to
+   replace the artifacts could change this page too. What it does establish is
+   that every release is signed by the same key, so a later change of signing
+   key is visible to you.
+
+2. Verify the signature over the checksum file:
+
+   ```shell
+   $ gpg --verify packer-plugin-xenserver_v<version>_SHA256SUMS.sig \
+                  packer-plugin-xenserver_v<version>_SHA256SUMS
+   ```
+
+   This must report a good signature from the key above.
+
+3. Verify the artifacts against the checksums:
+
+   ```shell
+   $ shasum -a 256 --check packer-plugin-xenserver_v<version>_SHA256SUMS
+   ```
+
+   Every file you downloaded must report `OK`.
 
 ## Developing the builder
 
 ### Dependencies
-* Packer >= v1.7.1 (https://packer.io)
-* XenServer > 8.4
-* Golang 1.24.1
+* Packer >= v1.7.0 (https://packer.io)
+* XenServer 9
+* Go 1.26
 
-## Compile the plugin
+### Compile the plugin
 
 Once you have installed Packer, you must compile this plugin and install the
 resulting binary.
 
+Building also needs the XenServer Go SDK, which this repository does not carry:
+`go.mod` has `replace xenapi => ./goSDK` and `goSDK/` is gitignored, so `make`,
+`make dev` and `go build` all fail until the SDK's `sdk_go/src/*` contents have
+been extracted into `./goSDK`. To fetch it:
+
+1. Download the Go SDK from the matching
+   [xapi-project/xen-api release](https://github.com/xapi-project/xen-api/releases)
+   (`Go-SDK-*.zip`).
+
+2. Extract its `sdk_go/src/*` contents into a `goSDK/` directory beside `go.mod`:
+
+   ```sh
+   unzip Go-SDK-*.zip -d sdk_temp
+   mkdir -p goSDK
+   mv sdk_temp/sdk_go/src/* goSDK/
+   rm -rf sdk_temp
+   ```
+
+Then build with the Go version pinned in `go.mod`:
+
 ```shell
-# Just build the Plugin
+# Build the plugin
 $ make
-# Build the plugin and copy it to ~/.packer.d/plugins/
+# Build the plugin and move it to ~/.packer.d/plugins/
 $ make dev
 
-#Manual steps:
+# Or by hand:
 $ go build -o packer-plugin-xenserver
 
-# Add the builder to the location packer expects it to be installed in
+# Install it where Packer looks for plugins
 $ mkdir -p ~/.packer.d/plugins/
-$ cp packer-builder-xenserver-iso  ~/.packer.d/plugins/packer-builder-xenserver-iso
+$ cp packer-plugin-xenserver ~/.packer.d/plugins/packer-plugin-xenserver
 ```
 
-# Documentation
+## Documentation
 
-For complete documentation on configuration commands, see [the
-xenserver-iso docs](docs/builders/xenserver-iso.mdx)
+For every configuration option, see the
+[xenserver-vm-iso](docs/builders/xenserver-vm-iso.mdx) and
+[xenserver-vm-clone](docs/builders/xenserver-vm-clone.mdx) builder docs.
+
+## Documentation: generated vs hand-written
+
+Some of the Markdown here is generated by `make generate`, and hand edits to it are lost
+on the next run:
+
+| Path | Edit by hand? | Produced by |
+| ---- | ------------- | ----------- |
+| `docs/**.mdx`, `docs/README.md` | **Yes** — the page sources | — |
+| `docs-partials/xenserver/**.mdx` | **Yes** — shared blocks, pulled in with `@include` | — |
+| `docs-partials/builder/**.mdx` | **No** | `go generate ./...` → `packer-sdc struct-markdown`, from the Go struct field comments |
+| `.web-docs/**/README.md` | **No** | `make generate` → `packer-sdc renderdocs` → `compile-to-webdocs.sh` |
+| `.web-docs/metadata.hcl`, `.web-docs/scripts/**` | **Yes** — they drive the generation | — |
+
+To change a page, edit its source in `docs/`, or the shared partial under
+`docs-partials/xenserver/common/` that it `@include`s, then run `make generate` and commit
+the result with the source change. No page includes `docs-partials/builder/**` or the
+Packer SDK's own partials, whose text refers to other plugins; keep the Go field comments
+in step with the pages all the same. The upgrade notes in `Upgrade*.mdx` appear on both
+`docs/README.md`, the registry front page, and `docs/builders/index.mdx`, which ships in
+`docs.zip`.
+
+```sh
+make generate      # regenerates every file marked "No" above
+git diff --stat    # commit the result alongside the source change
+```
+
+Generated files are committed because the HashiCorp integrations portal builds from
+`.web-docs/`.
 
 ## Special thanks
 
-Thanks @ddelnano for the the community support.
+Thanks @ddelnano for the community support.

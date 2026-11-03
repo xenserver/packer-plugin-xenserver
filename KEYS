@@ -1,0 +1,93 @@
+XenServer Packer plugin — release signing key
+=============================================
+
+This file holds the OpenPGP public key that signs XenServer Packer plugin
+releases. Each release carries a detached signature over its checksum file,
+`packer-plugin-xenserver_v<version>_SHA256SUMS.sig`, made with this key.
+
+The key travels with the releases it signs, so on its own it cannot establish
+that a release is genuine: anyone able to replace the artifacts could replace
+this file too. What it does give you is a check on a corrupted or truncated
+download, and -- once you have recorded the fingerprint below -- a way to
+notice if the signing key ever changes. Record it the first time you verify a
+release. See "Verifying a release" in README.md.
+
+pub   rsa4096 2026-09-23 [SC]
+      FFC5 D9E4 BA7A F786 2C48  3480 4489 5E74 8988 4299
+uid   XenServer Packer Plugin Key (XenServer Official Packer Plugin Signing Key) <security@xenserver.com>
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+mQINBGqzYtABEACnQjP/6ldflhLpr8fLatb0qcT2vIucoG+pbnS8ox9xEJ16JcEC
+DDlCZ8Y7BhdsSoCKn4KtCKuaoVV5Nq+AyyBf/+pmj0i11DjrE10wtzNgOkgYTC/f
+rYKavwFw7B927e8o69kuxCWIvT9ybOWxMg0Ce3l6+xEdaQXzSQZ0VAPi4RoXA8O3
+NGor2StX/+pOQjjAASEAjV91ZgC2zr68Mn5NekkocRZIvCTeoj3Oi4SYz3G13zWW
+riCLET3OImjBwGG9k8gcLTVYbxuYx2IU/dAj6uRAKq7Kustsrd63RJ1gBsAKiRmh
+0i/p12taCUIKmQyopCYDDthRh67sx1xwcaBLHlFtA8jugg3hOLu4Rls1Y89kC5Q+
+S3gVnHwJcJQBHGiApr/NZcCeRKkVMIiJuXC3AViMIn7gzS+Tfr2C1FY+430+al/e
+qq/ogFavxccnrni1W1EAb9agW1Yu2T0qoxNGDsfTjvmp4uuQnx+hAeNmKMUpw6N8
+l0pr2Wk60Ab1ExsRJujPxuZZMwwZNH882m8DTkBwobAe8PDs/rYPReYew4LZ3a7q
+L/ZwDdfT7ENv4JljscltgyI7GjkGFzXDuA0dctJZ/E1YUMF/pHY4KbPaoSgPrSN/
+MHNZudDHsC3LuqxQfvp6wrkCsJbR1a4EpMcmr0evIuOS5b/6rfnsQqqCrwARAQAB
+tGNYZW5TZXJ2ZXIgUGFja2VyIFBsdWdpbiBLZXkgKFhlblNlcnZlciBPZmZpY2lh
+bCBQYWNrZXIgUGx1Z2luIFNpZ25pbmcgS2V5KSA8c2VjdXJpdHlAeGVuc2VydmVy
+LmNvbT6JAjoEEwEKAC4JEESJXnSJiEKZFiEE/8XZ5Lp694YsSDSARIledImIQpkF
+AmqzbUgCGwMDBQF4AAD4lg//SMrylZvDd0fiN7FXzVhOdEWo87p2onf2TfGkep2q
+70y05cPcg3n7nhxuoEimQxeAoDB3yMM/YOwrT8iGmx69uKPt1Ou4nEqtGU4eTwmR
+6+/E1eXFa8oce0a7hPEdRnR45/KNqGGopgHf4quIxdQhpmq4Sa+4Wr6wkGoVgT3R
+asNFy5yZ122VLMKEb9ZahKVEHC855At3eR+zrg1vX7+MProZecpFu7xF+4flOE6X
+IP7qSgVtJc8MTLKFEuuuSErcdPAT2b+oALM87YXI4euUBp52MjS0SAc5eQd0q9M5
+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
+=h3zm
+-----END PGP PUBLIC KEY BLOCK-----

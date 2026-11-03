@@ -1,36 +1,70 @@
 ## Examples
 
-In order for new users to get up and running with the packer builder, a few examples of building a machine image with popular distros have been created.
+Examples of building a Windows image with the XenServer builders. For every option, see the
+[xenserver-vm-iso](../docs/builders/xenserver-vm-iso.mdx) and
+[xenserver-vm-clone](../docs/builders/xenserver-vm-clone.mdx) documentation.
 
-In order to see an exhaustive list of configuration options for the packer builder please see the [following documentation](../docs/builders/xenserver-iso.html.markdown). This doc will focus on the details relevant to the particular distro.
+| Directory | Builder | What it does |
+| --- | --- | --- |
+| `windows-iso/` | `xenserver-vm-iso` | Installs Windows 11 from an ISO on an ISO SR, then provisions it over WinRM |
+| `windows-clone-winrm/` | `xenserver-vm-clone` | Clones an existing Windows template, then provisions it over WinRM |
 
-### Running the examples
+Keep each example in its own directory: Packer loads every `*.pkr.hcl` in a directory as
+one configuration.
 
-In order to run the examples you will need to perform the following steps:
-1. Export those vars:
-```
-PKR_VAR_remote_host
-PKR_VAR_remote_password
-PKR_VAR_remote_username
-PKR_VAR_sr_name
-PKR_VAR_sr_iso_name
-``` 
-`PKR_VAR_remote_host` must be the resource pool primary, aka the master.
+### Running an example
 
-2. Run `packer init path/to/defenition.pkr.hcl` to download the xenserver plugin
+Run packer from the plugin's root directory (the one with `go.mod`); the `cd_files`
+paths in the templates are relative to it.
 
-2. Run `packer build  path/to/defenition.pkr.hcl`   
-so for example:
-`packer build  examples/centos/centos8-netinstall.pkr.hcl`
+1. Export the variables the example needs:
 
-### Ubuntu
+   ```
+   PKR_VAR_xenserver_host       # the pool coordinator (master)
+   PKR_VAR_xenserver_password
+   PKR_VAR_winrm_password
+   PKR_VAR_ca_cert_path         # the pool's certificate, see step 2
+   ```
 
-The Ubuntu example uses the [autoinstall tool](https://ubuntu.com/server/docs/install/autoinstallhttps://ubuntu.com/server/docs/install/autoinstall) to configure the VM template. Please see the [autoinstall docs](https://ubuntu.com/server/docs/install/autoinstall-reference) for an exhaustive list of what is supported.
+   The ISO example also needs `PKR_VAR_iso_name` and `PKR_VAR_iso_sr`: the install ISO and
+   the ISO SR it is on. `PKR_VAR_vm_sr` optionally names a writable SR for the VM's disks;
+   on a pool of more than one host, `Local storage` matches every host's local SR and
+   cannot be used. If your pool names the templates differently, set
+   `PKR_VAR_clone_template`.
 
-Packer will create a http server to serve the files as specified from the `http_directory` specified in the builder configuration. This is where the [user-data](http/ubuntu-2004/user-data) and [meta-data](http/ubuntu-2004/meta-data) for autoinstall must be present.
+2. Write out the pool's certificate, and point `PKR_VAR_ca_cert_path` (or
+   `XENSERVER_CA_CERT_PATH`) at it:
 
-### Centos
+   ```
+   xe host-get-server-certificate host=<host-uuid> > pool-ca.pem
+   ```
 
-The Centos examples use kickstart files to configure the VM template. Please see the [kickstart documentation](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/installation_guide/sect-kickstart-syntax) for the options that are supported.
+3. Install the plugin and build:
 
-Packer will create a http server to serve the files as specified from the `http_directory` specified in the builder configuration. This is where the [kickstart config](http/centos8/ks-centos8.cfg) file must be present.
+   ```
+   packer init  examples/windows-iso/windows-iso-winrm.pkr.hcl
+   packer build examples/windows-iso/windows-iso-winrm.pkr.hcl
+   ```
+
+Each example also ships a `*.pkrvars.hcl.example`. Copy it to a name ending in
+`.auto.pkrvars.hcl`, which Packer loads automatically, or pass it with `-var-file=<path>`.
+Keep passwords out of it.
+
+### Windows
+
+- **WinRM**: both examples connect over HTTPS (`winrm_use_ssl = true`) and verify the
+  guest's certificate. The guest's 5986 listener must present a certificate that the
+  machine running Packer trusts, issued for the address Packer connects to.
+- **XenServer VM Tools**: the build learns the VM's address from the VM Tools, so they must
+  be installed in the guest. In `windows-iso/` the answer file installs the MSI you put on
+  the `cd_files` CD; in `windows-clone-winrm/` the source template must already have them.
+  Without them the build fails after `install_timeout` (200 minutes) with
+  `No IP address for the VM`.
+- **Answer file**: `windows-iso/` needs an `Autounattend.xml` and the VM Tools MSI on a CD
+  via `cd_files`. You supply both; the commented-out `cd_files` line in the template is an
+  example path. The answer file must install the VM Tools and create the WinRM listener
+  above; see Microsoft's
+  [Unattended Windows Setup Reference](https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/).
+- **Windows 11** needs UEFI and a vTPM (`firmware = "uefi"`, `vtpm = true`). On the clone
+  builder, `vtpm = false` removes an inherited vTPM and everything sealed to it, such as a
+  BitLocker key, and cannot be undone.

@@ -1,0 +1,15 @@
+<!-- Code generated from the comments of the CloneConfig struct in builder/xenserver/clone/config.go; DO NOT EDIT MANUALLY -->
+
+- `clone_template` (string) - Name label of the template to clone. Exactly one of `clone_template` and
+  `clone_vm` must be set, and the name must match exactly one template.
+
+- `clone_vm` (string) - Name label of the VM or snapshot to clone. Exactly one of `clone_template`
+  and `clone_vm` must be set, and the name must match exactly one VM or
+  snapshot. A VM must be halted; snapshot a running VM and name the snapshot
+  instead. A checkpoint cannot be combined with `vm_sr`.
+
+- `vtpm` (\*bool) - Attach a virtual TPM. Omit it to keep whatever the source has. `true` adds
+  one, and requires `firmware = "uefi"`, set explicitly. `false` removes the
+  inherited vTPM, with anything sealed to it, and cannot be undone.
+
+<!-- End of code generated from the comments of the CloneConfig struct in builder/xenserver/clone/config.go; -->

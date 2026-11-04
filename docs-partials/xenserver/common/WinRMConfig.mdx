@@ -1,0 +1,28 @@
+<!-- Hand-written shared partial: the WinRM options, included by every XenServer builder
+     page in place of the SDK's WinRM partial. -->
+
+- `winrm_username` (string) - The user Packer logs in to the guest as. Required with
+  `communicator = "winrm"`.
+
+- `winrm_password` (string) - The password for `winrm_username`. Required with
+  `communicator = "winrm"`.
+
+- `winrm_host` (string) - The address to connect to. Defaults to the address the VM
+  reports.
+
+- `winrm_port` (int) - The port to connect to. Defaults to `5985`, or `5986` when
+  `winrm_use_ssl` is `true`.
+
+- `winrm_use_ssl` (bool) - Connect over HTTPS. Defaults to `false`.
+
+- `winrm_insecure` (bool) - When `true`, the guest's certificate chain and host name are
+  not checked. Defaults to `false`.
+
+- `winrm_timeout` (duration string | ex: "1h5m2s") - How long to wait for WinRM to become
+  available. Defaults to `30m`.
+
+- `winrm_use_ntlm` (bool) - Authenticate with NTLMv2 instead of Basic authentication, so
+  the guest does not need Basic authentication enabled. Defaults to `false`.
+
+- `winrm_no_proxy` (bool) - Bypass any configured proxy when connecting to the guest.
+  Defaults to `false`.

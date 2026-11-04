@@ -1,0 +1,34 @@
+<!-- Hand-written shared partial: guest tools, included by every XenServer builder page. -->
+
+The **XenServer VM Tools** (guest agent and paravirtualized drivers) give a graceful
+shutdown, report the guest's IP address, and improve I/O performance. A WinRM build needs
+them running in the guest: without `http_directory`, it learns the VM's address only from
+the tools, so it cannot connect until they are installed.
+
+- `xenserver-vm-iso`: install them from the answer file, with the MSI on the `cd_files`
+  CD.
+- `xenserver-vm-clone`: the source must already have them.
+
+### Windows
+
+Once Packer is connected, a provisioner can install a newer **XenServer VM Tools for
+Windows** MSI:
+
+```hcl
+build {
+  sources = ["source.xenserver-vm-clone.windows"]
+
+  provisioner "file" {
+    source      = "tools/managementagentx64.msi"
+    destination = "C:/Windows/Temp/xstools.msi"
+  }
+
+  provisioner "powershell" {
+    inline = [
+      "Start-Process msiexec.exe -Wait -ArgumentList '/i C:\\Windows\\Temp\\xstools.msi','/quiet','/norestart'"
+    ]
+  }
+}
+```
+
+-> **Note:** Match the tools version to the target XenServer release.

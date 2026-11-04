@@ -1,0 +1,87 @@
+# Shared by the internal workflows and the public repository's, so it lives in the
+# plugin tree. Callers where the plugin module is not the repository root pass
+# plugin-path.
+name: Set up XenServer Go SDK
+description: >-
+  Download the XenServer Go SDK into the plugin module's ./goSDK so the
+  `replace xenapi => ./goSDK` directive in go.mod resolves. Required by any
+  step that builds this module.
+inputs:
+  sdk-url:
+    description: >-
+      Explicit SDK zip URL. When empty, the latest xapi-project/xen-api release
+      is resolved from github.com and its Go SDK asset is used.
+    required: false
+    default: ""
+  plugin-path:
+    description: Path to the Packer plugin Go module.
+    required: false
+    default: "."
+runs:
+  using: composite
+  steps:
+    - name: Download and extract XenServer SDK
+      shell: bash
+      working-directory: ${{ inputs.plugin-path }}
+      env:
+        SDK_URL: ${{ inputs.sdk-url }}
+      run: |
+        set -euo pipefail
+
+        if ! command -v unzip >/dev/null 2>&1; then
+          sudo apt-get update
+          sudo apt-get install -y unzip
+        fi
+
+        url="${SDK_URL}"
+        if [ -z "${url}" ]; then
+          # Take the tag from the /releases/latest redirect; xenserver.com uses a
+          # different version scheme from the xen-api release tags.
+          latest="$(curl -fsSL -o /dev/null -w '%{url_effective}' \
+            'https://github.com/xapi-project/xen-api/releases/latest')"
+          tag="${latest##*/}"
+          case "${tag}" in
+            v[0-9]*) ;;
+            *)
+              echo "Unable to resolve the latest xen-api release tag (got '${tag}')." >&2
+              exit 1
+              ;;
+          esac
+          url="https://github.com/xapi-project/xen-api/releases/download/${tag}/Go-SDK-prerelease-unsigned.zip"
+        fi
+
+        # Cache the extracted SDK per URL, so a runner that runs many jobs
+        # downloads it once.
+        cache_dir="${RUNNER_TOOL_CACHE:-${RUNNER_TEMP:-/tmp}}/xenserver-sdk/$(printf '%s' "${url}" | sha256sum | cut -c1-16)"
+
+        if [ ! -f "${cache_dir}/.complete" ]; then
+          work="$(mktemp -d "${RUNNER_TEMP:-/tmp}/xenserver-sdk.XXXXXX")"
+          curl -fsSL "${url}" -o "${work}/sdk.zip"
+          unzip -q "${work}/sdk.zip" -d "${work}/extracted"
+
+          if [ ! -d "${work}/extracted/sdk_go/src" ]; then
+            echo "Unexpected SDK archive layout: sdk_go/src not found in ${url}" >&2
+            echo "Archive contains:" >&2
+            (cd "${work}/extracted" && find . -maxdepth 2 -type d) >&2
+            rm -rf "${work}"
+            exit 1
+          fi
+
+          touch "${work}/extracted/sdk_go/src/.complete"
+          mkdir -p "$(dirname "${cache_dir}")"
+          # -T so a lost race cannot nest src/ inside the winner's cache entry.
+          if ! mv -T "${work}/extracted/sdk_go/src" "${cache_dir}" 2>/dev/null; then
+            if [ ! -f "${cache_dir}/.complete" ]; then
+              echo "Failed to populate the SDK cache at ${cache_dir}." >&2
+              rm -rf "${work}"
+              exit 1
+            fi
+          fi
+          rm -rf "${work}"
+        fi
+
+        rm -rf goSDK
+        mkdir -p goSDK
+        cp -a "${cache_dir}/." goSDK/
+        rm -f goSDK/.complete
+        echo "Installed XenServer Go SDK from ${url}"

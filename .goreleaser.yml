@@ -1,0 +1,79 @@
+version: 2
+
+# Packer needs the binary named packer-plugin-<name>; without this, GoReleaser
+# derives the name from the git remote.
+project_name: packer-plugin-xenserver
+env:
+  - CGO_ENABLED=0
+before:
+  hooks:
+    # Render docs/ into docs.zip, which is attached to the release for Packer.io.
+    - make ci-release-docs
+    # Check compatibility with the required Packer SDK version.
+    - make plugin-check
+builds:
+  # Kept from upstream; the SDK check runs in the before hook, not on this artifact.
+  -
+    id: plugin-check
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
+    goos:
+      - linux
+    goarch:
+      - amd64
+    binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
+  -
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
+    goos:
+      - freebsd
+      - windows
+      - linux
+      - darwin
+    # No 386 or arm: the SDK's VirtualSize is a Go int, which is 32-bit there and
+    # truncates disk sizes over 2 GiB.
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: linux
+        goarch: amd64
+    binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
+archives:
+- formats: [ zip ]
+  files:
+    - none*
+  name_template: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
+checksum:
+  name_template: '{{ .ProjectName }}_v{{ .Version }}_SHA256SUMS'
+  algorithm: sha256
+signs:
+  - artifacts: checksum
+    args:
+      # No tty in CI, so gpg must not prompt.
+      - "--batch"
+      - "--local-user"
+      - "{{ .Env.GPG_FINGERPRINT }}"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
+release:
+  draft: true
+  extra_files:
+  - glob: ./docs.zip
+  # Packer does not check the signature, so ship the public key for checking it by hand.
+  - glob: ./KEYS
+
+# Snapshot builds are untagged, so they take their version from PLUGIN_VERSION.
+snapshot:
+  version_template: '{{ .Env.PLUGIN_VERSION }}'
+
+changelog:
+  disable: true

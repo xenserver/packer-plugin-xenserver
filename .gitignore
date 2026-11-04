@@ -1,0 +1,28 @@
+*.swp
+*~
+bin
+pkg
+crash.log
+packer_cache/*
+builder-*
+dist/*
+vendor/*
+# The built plugin binary at the top of this directory. Windows `go build`
+# writes the .exe form, which the bare name does not match.
+/packer-plugin-xenserver
+/packer-plugin-xenserver.exe
+
+# Exported images (output_directory defaults to output-<build_name>) and the
+# docs bundle left behind by `make ci-release-docs`.
+output-*/
+docs.zip
+.docs/
+
+# Filled-in variable files carry pool credentials; only the .example ships.
+*.pkrvars.hcl
+
+# VSCode
+.vscode/
+
+# XenAPI Go SDK, fetched out of band (see README); go.mod has `replace xenapi => ./goSDK`.
+goSDK

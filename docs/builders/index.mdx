@@ -1,0 +1,51 @@
+---
+description: |
+  The XenServer Packer builders create XenServer virtual machines and
+  templates over the XenAPI.
+page_title: XenServer - Builders
+sidebar_title: Overview
+---
+
+# XenServer Builders
+
+The XenServer Packer plugin provides two builders for creating XenServer
+virtual machines and templates, depending on the strategy you want to use to build
+the image. Both drive a remote XenServer host or pool over the XenAPI, so XenCenter
+is not required.
+
+- [xenserver-vm-iso](/packer/integrations/xenserver/xenserver/latest/components/builder/xenserver-vm-iso) -
+  Starts from an ISO file and drives an unattended operating system install on a
+  remote XenServer host or pool.
+
+- [xenserver-vm-clone](/packer/integrations/xenserver/xenserver/latest/components/builder/xenserver-vm-clone) -
+  Clones an existing template or VM, then modifies it and saves the result — for
+  patching or customizing a golden image without a full reinstall.
+
+## How to use this plugin
+
+From Packer v1.7.0, copy and paste this code into your Packer configuration to
+install this plugin. Then, run [`packer init`](/packer/docs/commands/init).
+
+```hcl
+packer {
+  required_plugins {
+    xenserver = {
+      version = ">= 1.0.0"
+      source  = "github.com/xenserver/xenserver"
+    }
+  }
+}
+```
+
+## Upgrading from the earlier XenServer plugin
+
+@include 'xenserver/common/UpgradeIntro.mdx'
+### Builder types
+
+@include 'xenserver/common/UpgradeBuilderTypes.mdx'
+### Renamed options
+
+@include 'xenserver/common/UpgradeRenamedOptions.mdx'
+### Removed options
+
+@include 'xenserver/common/UpgradeRemovedOptions.mdx'

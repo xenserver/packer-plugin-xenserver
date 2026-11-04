@@ -1,0 +1,18 @@
+| Old | New |
+| --- | --- |
+| `remote_host` | `xenserver_host` |
+| `remote_username` | `xenserver_username` |
+| `remote_password` | `xenserver_password` |
+| `sr_name` | `vm_sr` |
+| `sr_iso_name` | `iso_sr` |
+| `tools_iso_name` | Not supported on XenServer 9 (deprecated `guest_tools_iso`, `xenserver-vm-iso` only) |
+| `vm_memory` | `vm_memory_gb` |
+| `disk_size` | `disk_size_gb` |
+| `vTPM` | `vtpm` |
+| `server_cert` | `ca_cert_path` |
+| `skip_cert_verification` | `insecure` |
+
+Memory and disk changed unit as well as name, and the numbers are not converted for
+you: `vm_memory = 4096` becomes `vm_memory_gb = 4`, and `disk_size = 40000` becomes
+`disk_size_gb = 40`. Leaving the old figure in place asks the pool for about a
+thousand times as much.
